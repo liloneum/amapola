@@ -34,7 +34,7 @@
      <number>6</number>
     </property>
     <item row="0" column="0">
-     <widget class="QTableWidget" name="subTable">
+     <widget class="MySubtitlesTable" name="subTable">
       <property name="enabled">
        <bool>false</bool>
       </property>
@@ -75,7 +75,7 @@
        <number>5</number>
       </property>
       <attribute name="horizontalHeaderVisible">
-       <bool>false</bool>
+       <bool>true</bool>
       </attribute>
       <attribute name="horizontalHeaderCascadingSectionResizes">
        <bool>false</bool>
@@ -93,7 +93,7 @@
        <bool>true</bool>
       </attribute>
       <attribute name="verticalHeaderVisible">
-       <bool>false</bool>
+       <bool>true</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>42</number>
@@ -257,6 +257,32 @@
         <height>0</height>
        </size>
       </property>
+      <widget class="MyTextEdit" name="stEditDisplay">
+       <property name="geometry">
+        <rect>
+         <x>1</x>
+         <y>240</y>
+         <width>396</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>15</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="verticalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+       <property name="horizontalScrollBarPolicy">
+        <enum>Qt::ScrollBarAlwaysOff</enum>
+       </property>
+      </widget>
      </widget>
     </item>
     <item row="1" column="0" colspan="2">
@@ -335,6 +361,16 @@
    <extends>QWidget</extends>
    <header location="global">mywaveform.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MyTextEdit</class>
+   <extends>QTextEdit</extends>
+   <header location="global">mytextedit.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MySubtitlesTable</class>
+   <extends>QTableWidget</extends>
+   <header location="global">mysubtitlestable.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>

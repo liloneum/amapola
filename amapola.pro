@@ -9,11 +9,15 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     myvideoplayer.cpp \
-    mywaveform.cpp
+    mywaveform.cpp \
+    mytextedit.cpp \
+    mysubtitlestable.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
-    mywaveform.h
+    mywaveform.h \
+    mytextedit.h \
+    mysubtitlestable.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
