@@ -20,43 +20,50 @@ class QGraphicsScene;
 class MyVideoPlayer : public QWidget
 {
     Q_OBJECT
+
     
 public:
     explicit MyVideoPlayer(QWidget *parent = 0);
     ~MyVideoPlayer();
+    QSizeF videoItemSize();
+    QSizeF videoItemNativeSize();
+
+signals:
+    void positionChanged(qint64);
+    void durationChanged(qint64);
 
 public slots:
     QString openFile();
+    void setPosition(qint64 videoPlayerPositionMs);
 
 private slots:
     void on_playButton_clicked();
-    void mediaStateChanged(QMediaPlayer::State state);
+    void updatePlayerState(QMediaPlayer::State state);
     void on_timeSlider_sliderReleased();
-    void positionChanged(qint64 playerPosition);
-    void durationChanged();
+    void updateSliderPosition(qint64 playerPositionMs);
+    void updateDuration();
     void on_timeSlider_sliderPressed();
     void on_timeSlider_sliderMoved(int sliderPosition);
     void resizeEvent(QResizeEvent* event);
     bool eventFilter(QObject* watched, QEvent* event);
-    void UpdateTime();
+    void updateTime();
 
     void on_timeSlider_valueChanged(int value);
 
-    void on_timeSlider_actionTriggered(int action);
     
 private:
-    Ui::MyVideoPlayer *ui;
     QMediaPlayer* mpPlayer;
+    Ui::MyVideoPlayer *ui;
     QGraphicsScene* mpVideoScene;
     QGraphicsVideoItem* mpVideoItem;
-    //QVideoWidget *video;
-    QTime* mpCurrentTime;
-    QTime* mpDurationTime;
+    QTime* mpCurrentTimeHMS;
+    QTime* mpDurationTimeHMS;
     QGraphicsScene* mpTimeGraphicsScene;
     QGraphicsTextItem* mpTimeTextItem;
-    int mTimeSliderMaxRange;
-    int mPlayerPositionNotifyInterval;
+    qint32 mTimeSliderMaxRange;
+    qint16 mPlayerPositionNotifyIntervalMs;
     bool mTimeSliderPositionChangedByGui;
+    qint64 mVideoDuration;
 };
 
 #endif // MYVIDEOPLAYER_H
