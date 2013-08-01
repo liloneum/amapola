@@ -40,18 +40,41 @@ private slots:
     void updatePostionMarker(qint64 playerPositionMs);
 
 private:
+    // Qt designer ui reference
     Ui::MyWaveForm *ui;
+
+    // Audio decoder object
     QAudioDecoder* mpDecoder;
+
+    // Stream to read/write file
     QDataStream* mpStream;
+
+    // File object
     QFile* mpFile;
-    quint16 mZoomValue;
+
+    // Lower time in millisecond to display
     qint32 mMinPlotTimeMs;
+
+    // Higher time in millisecond to display
     qint32 mMaxPlotTimeMs;
+
+    // Vector wich contain amplitude data
     QVector<double> mAmplitudeVector;
+
+    // Vector wich contain time data in millisecond
     QVector<double> mTimeVectorMs;
+
+    // Wave-form curve
     QwtPlotCurve* mpWaveFormCurve;
+
+    // Marker object
     QwtPlotMarker* mpPositionMarker;
+
+    // Text label to display "loading..." message
     QwtPlotTextLabel* mpLoadingTextItem;
+
+    // Current media duration in millisecond
+    qint32 mMediaDurationMs;
 };
 
 #endif // MYWAVEFORM_H
