@@ -7,7 +7,7 @@
 #include <QMouseEvent>
 
 #define SEC_TO_MSEC 1000
-#define FRAME_PS_SEC 25
+#define FRAME_PS_SEC 1000
 
 MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     QWidget(parent),
@@ -80,8 +80,7 @@ void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
 
 QString MyVideoPlayer::openFile() {
 
-    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath() +"/Videos",
-                                                     tr("Video Files (*.mp4 *.wmv *.avi)"));
+    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
 
     if ( !file_name.isEmpty() ) {
         mpPlayer->setMedia(QUrl::fromLocalFile(file_name));
@@ -184,7 +183,7 @@ bool MyVideoPlayer::eventFilter(QObject* watched, QEvent* event) {
 
 void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
 
-    mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height() );
+    mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height());
     mpVideoItem->setSize(QSizeF(ui->videoView->size()));
     QWidget::resizeEvent(event);
 }
@@ -209,9 +208,5 @@ void MyVideoPlayer::on_timeSlider_valueChanged(int sliderPosition)
 
 void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
     mpPlayer->setPosition(videoPlayerPositionMs);
-}
-
-qint64 MyVideoPlayer::playerPosition() {
-    return mpPlayer->position();
 }
 

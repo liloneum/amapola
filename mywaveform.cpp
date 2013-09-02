@@ -112,7 +112,7 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
     mpPositionMarker->detach();
     mpLoadingTextItem->detach();
 
-    // If a ".wf" file doesn't exist, decode and save audio data
+    // If a ".wf" file doesn't exist, decode and save audios data
     if ( !mpFile->exists() ) {
 
         QAudioFormat desired_format;
@@ -137,8 +137,8 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
         title.setRenderFlags( Qt::AlignHCenter | Qt::AlignVCenter );
 
         QFont font;
-        font.setBold(true);
-        title.setFont(font);
+        font.setBold( true );
+        title.setFont( font );
         mpLoadingTextItem->setText( title );
         mpLoadingTextItem->attach(ui->waveFormPlot);
 
@@ -149,12 +149,14 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
     }
 }
 
-// readBuffer is called when a decoded audio-buffer is ready
+// readBuffer is called when a decoder audio-buffer is ready
 // Write the audio-buffer data in ".wf" file
 void MyWaveForm::readBuffer() {
 
     QAudioBuffer audio_buffer;
     audio_buffer = mpDecoder->read();
+//    qint64 duration = audio_buffer.duration();
+//    bool valid_buffer = audio_buffer.isValid();
 
     if (audio_buffer.isValid()) {
 
@@ -188,7 +190,6 @@ void MyWaveForm::initWaveForm() {
     mAmplitudeVector.resize(size_of_file / SAMPLE_SIZE_BYTES);
     mTimeVectorMs.resize(size_of_file / SAMPLE_SIZE_BYTES);
 
-    // Copy the data from ".wf" file to a vector
     for (qint32 i = 0; i < mTimeVectorMs.size(); ++i) {
         qint16 buffer;
         *mpStream >> buffer;
@@ -198,21 +199,16 @@ void MyWaveForm::initWaveForm() {
 
     mpFile->close();
 
-    mMediaDurationMs = (qint32)mTimeVectorMs.last();
-
-    // Set scope of wave-form to the maximum defined, with origin at 0
     mMinPlotTimeMs = 0;
-    mMaxPlotTimeMs = (qint32)MAX_TIME_SCALE_MS;
-    // If video duration is less than the maximum scope defined, set scope to view complete wave-form
-    if ( mMaxPlotTimeMs > mMediaDurationMs ) {
-        mMaxPlotTimeMs = mMediaDurationMs;
+    mMaxPlotTimeMs = (qint32)( (qreal)MAX_TIME_SCALE_MS * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC) );
+    if ( mMaxPlotTimeMs > (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) {
+        mMaxPlotTimeMs = (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] );
     }
 
 //    mpWaveFormCurve->setSamples(mTimeVectorMs, mAmplitudeVector);
 //    mpWaveFormCurve->attach(ui->waveFormPlot);
 //    ui->waveFormPlot->replot();
 
-    // Plot the wave-form and the marker
     mpWaveFormCurve->attach(ui->waveFormPlot);
     mpPositionMarker->attach(ui->waveFormPlot);
     mpLoadingTextItem->detach();
@@ -220,7 +216,6 @@ void MyWaveForm::initWaveForm() {
 
 }
 
-// Plot the wave-form with in function of the current scope
 void MyWaveForm::plotWaveForm() {
 
     qint32 vector_size;
@@ -232,12 +227,9 @@ void MyWaveForm::plotWaveForm() {
     amplitude_vector.resize(vector_size);
     time_vector.resize(vector_size);
 
-    qint32 min_index = (qint32)( (qreal)mMinPlotTimeMs * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) );
-    qint32 max_index = (qint32)( (qreal)mMaxPlotTimeMs * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) );
-
-    for ( qint32 i = min_index; i <= max_index; i++ ) {
-        amplitude_vector[i - min_index] = mAmplitudeVector[i];
-        time_vector[i - min_index] = mTimeVectorMs[i];
+    for ( qint32 i = mMinPlotTimeMs; i <= mMaxPlotTimeMs; i++ ) {
+        amplitude_vector[i - mMinPlotTimeMs] = mAmplitudeVector[i];
+        time_vector[i - mMinPlotTimeMs] = mTimeVectorMs[i];
     }
 
     mpWaveFormCurve->setSamples(time_vector, amplitude_vector);
@@ -247,7 +239,6 @@ void MyWaveForm::plotWaveForm() {
 
 bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
 
-    // Manage mouse click and wheel event for the wave-form plot object
     if ( watched == ui->waveFormPlot ) {
         if ( event->type() == QEvent::Wheel ) {
 
@@ -255,11 +246,8 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
 
             Qt::KeyboardModifiers event_keybord_modifier = wheel_event->modifiers();
 
-            // Ctrl key + Mouse wheel -> zoom in/out the scope
-            // Shift key + Mouse wheel -> shift the scope
             if ( event_keybord_modifier & ( Qt::ControlModifier | Qt::ShiftModifier ) ) {
 
-                // See the Qt doc to convert the wheel angle delta to number of steps
                 QPoint num_degrees = wheel_event->angleDelta() / 8;
 
                 if( !num_degrees.isNull() ) {
@@ -274,7 +262,6 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
                             return true;
                         }
                     }
-                    // Replot wave form if the scope was modified
                     plotWaveForm();
                 }
             }
@@ -282,7 +269,6 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
         }
         else if( event->type() == QEvent::MouseButtonPress ) {
 
-            // Set the marker position to position clicked
             QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
 
             setPosition(mouse_event->x());
@@ -300,49 +286,44 @@ bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
     int start_scale_dist_from_border, end_scale_dist_from_border;
     int plot_width_px;
 
-    // Current scope size in millisecond
     scale_size_ms = mMaxPlotTimeMs - mMinPlotTimeMs;
 
-    // If zoom in/out isn't ever at min/max possible, compute the new scope size in millisecond.
-    if ( step > 0 ) { // Zoom out
-        if ( ( scale_size_ms == (quint32)MAX_TIME_SCALE_MS )  ||
-             (scale_size_ms == (quint32)mTimeVectorMs.last() ) ) {
+    if ( step > 0 ) {
+        if ( ( scale_size_ms == (quint32)( ( qreal)MAX_TIME_SCALE_MS * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) ) ) ||
+             (scale_size_ms == (quint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) ) {
             return false;
         }
         new_scale_size_ms = scale_size_ms * (step * ZOOM_FACTOR);
     }
-    else if ( step < 0 ) { // Zoom in
-        if ( scale_size_ms == (quint32)MIN_TIME_SCALE_MS ) {
+    else if ( step < 0 ) {
+        if ( scale_size_ms == (quint32)( (qreal)MIN_TIME_SCALE_MS * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) ) ) {
             return false;
         }
         new_scale_size_ms = (quint32)( (qreal)scale_size_ms / (qreal)( qAbs(step) * ZOOM_FACTOR) );
     }
 
-    // Bounded by the min/max(or video duration) defined
-    new_scale_size_ms = qBound( (quint32)MIN_TIME_SCALE_MS, new_scale_size_ms, (quint32)MAX_TIME_SCALE_MS );
-
     ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->getBorderDistHint(start_scale_dist_from_border, end_scale_dist_from_border);
 
-    // Calculate the mouse position relative to the horizontale scale
     xPos = xPos - start_scale_dist_from_border - ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->x();
     if ( xPos < 0 ) {
         xPos = 0;
     }
 
-    // Calculate plot surface width in pixels
     plot_width_px = ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->size().width() - start_scale_dist_from_border - end_scale_dist_from_border;
 
-    // Convert mouse position in pixel to a position in millisecond
     x_pos_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
-    // Compute lower and higher values of the scope
+    new_scale_size_ms = qBound((quint32)( (qreal)MIN_TIME_SCALE_MS * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) ),
+                               new_scale_size_ms,
+                               (quint32)( (qreal)MAX_TIME_SCALE_MS * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) ) );
+
     mMinPlotTimeMs = x_pos_ms - (qint32)( (qreal)( x_pos_ms - mMinPlotTimeMs ) * ( (qreal)new_scale_size_ms / (qreal)scale_size_ms ) );
     if ( mMinPlotTimeMs < 0 ) {
         mMinPlotTimeMs = 0;
     }
     mMaxPlotTimeMs = mMinPlotTimeMs + new_scale_size_ms;
-    if ( mMaxPlotTimeMs >  mMediaDurationMs ) {
-        mMaxPlotTimeMs = mMediaDurationMs;
+    if ( mMaxPlotTimeMs >  (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) {
+        mMaxPlotTimeMs = (qint32)mTimeVectorMs[mTimeVectorMs.size() - 1];
     }
     return true;
 }
@@ -352,13 +333,9 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
     quint32 scale_size_ms;
     qint32 time_shift_ms;
 
-    // Current scope size in millisecond
     scale_size_ms = mMaxPlotTimeMs - mMinPlotTimeMs;
-
-    // Compute scope shift in millisecond
     time_shift_ms = (qint32)( (qreal)scale_size_ms * (qreal)TIME_SHIFT_FACTOR * (qreal)( qAbs(step) ) );
 
-    // Right shift
     if ( (step > 0) && ( mMinPlotTimeMs != 0 ) ) {
 
         mMinPlotTimeMs -= time_shift_ms;
@@ -368,14 +345,14 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
         }
 
         mMaxPlotTimeMs = mMinPlotTimeMs + scale_size_ms;
-    } // Left shift
+    }
     else if ( (step < 0) &&
-              (mMaxPlotTimeMs != mMediaDurationMs ) ) {
+              (mMaxPlotTimeMs != (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) ) {
 
         mMaxPlotTimeMs += time_shift_ms;
 
-        if( mMaxPlotTimeMs > mMediaDurationMs ) {
-            mMaxPlotTimeMs = mMediaDurationMs;
+        if( mMaxPlotTimeMs > (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) {
+            mMaxPlotTimeMs = (qint32)mTimeVectorMs[mTimeVectorMs.size() - 1];
         }
 
         mMinPlotTimeMs = mMaxPlotTimeMs - scale_size_ms;
@@ -386,56 +363,51 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
     return true;
 }
 
-// Compute new position in fonction of mouse click position
 void MyWaveForm::setPosition(int xPos) {
 
     qint32 scale_size_ms;
+    qint32 x_pos_ms;
     qint32 position_ms;
     int start_scale_dist_from_border, end_scale_dist_from_border;
     int plot_width_px;
 
     ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->getBorderDistHint(start_scale_dist_from_border, end_scale_dist_from_border);
 
-    // Calculate the mouse position relative to the horizontale scale
     xPos = xPos - start_scale_dist_from_border - ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->x();
     if ( xPos < 0 ) {
         xPos = 0;
     }
-    // Calculate plot surface width in pixels
     plot_width_px = ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->size().width() - start_scale_dist_from_border - end_scale_dist_from_border;
-    // Current scope size in millisecond
+    //int plot_width = ui->waveFormPlot->canvas()->size().width();
     scale_size_ms = mMaxPlotTimeMs - mMinPlotTimeMs;
-    // Convert mouse position in pixel to a position in millisecond
-    position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
+    x_pos_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
+
+    position_ms = (qint32)mTimeVectorMs[x_pos_ms];
 
     emit positionChanged(position_ms);
 }
 
-// Draw the marker in function of the player current position
 void MyWaveForm::updatePostionMarker(qint64 playerPositionMs) {
 
     qint32 scale_size_ms;
 
-    if ( playerPositionMs > mMediaDurationMs ) {
+    if ( playerPositionMs > (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) {
         return;
     }
 
-    // Shift the scope when the marker arrive at end of viewed scope
     if ( ( playerPositionMs > mMaxPlotTimeMs ) || ( playerPositionMs < mMinPlotTimeMs ) ) {
 
         scale_size_ms = mMaxPlotTimeMs - mMinPlotTimeMs;
-        mMinPlotTimeMs =  (qint32)playerPositionMs;
+        mMinPlotTimeMs =  (qint32)( (qreal)playerPositionMs * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) );
         mMaxPlotTimeMs = mMinPlotTimeMs + scale_size_ms;
 
-        // Limit the time shift at end of media
-        if ( mMaxPlotTimeMs > mMediaDurationMs ) {
-            mMaxPlotTimeMs = mMediaDurationMs;
+        if ( mMaxPlotTimeMs > (qint32)( mTimeVectorMs[mTimeVectorMs.size() - 1] ) ) {
+            mMaxPlotTimeMs = (qint32)mTimeVectorMs[mTimeVectorMs.size() - 1];
             mMinPlotTimeMs = mMaxPlotTimeMs - scale_size_ms;
         }
-        // Replot the wave-form
+
         plotWaveForm();
     }
-    // Replot the marker
     mpPositionMarker->setXValue((double)playerPositionMs);
     ui->waveFormPlot->replot();
 }
