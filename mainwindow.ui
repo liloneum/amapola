@@ -93,7 +93,7 @@
        <bool>true</bool>
       </attribute>
       <attribute name="verticalHeaderVisible">
-       <bool>true</bool>
+       <bool>false</bool>
       </attribute>
       <attribute name="verticalHeaderDefaultSectionSize">
        <number>42</number>
@@ -323,6 +323,7 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionImport_Subtitles"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -345,6 +346,11 @@
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionImport_Subtitles">
+   <property name="text">
+    <string>Import Subtitles</string>
    </property>
   </action>
  </widget>

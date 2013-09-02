@@ -52,17 +52,40 @@ private slots:
 
     
 private:
-    QMediaPlayer* mpPlayer;
+    // Qt designer ui reference
     Ui::MyVideoPlayer *ui;
+
+    // Media player object
+    QMediaPlayer* mpPlayer;
+
+    // Graphics scene to display video item
     QGraphicsScene* mpVideoScene;
+
+    // Graphics item to draw video
     QGraphicsVideoItem* mpVideoItem;
+
+    // Time object which contain the current time with "hh:mm:ss.zzz" format
     QTime* mpCurrentTimeHMS;
+
+    // Time object which contain the video duration time with "hh:mm:ss.zzz" format
     QTime* mpDurationTimeHMS;
+
+    // Graphics scene to display time item
     QGraphicsScene* mpTimeGraphicsScene;
+
+    // Graphics item to draw time
     QGraphicsTextItem* mpTimeTextItem;
+
+    // Maximum range of position slider
     qint32 mTimeSliderMaxRange;
+
+    // Player position changed notify interval
     qint16 mPlayerPositionNotifyIntervalMs;
+
+    // Flag to check if the slider was moved by user
     bool mTimeSliderPositionChangedByGui;
+
+    // Video duration time in millisecond
     qint64 mVideoDuration;
 };
 

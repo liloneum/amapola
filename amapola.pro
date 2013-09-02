@@ -11,13 +11,19 @@ SOURCES += main.cpp\
     myvideoplayer.cpp \
     mywaveform.cpp \
     mytextedit.cpp \
-    mysubtitlestable.cpp
+    mysubtitlestable.cpp \
+    myfilereader.cpp \
+    SubtitlesParsers/SubRip/subripparser.cpp \
+    mysubtitles.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
     mywaveform.h \
     mytextedit.h \
-    mysubtitlestable.h
+    mysubtitlestable.h \
+    myfilereader.h \
+    SubtitlesParsers/SubRip/subripparser.h \
+    mysubtitles.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \

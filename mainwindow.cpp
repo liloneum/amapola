@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "myfilereader.h"
+#include "SubtitlesParsers/SubRip/subripparser.h"
+#include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -60,7 +63,7 @@ void MainWindow::on_actionOpen_triggered()
 
         ui->waveForm->openFile(wf_file_name, video_file_name);
 
-        ui->subTable->initStTable();
+        ui->subTable->initStTable(0);
 
     }
 }
@@ -102,4 +105,19 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 void MainWindow::on_actionQuit_triggered()
 {
     close();
+}
+
+void MainWindow::on_actionImport_Subtitles_triggered()
+{
+    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath());
+    MyFileReader file_reader(file_name,"UTF-8");
+    SubRipParser* parser = new SubRipParser();
+    QList<MySubtitles> subtitles_list = parser->open(file_reader);
+
+    if ( !subtitles_list.isEmpty() ) {
+
+        ui->subTable->loadSubtitles(subtitles_list);
+    }
+
+
 }

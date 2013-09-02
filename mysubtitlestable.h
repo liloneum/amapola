@@ -2,6 +2,7 @@
 #define MYSUBTITLESTABLE_H
 
 #include <QTableWidget>
+#include "mysubtitles.h"
 
 class MySubtitlesTable : public QTableWidget
 {
@@ -17,7 +18,8 @@ signals:
 
 public slots:
     void updateStTable(QString stText);
-    void initStTable();
+    void initStTable(qint32 numberOfRow);
+    void loadSubtitles(QList<MySubtitles> subtitlesList);
 
 private slots:
     void updateSelectedItem();
@@ -27,10 +29,19 @@ private slots:
     bool updateStTime(QTableWidgetItem* time_item);
 
 private:
+    // Lookup table to retrieive faster a subtitle number in function of time in millisecond
     QVector<qint32> mPositionMsToStIndex;
+
+    // Position time of the video in millisecond
     qint64 mVideoPositionMs;
+
+    // Previous subtitle displayed index.
     qint32 mPreviousIndex;
+
+    // Total number of subtitles
     qint32 mStCount;
+
+    bool mSubLoadding;
 };
 
 #endif // MYSUBTITLESTABLE_H

@@ -27,6 +27,8 @@ private slots:
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
 
+    void on_actionImport_Subtitles_triggered();
+
 private:
     Ui::MainWindow* ui;
 };
