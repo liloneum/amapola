@@ -80,7 +80,8 @@ void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
 
 QString MyVideoPlayer::openFile() {
 
-    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
+    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath() +"/Videos",
+                                                     tr("Video Files (*.mp4 *.wmv *.avi)"));
 
     if ( !file_name.isEmpty() ) {
         mpPlayer->setMedia(QUrl::fromLocalFile(file_name));

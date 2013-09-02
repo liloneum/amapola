@@ -1,8 +1,10 @@
-#include "dcsub.h"
+#include "dcsubparser.h"
 #include <QXmlSimpleReader>
 #include <QDomDocument>
 #include <QMessageBox>
+#include <QUuid>
 #include <mainwindow.h>
+#include "myattributesconverter.h"
 
 #define FONT_ID_DEFAULT_VALUE ""
 #define FONT_COLOR_DEFAULT_VALUE "FFFFFFFF"
@@ -20,7 +22,7 @@
 #define TEXT_VPOSITION_DEFAULT_VALUE "0"
 
 
-DcSub::DcSub() {
+DcSubParser::DcSubParser() {
 
     mNewSubtitle.clear();
     mSubtitlesList.clear();
@@ -41,7 +43,7 @@ DcSub::DcSub() {
 }
 
 
-void DcSub::parseTree(QDomElement xmlElement) {
+void DcSubParser::parseTree(QDomElement xmlElement) {
 
     bool font_inside_text = false;
     bool font_inside_whole_text = false;
@@ -66,18 +68,21 @@ void DcSub::parseTree(QDomElement xmlElement) {
             // TimeIn
             QString start_time = xmlElement.attribute("TimeIn");
 
+            start_time = MyAttributesConverter::toTimeHMSms(start_time);
+
             if ( !start_time.isEmpty() ) {
 
-                start_time.replace(start_time.lastIndexOf(":"), 1, ".");
                 mNewSubtitle.setStartTime(start_time);
             }
+
 
             //TimeOut
             QString end_time = xmlElement.attribute("TimeOut");
 
+            end_time = MyAttributesConverter::toTimeHMSms(end_time);
+
             if ( !end_time.isEmpty() ) {
 
-                end_time.replace(end_time.lastIndexOf(":"), 1, ".");
                 mNewSubtitle.setEndTime(end_time);
             }
         }
@@ -188,10 +193,9 @@ void DcSub::parseTree(QDomElement xmlElement) {
 }
 
 
-QList<MySubtitles> DcSub::open(QString fileName) {
+QList<MySubtitles> DcSubParser::open(MyFileReader file) {
 
-    QFile file_read(fileName);
-    //QList<MySubtitles> subtitles_list;
+    QFile file_read( file.getFileName() );
 
     if ( !file_read.open(QIODevice::ReadOnly) ) {
         // QMessageBox::warning(this, "loading", "Failed to load file.");
@@ -215,6 +219,8 @@ QList<MySubtitles> DcSub::open(QString fileName) {
 
     QDomElement xml_load_font = xml_root.firstChildElement("LoadFont");
     mFontList.first().setFontId( xml_load_font.attribute("Id") );
+    //mFontList.first().setFontSize( QString::number( MyAttributesConverter::fontHeightToSize(mFontList.first().fontId(), FONT_SIZE_DEFAULT_VALUE) ) );
+    mFontList.first().setFontSize(FONT_SIZE_DEFAULT_VALUE);
 
     QDomElement xml_element = xml_load_font.nextSibling().toElement();
 
@@ -228,8 +234,175 @@ QList<MySubtitles> DcSub::open(QString fileName) {
     return mSubtitlesList;
 }
 
+void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
-void DcSub::changeFont(QDomElement xmlElement) {
+    QDomDocument doc("dcsub");
+
+    QDomProcessingInstruction xml_version = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
+    doc.appendChild(xml_version);
+
+    // Create the root node "DCSubtitle"
+    QDomElement xml_root = doc.createElement("DCSubtitle");
+    xml_root.setAttribute("Version", "1.1");
+    doc.appendChild(xml_root);
+
+    // Generate an UUID an create the node "SubtitleID"
+    QDomElement xml_SubId = doc.createElement("SubtitleID");
+    xml_root.appendChild( xml_SubId );
+    QDomText subid_text = doc.createTextNode( QUuid::createUuid().toString().remove('{').remove('}') );
+    xml_SubId.appendChild(subid_text);
+
+    // Add "MovieTitle" node
+    QDomElement xml_MovTitl = doc.createElement("MovieTitle");
+    xml_root.appendChild(xml_MovTitl);
+    QDomText movtitl_text = doc.createTextNode("the movie title");
+    xml_MovTitl.appendChild(movtitl_text);
+
+    // Add "ReelNumber" node
+    QDomElement xml_RealNum = doc.createElement("ReelNumber");
+    xml_root.appendChild(xml_RealNum);
+    QDomText realnum_text = doc.createTextNode("1");
+    xml_RealNum.appendChild(realnum_text);
+
+    // Add "Language" node
+    QDomElement xml_Lang = doc.createElement("Language");
+    xml_root.appendChild(xml_Lang);
+    QDomText lang_text = doc.createTextNode("fr");
+    xml_Lang.appendChild(lang_text);
+
+    // Add "LoadFont" node
+    QDomElement xml_LoadFont = doc.createElement("LoadFont");
+    QString font_id = subtitlesList.first().text().first().Font().fontId();
+    mFontList.first().setFontId(font_id);
+    xml_LoadFont.setAttribute("Id", font_id);
+    xml_LoadFont.setAttribute("URI", (font_id +".ttf"));
+    xml_root.appendChild(xml_LoadFont);
+
+    TextFont text_font0 = subtitlesList.first().text().first().Font();
+    QDomElement xml_font0 = doc.createElement("Font");
+    this->writeFont(&xml_font0, mFontList.first(), text_font0);
+    xml_root.appendChild(xml_font0);
+
+    for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
+
+        MySubtitles current_subtitle = subtitlesList.at(i);
+
+        QDomElement xml_Subtitle = doc.createElement("Subtitle");
+        xml_Subtitle.setAttribute("SpotNumber", QString::number(i+1));
+        xml_Subtitle.setAttribute("FadeUpTime", "TO DO");
+        xml_Subtitle.setAttribute("FadeDownTime", "TO DO");
+        xml_Subtitle.setAttribute("TimeIn", MyAttributesConverter::toTimeHMSticks( current_subtitle.startTime() ));
+        xml_Subtitle.setAttribute("TimeOut", MyAttributesConverter::toTimeHMSticks( current_subtitle.endTime() ));
+        xml_font0.appendChild(xml_Subtitle);
+
+        QList<TextLine> text_list = current_subtitle.text();
+
+        for ( qint32 j = 0; j < text_list.size(); j++ ) {
+
+            TextLine text_line = text_list.at(j);
+            TextFont text_font = text_line.Font();
+            QDomElement xml_newfont = doc.createElement("Font");
+            this->writeFont(&xml_newfont, text_font0, text_font);
+
+            QDomElement xml_current_element;
+
+            if ( xml_newfont.hasAttributes() ) {
+                xml_Subtitle.appendChild(xml_newfont);
+                xml_current_element = xml_newfont;
+            }
+            else {
+                xml_current_element = xml_Subtitle;
+            }
+
+            QDomElement xml_text = doc.createElement("Text");
+
+            if ( text_line.textDirection() == "") {
+                xml_text.setAttribute("Direction", TEXT_DIRECTION_DEFAULT_VALUE);
+            }
+            else {
+                xml_text.setAttribute("Direction", text_line.textDirection());
+            }
+
+            if ( text_line.textHAlign() == "") {
+                xml_text.setAttribute("HAlign", TEXT_HALIGN_DEFAULT_VALUE);
+            }
+            else {
+                xml_text.setAttribute("HAlign", text_line.textHAlign());
+            }
+
+            if ( text_line.textHPosition() == "") {
+                xml_text.setAttribute("HPosition", TEXT_HPOSITION_DEFAULT_VALUE);
+            }
+            else {
+                xml_text.setAttribute("HPosition", text_line.textHPosition());
+            }
+
+            if ( text_line.textVAlign() == "") {
+                xml_text.setAttribute("VAlign", TEXT_VALIGN_DEFAULT_VALUE);
+            }
+            else {
+                xml_text.setAttribute("VAlign", text_line.textVAlign());
+            }
+
+            if ( text_line.textVPosition() == "") {
+                xml_text.setAttribute("VPosition", TEXT_VPOSITION_DEFAULT_VALUE);
+            }
+            else {
+                xml_text.setAttribute("VPosition", text_line.textVPosition());
+            }
+
+            xml_current_element.appendChild(xml_text);
+
+            QDomText text_text = doc.createTextNode(text_line.Line());
+            xml_text.appendChild(text_text);
+        }
+    }
+
+    QString xml = doc.toString();
+    file.write( xml );
+}
+
+void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont) {
+
+    if ( previousFont.findDiff(newFont) ) {
+
+        if ( newFont.fontId() != "" ) {
+            xmlElement->setAttribute("Id", newFont.fontId());
+        }
+
+        if ( newFont.fontColor() != "" ) {
+            xmlElement->setAttribute("Color", newFont.fontColor());
+        }
+
+        if ( newFont.fontEffect() != "" ) {
+            xmlElement->setAttribute("Effect", newFont.fontEffect());
+        }
+
+        if ( newFont.fontEffectColor() != "" ) {
+            xmlElement->setAttribute("EffectColor", newFont.fontEffectColor());
+        }
+
+        if ( newFont.fontItalic() != "" ) {
+            xmlElement->setAttribute("Italic", newFont.fontItalic());
+        }
+
+        if ( newFont.fontUnderlined() != "" ) {
+            xmlElement->setAttribute("Underlined", newFont.fontUnderlined());
+        }
+
+        if ( newFont.fontScript() != "" ) {
+            xmlElement->setAttribute("Script", newFont.fontScript());
+        }
+
+        if ( newFont.fontSize() != "" ) {
+            //QString new_font_size = QString::number( MyAttributesConverter::fontSizeToHeight(previousFont.fontId(), newFont.fontSize()) );
+            QString new_font_size = newFont.fontSize();
+            xmlElement->setAttribute("Size", new_font_size);
+        }
+    }
+}
+
+void DcSubParser::changeFont(QDomElement xmlElement) {
 
     if ( ( xmlElement.isNull() ) || ( xmlElement.tagName() != "Font") ) {
         return;
@@ -271,13 +444,17 @@ void DcSub::changeFont(QDomElement xmlElement) {
     }
 
     // attribute Size
-    //mSize = xmlElement.attribute("Size").toInt();
+    QString font_size;
     if ( !xmlElement.attribute("Size").isNull() ) {
-        new_font.setFontSize( xmlElement.attribute("Size") );
+        //font_size = QString::number( MyAttributesConverter::fontHeightToSize(new_font.fontId(), xmlElement.attribute("Size")) );
+        font_size = xmlElement.attribute("Size");
     }
     else {
-        new_font.setFontSize( mFontList.last().fontSize() );
+        font_size = mFontList.last().fontSize();
     }
+
+    new_font.setFontSize( font_size );
+
 
     // attribute AspectAdjust
 

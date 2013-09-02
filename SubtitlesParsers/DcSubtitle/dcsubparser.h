@@ -1,9 +1,10 @@
-#ifndef DCSUB_H
-#define DCSUB_H
+#ifndef DCSUBPARSER_H
+#define DCSUBPARSER_H
 
 #include "myfilereader.h"
 #include "myfilewriter.h"
 #include "mysubtitles.h"
+#include "mysubtitlefileparser.h"
 #include <QFile>
 #include <QDomElement>
 #include <QString>
@@ -11,16 +12,17 @@
 #include <QColor>
 #include <QList>
 
-class DcSub
+class DcSubParser : public MySubtitleFileParser
 {
 public:
-    DcSub();
-    QList<MySubtitles> open(QString fileName);
+    DcSubParser();
+    QList<MySubtitles> open(MyFileReader file);
     void save(MyFileWriter & file, QList<MySubtitles> subtitlesList);
 
 private:
     void changeFont(QDomElement xmlElement);
     void parseTree(QDomElement xmlElement);
+    void writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont);
 
     QList<TextFont> mFontList;
     TextLine mNewText;
@@ -46,4 +48,4 @@ private:
     QString mScript;
 };
 
-#endif // DCSUB_H
+#endif // DCSUBPARSER_H

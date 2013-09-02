@@ -34,16 +34,19 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
             if ( !( lines[i + 1].isEmpty() ) ) {
 
-                QString text;
-                text = lines[i + 1];
+                TextLine text_line;
+                TextFont text_font;
+
+                text_line.setLine(lines[i + 1]);
+
+                new_subtitle.setText(text_line, text_font);
 
                 if ( !( lines[i + 2].isEmpty() ) ) {
 
-                    text += "\n";
-                    text += lines[i + 2];
-                }
+                    text_line.setLine(lines[i + 2]);
 
-//                new_subtitle.setText(text);
+                    new_subtitle.setText(text_line, text_font);
+                }
             }
 
             subtitles_list.append(new_subtitle);
@@ -63,9 +66,24 @@ void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
         QString time(subtitlesList[i].startTime() + " --> " + subtitlesList[i].endTime());
         time.replace(".", ",");
 
+        QString text("");
+
+        for ( qint32 j = 0; j < subtitlesList[i].text().size(); j++ ) {
+
+            TextLine text_line = subtitlesList[i].text().at(j);
+
+            if ( text.isEmpty() ) {
+                text = text_line.Line();
+            }
+            else {
+                text += "\n";
+                text += text_line.Line();
+            }
+        }
+
         QString text_to_write( sub_num + "\n"
                                + time + "\n"
-//                               + subtitlesList[i].text() + "\n"
+                               + text + "\n"
                                + "\n");
 
         file.write(text_to_write);

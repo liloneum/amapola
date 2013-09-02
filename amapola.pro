@@ -17,9 +17,10 @@ SOURCES += main.cpp\
     mysubtitles.cpp \
     myfilewriter.cpp \
     mysettings.cpp \
-    SubtitlesParsers/DcSubtitle/dcsub.cpp \
     mytextedit2.cpp \
-    myattributesconverter.cpp
+    myattributesconverter.cpp \
+    SubtitlesParsers/DcSubtitle/dcsubparser.cpp \
+    mysubtitlefileparser.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -31,9 +32,10 @@ HEADERS  += mainwindow.h \
     mysubtitles.h \
     myfilewriter.h \
     mysettings.h \
-    SubtitlesParsers/DcSubtitle/dcsub.h \
     mytextedit2.h \
-    myattributesconverter.h
+    myattributesconverter.h \
+    SubtitlesParsers/DcSubtitle/dcsubparser.h \
+    mysubtitlefileparser.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \

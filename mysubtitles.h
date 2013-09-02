@@ -28,6 +28,8 @@ public:
     QString fontUnderlined();
     QString fontScript();
 
+    bool findDiff(TextFont & font);
+
 private:
     // attribute Id
     QString mFontId;

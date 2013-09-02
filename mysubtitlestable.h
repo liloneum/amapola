@@ -17,12 +17,13 @@ signals:
     void newTextToDisplay(MySubtitles);
 
 public slots:
-    void updateStTable(MySubtitles newSubtitle);
+    void insertNewSub(MySubtitles newSubtitle);
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
     QList<MySubtitles> saveSubtitles();
     bool isNewEntry();
     void updateText(QList<TextLine> textLines);
+    void updateDatas(MySubtitles subtitle);
 
 private slots:
     void updateSelectedItem();

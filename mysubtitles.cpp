@@ -248,3 +248,49 @@ QString TextFont::fontScript() {
     return mScript;
 }
 
+bool TextFont::findDiff(TextFont & font) {
+
+    bool is_different = false;
+
+    if ( this->fontId() == font.fontId() ) {
+        font.setFontId("");
+    }
+    else is_different = true;
+
+    if ( this->fontColor() == font.fontColor() ) {
+        font.setFontColor("");
+    }
+    else is_different = true;
+
+    if ( this->fontEffect() == font.fontEffect() ) {
+        font.setFontEffect("");
+    }
+    else is_different = true;
+
+    if ( this->fontEffectColor() == font.fontEffectColor() ) {
+        font.setFontEffectColor("");
+    }
+    else is_different = true;
+
+    if ( this->fontItalic() == font.fontItalic() ) {
+        font.setFontItalic("");
+    }
+    else is_different = true;
+
+    if ( this->fontUnderlined() == font.fontUnderlined() ) {
+        font.setFontUnderlined("");
+    }
+    else is_different = true;
+
+    if ( this->fontScript() == font.fontScript() ) {
+        font.setFontScript("");
+    }
+    else is_different = true;
+
+    if ( this->fontSize() == font.fontSize() ) {
+        font.setFontSize("");
+    }
+    else is_different = true;
+
+    return is_different;
+}

@@ -20,17 +20,25 @@ public:
 
 signals:
     void cursorPositionChanged();
+    void subDatasChanged(MySubtitles);
+    void textLineFocusChanged(TextFont);
 
 public slots :
     void setText(MySubtitles subtitle);
     QList<TextLine> text();
     MySubtitles subtitleData();
+    void updateTextPosition(QList<TextLine> textLines);
+    void updateTextFont(TextFont textFont);
 
 private slots:
      bool eventFilter(QObject* watched, QEvent* event);
      void resizeEvent(QResizeEvent* event);
      void newCursorPosition();
-     void setTextPosition(QTextEdit* textEdit, TextLine textLine);
+     void setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize widgetSize);
+     void textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize);
+     void setTextFont(QTextEdit* textEdit, TextFont textFont, QSize widgetSize);
+     void textFont(QTextEdit* textEdit, TextFont &textFont, QSize widgetSize);
+
      void defaultSub();
     
 private:
@@ -38,6 +46,9 @@ private:
     QColor mColor;
     bool mIsSettingLines;
     MySubtitles mDefaultSub;
+    QSize mPreviousWidgetSize;
+    qint32 mPxPerInch;
+    QTextEdit* mpLastFocused;
 };
 
 #endif // MYTEXTEDIT2_H

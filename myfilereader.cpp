@@ -8,6 +8,8 @@ MyFileReader::MyFileReader(const QString fileName, QString textCodec)
     //mLines.resize(1);
     //mLines.fill("");
 
+    mFileName = fileName;
+
     mNumberOfLines = 0;
 
     if(!readFile(fileName, textCodec)) {
@@ -42,4 +44,8 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
 QVector<QString> MyFileReader::lines() {
 
     return mLines;
+}
+
+QString MyFileReader::getFileName() {
+    return mFileName;
 }

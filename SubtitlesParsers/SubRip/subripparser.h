@@ -1,11 +1,12 @@
 #ifndef SUBRIPPARSER_H
 #define SUBRIPPARSER_H
 
+#include "mysubtitlefileparser.h"
 #include "myfilereader.h"
 #include "myfilewriter.h"
 #include "mysubtitles.h"
 
-class SubRipParser
+class SubRipParser : public MySubtitleFileParser
 {
 public:
     SubRipParser();
