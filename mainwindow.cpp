@@ -8,18 +8,30 @@
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QString>
-
+#include <QKeyEvent>
+#include <QMessageBox>
 
 #define TEXT_HALIGN_DEFAULT_VALUE "center"
 #define TEXT_HPOSITION_DEFAULT_VALUE 0.0
 #define TEXT_VALIGN_DEFAULT_VALUE "bottom"
 #define TEXT_VPOSITION_DEFAULT_VALUE 8.0
 
+#define SEC_TO_MSEC 1000
+#define FRAME_PER_SEC 25
+#define SUB_MIN_INTERVAL_FRAME 5
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    for ( qint32 i = 5; i < ui->subTable->columnCount(); i++ ) {
+        ui->subTable->setColumnHidden(i, true);
+    }
+
+    this->installEventFilter(this);
 
     mTextPosChangedBySoft = false;
     mTextPosChangedByUser = false;
@@ -35,8 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->subTable, SLOT(updateStDisplay(qint64)));
     connect(ui->stEditDisplay2, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
     connect(ui->stEditDisplay2, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
-    connect(ui->stEditDisplay2, SIGNAL(subDatasChanged(MySubtitles)), this, SLOT(updatePosToolBox(MySubtitles)));
-    connect(ui->stEditDisplay2, SIGNAL(textLineFocusChanged(TextFont)), this, SLOT(updateFontToolBox(TextFont)));
+    connect(ui->stEditDisplay2, SIGNAL(textLineFocusChanged(TextFont, TextLine)), this, SLOT(updateToolBox(TextFont, TextLine)));
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint32)), this, SLOT(updateVideoPosition(qint32)));
     connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
 
@@ -47,13 +58,76 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
+
+    if ( event->type() == QEvent::KeyPress ) {
+
+        QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
+
+        if ( key_event->key() == Qt::Key_F1 ) {
+
+            if ( ui->subTable->setStartTime( ui->videoPlayer->playerPosition()) == false ) {
+                QString error_msg = ui->subTable->errorMsg();
+                QMessageBox::warning(this, "Set start time", error_msg);
+            }
+        }
+        else if ( key_event->key() == Qt::Key_F2 ) {
+
+            if ( ui->subTable->setEndTime( ui->videoPlayer->playerPosition()) == false ) {
+                QString error_msg = ui->subTable->errorMsg();
+                QMessageBox::warning(this, "Set end time", error_msg);
+            }
+        }
+        else if ( key_event->key() == Qt::Key_F3 ) {
+
+            qint64 end_time_ms = ui->videoPlayer->playerPosition();
+
+            if ( ui->subTable->setEndTime(end_time_ms) == false ) {
+                QString error_msg = ui->subTable->errorMsg();
+                QMessageBox::warning(this, "Set end time", error_msg);
+            }
+            else {
+
+                qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / (qreal)FRAME_PER_SEC ) * (qreal)SUB_MIN_INTERVAL_FRAME );
+
+                if ( ui->subTable->insertNewSub( ui->stEditDisplay2->getDefaultSub(), start_time_ms  ) == false ) {
+                    QString error_msg = ui->subTable->errorMsg();
+                    QMessageBox::warning(this, "Insert subtitle", error_msg);
+                }
+            }
+        }
+        else if ( key_event->key() == Qt::Key_F4 ) {
+
+            if ( ui->subTable->insertNewSubAfterCurrent( ui->stEditDisplay2->getDefaultSub() ) == false ) {
+                QString error_msg = ui->subTable->errorMsg();
+                QMessageBox::warning(this, "Insert subtitle", error_msg);
+            }
+        }
+        else if ( key_event->key() == Qt::Key_Backspace ) {
+
+            Qt::KeyboardModifiers event_keybord_modifier = key_event->modifiers();
+
+            if ( event_keybord_modifier == Qt::ControlModifier ) {
+
+                ui->subTable->deleteCurrentSub();
+            }
+        }
+    }
+    return QMainWindow::eventFilter(watched, event);
+}
+
 void MainWindow::updateSubTable() {
 
     if ( ui->subTable->isNewEntry() ) {
-        ui->subTable->insertNewSub( ui->stEditDisplay2->subtitleData() );
+        if ( ui->subTable->insertNewSub( ui->stEditDisplay2->subtitleData()) == false ) {
+            QString error_msg = ui->subTable->errorMsg();
+            QMessageBox::warning(this, "Insert subtitle", error_msg);
+            MySubtitles empty_subtitle;
+            updateTextEdit(empty_subtitle);
+        }
     }
     else {
-        ui->subTable->updateText( ui->stEditDisplay2->text() );
+        ui->subTable->updateText( ui->stEditDisplay2->text());
     }
 }
 
@@ -66,7 +140,6 @@ void MainWindow::updateVideoPosition(qint32 positionMs) {
 void MainWindow::updateTextEdit(MySubtitles subtitle) {
 
     ui->stEditDisplay2->setText(subtitle);
-    this->updatePosToolBox(subtitle);
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -209,217 +282,91 @@ void MainWindow::on_settingsButton_clicked()
         break;
     }
 }
+
+void MainWindow::displayErrorMsg(QString errorMsg) {
+
+    QMessageBox::warning(this, "Error", errorMsg);
+}
+
 // ******************************** Tool Box ***************************************************************//
 
-void MainWindow::updatePosToolBox(MySubtitles subtitle) {
+void MainWindow::updateToolBox(TextFont textFont, TextLine textLine) {
+
+    this->updatePosToolBox(textLine);
+
+    this->updateFontToolBox(textFont);
+}
+
+void MainWindow::updatePosToolBox(TextLine textLine) {
 
     if ( mTextPosChangedByUser != true ) {
 
         mTextPosChangedBySoft = true;
 
-        QList<TextLine> TextLines = subtitle.text();
-        TextLine text;
-
-        if ( TextLines.count() == 2 ) {
-
-            if ( ui->lineDownLabel->isEnabled() == false )  {
-                ui->lineDownLabel->setEnabled(true);
-                ui->hAlignDownBox->setEnabled(true);
-                ui->hAlignDownLabel->setEnabled(true);
-                ui->hPosDownSpinBox->setEnabled(true);
-                ui->hPosDownLabel->setEnabled(true);
-                ui->vAlignDownBox->setEnabled(true);
-                ui->vAlignDownLabel->setEnabled(true);
-                ui->vPosDownSpinBox->setEnabled(true);
-                ui->vPosDownLabel->setEnabled(true);
-            }
-
-            if ( ui->lineUpLabel->isEnabled() == false )  {
-                ui->lineUpLabel->setEnabled(true);
-                ui->hAlignUpBox->setEnabled(true);
-                ui->hAlignUpLabel->setEnabled(true);
-                ui->hPosUpSpinBox->setEnabled(true);
-                ui->hPosUpLabel->setEnabled(true);
-                ui->vAlignUpBox->setEnabled(true);
-                ui->vAlignUpLabel->setEnabled(true);
-                ui->vPosUpSpinBox->setEnabled(true);
-                ui->vPosUpLabel->setEnabled(true);
-            }
-
-            text = TextLines.first();
-
-            ui->hAlignUpBox->setCurrentText( text.textHAlign() );
-            ui->hPosUpSpinBox->setValue( text.textHPosition().toDouble() );
-            ui->vAlignUpBox->setCurrentText( text.textVAlign() );
-            ui->vPosUpSpinBox->setValue( text.textVPosition().toDouble() );
-
-            text = TextLines.last();
-
-            ui->hAlignDownBox->setCurrentText( text.textHAlign() );
-            ui->hPosDownSpinBox->setValue( text.textHPosition().toDouble() );
-            ui->vAlignDownBox->setCurrentText(text.textVAlign() );
-            ui->vPosDownSpinBox->setValue( text.textVPosition().toDouble() );
+        if ( ui->lineLabel->isEnabled() == false )  {
+            ui->lineLabel->setEnabled(true);
+            ui->hAlignBox->setEnabled(true);
+            ui->hAlignLabel->setEnabled(true);
+            ui->hPosSpinBox->setEnabled(true);
+            ui->hPosLabel->setEnabled(true);
+            ui->vAlignBox->setEnabled(true);
+            ui->vAlignLabel->setEnabled(true);
+            ui->vPosSpinBox->setEnabled(true);
+            ui->vPosLabel->setEnabled(true);
         }
-        else if ( TextLines.count() == 1 ) {
 
-            if ( ui->lineDownLabel->isEnabled() == false )  {
-                ui->lineDownLabel->setEnabled(true);
-                ui->hAlignDownBox->setEnabled(true);
-                ui->hAlignDownLabel->setEnabled(true);
-                ui->hPosDownSpinBox->setEnabled(true);
-                ui->hPosDownLabel->setEnabled(true);
-                ui->vAlignDownBox->setEnabled(true);
-                ui->vAlignDownLabel->setEnabled(true);
-                ui->vPosDownSpinBox->setEnabled(true);
-                ui->vPosDownLabel->setEnabled(true);
-            }
+        ui->hAlignBox->setCurrentText( textLine.textHAlign() );
+        ui->hPosSpinBox->setValue( textLine.textHPosition().toDouble() );
+        ui->vAlignBox->setCurrentText( textLine.textVAlign() );
+        ui->vPosSpinBox->setValue( textLine.textVPosition().toDouble() );
 
-            if ( ui->lineUpLabel->isEnabled() == true )  {
-                ui->lineUpLabel->setEnabled(false);
-                ui->hAlignUpBox->setEnabled(false);
-                ui->hAlignUpLabel->setEnabled(false);
-                ui->hPosUpSpinBox->setEnabled(false);
-                ui->hPosUpLabel->setEnabled(false);
-                ui->vAlignUpBox->setEnabled(false);
-                ui->vAlignUpLabel->setEnabled(false);
-                ui->vPosUpSpinBox->setEnabled(false);
-                ui->vPosUpLabel->setEnabled(false);
-            }
-
-            text = TextLines.first();
-
-            ui->hAlignDownBox->setCurrentText( text.textHAlign() );
-            ui->hPosDownSpinBox->setValue( text.textHPosition().toDouble() );
-            ui->vAlignDownBox->setCurrentText( text.textVAlign() );
-            ui->vPosDownSpinBox->setValue( text.textVPosition().toDouble() );
-        }
-        else if ( TextLines.count() == 0 ) {
-
-            if ( ui->lineDownLabel->isEnabled() == false )  {
-                ui->lineDownLabel->setEnabled(true);
-                ui->hAlignDownBox->setEnabled(true);
-                ui->hAlignDownLabel->setEnabled(true);
-                ui->hPosDownSpinBox->setEnabled(true);
-                ui->hPosDownLabel->setEnabled(true);
-                ui->vAlignDownBox->setEnabled(true);
-                ui->vAlignDownLabel->setEnabled(true);
-                ui->vPosDownSpinBox->setEnabled(true);
-                ui->vPosDownLabel->setEnabled(true);
-            }
-
-            if ( ui->lineUpLabel->isEnabled() == true )  {
-                ui->lineUpLabel->setEnabled(false);
-                ui->hAlignUpBox->setEnabled(false);
-                ui->hAlignUpLabel->setEnabled(false);
-                ui->hPosUpSpinBox->setEnabled(false);
-                ui->hPosUpLabel->setEnabled(false);
-                ui->vAlignUpBox->setEnabled(false);
-                ui->vAlignUpLabel->setEnabled(false);
-                ui->vPosUpSpinBox->setEnabled(false);
-                ui->vPosUpLabel->setEnabled(false);
-            }
-
-            ui->hAlignDownBox->setCurrentText( TEXT_HALIGN_DEFAULT_VALUE );
-            ui->hPosDownSpinBox->setValue( TEXT_HPOSITION_DEFAULT_VALUE );
-            ui->vAlignDownBox->setCurrentText( TEXT_VALIGN_DEFAULT_VALUE );
-            ui->vPosDownSpinBox->setValue( TEXT_VPOSITION_DEFAULT_VALUE );
-        }
-        mTextPosChangedBySoft = false;
     }
+    mTextPosChangedBySoft = false;
 }
 
 void MainWindow::updateTextPosition() {
 
     mTextPosChangedByUser = true;
 
-    QList<TextLine> text_lines;
     TextLine text_line;
 
-    if ( ui->lineDownLabel->isEnabled() == true )  {
+    text_line.setTextHAlign( ui->hAlignBox->currentText() );
 
-        if ( ui->lineUpLabel->isEnabled() == true )  {
+    QString hPos_str = QString::number(ui->hPosSpinBox->value(), 'f', 1);
+    text_line.setTextHPosition( hPos_str );
 
-            text_line.setTextHAlign( ui->hAlignUpBox->currentText() );
+    text_line.setTextVAlign( ui->vAlignBox->currentText() );
 
-            QString hPos_str = QString::number(ui->hPosUpSpinBox->value(), 'f', 1);
-            text_line.setTextHPosition( hPos_str );
+    QString vPos_str = QString::number(ui->vPosSpinBox->value(), 'f', 1);
+    text_line.setTextVPosition( vPos_str );
 
-            text_line.setTextVAlign( ui->vAlignUpBox->currentText() );
-
-            QString vPos_str = QString::number(ui->vPosUpSpinBox->value(), 'f', 1);
-            text_line.setTextVPosition( vPos_str );
-
-            text_lines.append(text_line);
-        }
-
-        text_line.setTextHAlign( ui->hAlignDownBox->currentText() );
-
-        QString hPos_str = QString::number(ui->hPosDownSpinBox->value(), 'f', 1);
-        text_line.setTextHPosition( hPos_str );
-
-        text_line.setTextVAlign( ui->vAlignDownBox->currentText() );
-
-        QString vPos_str = QString::number(ui->vPosDownSpinBox->value(), 'f', 1);
-        text_line.setTextVPosition( vPos_str );
-
-        text_lines.append(text_line);
-    }
-
-    ui->stEditDisplay2->updateTextPosition(text_lines);
+    ui->stEditDisplay2->updateTextPosition(text_line);
 
     mTextPosChangedByUser = false;
 }
 
-void MainWindow::on_vAlignDownBox_activated(const QString &arg1) {
+void MainWindow::on_vAlignBox_activated(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
     }
 }
 
-void MainWindow::on_vPosDownSpinBox_valueChanged(const QString &arg1) {
+void MainWindow::on_vPosSpinBox_valueChanged(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
     }
 }
 
-void MainWindow::on_hAlignDownBox_activated(const QString &arg1) {
+void MainWindow::on_hAlignBox_activated(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
     }
 }
 
-void MainWindow::on_hPosDownSpinBox_valueChanged(const QString &arg1) {
-
-    if ( mTextPosChangedBySoft == false ) {
-        updateTextPosition();
-    }
-}
-
-void MainWindow::on_vAlignUpBox_activated(const QString &arg1) {
-
-    if ( mTextPosChangedBySoft == false ) {
-        updateTextPosition();
-    }
-}
-
-void MainWindow::on_vPosUpSpinBox_valueChanged(const QString &arg1) {
-
-    if ( mTextPosChangedBySoft == false ) {
-        updateTextPosition();
-    }
-}
-
-void MainWindow::on_hAlignUpBox_activated(const QString &arg1) {
-
-    if ( mTextPosChangedBySoft == false ) {
-        updateTextPosition();
-    }
-}
-
-void MainWindow::on_hPosUpSpinBox_valueChanged(const QString &arg1) {
+void MainWindow::on_hPosSpinBox_valueChanged(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();

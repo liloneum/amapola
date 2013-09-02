@@ -25,8 +25,10 @@ private slots:
     void updateSubTable();
     void updateVideoPosition(qint32 positionMs);
     void updateTextEdit(MySubtitles subtitle);
+    bool eventFilter(QObject* watched, QEvent* event);
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
+    void displayErrorMsg(QString);
 
     void on_actionImport_Subtitles_triggered();
 
@@ -37,30 +39,22 @@ private slots:
 
     //***************************Tool Box ***************************//
 
-    void updatePosToolBox(MySubtitles subtitle);
+    void updateToolBox(TextFont textFont, TextLine textLine);
+
+    void updatePosToolBox(TextLine textLine);
     void updateTextPosition();
 
+    void on_vPosSpinBox_valueChanged(const QString &arg1);
 
-    void on_vPosDownSpinBox_valueChanged(const QString &arg1);
+    void on_hPosSpinBox_valueChanged(const QString &arg1);
 
-    void on_hPosDownSpinBox_valueChanged(const QString &arg1);
+    void on_vAlignBox_activated(const QString &arg1);
 
-    void on_vPosUpSpinBox_valueChanged(const QString &arg1);
-
-    void on_vAlignDownBox_activated(const QString &arg1);
-
-    void on_hAlignDownBox_activated(const QString &arg1);
-
-    void on_vAlignUpBox_activated(const QString &arg1);
-
-    void on_hAlignUpBox_activated(const QString &arg1);
-
-    void on_hPosUpSpinBox_valueChanged(const QString &arg1);
+    void on_hAlignBox_activated(const QString &arg1);
 
 
     void updateFontToolBox(TextFont textFont);
     void updateTextFont(bool customColorClicked);
-
 
     void on_fontSizeSpinBox_valueChanged(const QString &arg1);
 

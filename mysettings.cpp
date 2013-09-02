@@ -12,3 +12,4 @@ MySettings::~MySettings()
 {
     delete ui;
 }
+

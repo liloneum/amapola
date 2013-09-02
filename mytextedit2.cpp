@@ -9,11 +9,6 @@
 #define REF_HEIGHT_INCH 11
 #define PT_PER_INCH 72
 
-#define POS1_X 30
-#define POS1_Y 180
-#define POS2_X 30
-#define POS2_Y 200
-
 #define LINE_SAPACING 2
 
 #define FONT_ID_DEFAULT_VALUE "Arial"
@@ -29,13 +24,13 @@
 #define TEXT1_HALIGN_DEFAULT_VALUE "center"
 #define TEXT1_HPOSITION_DEFAULT_VALUE "0"
 #define TEXT1_VALIGN_DEFAULT_VALUE "bottom"
-#define TEXT1_VPOSITION_DEFAULT_VALUE "14"
+#define TEXT1_VPOSITION_DEFAULT_VALUE "8"
 
-#define TEXT2_DIRECTION_DEFAULT_VALUE "horizontal"
-#define TEXT2_HALIGN_DEFAULT_VALUE "center"
-#define TEXT2_HPOSITION_DEFAULT_VALUE "0"
-#define TEXT2_VALIGN_DEFAULT_VALUE "bottom"
-#define TEXT2_VPOSITION_DEFAULT_VALUE "8"
+//#define TEXT2_DIRECTION_DEFAULT_VALUE "horizontal"
+//#define TEXT2_HALIGN_DEFAULT_VALUE "center"
+//#define TEXT2_HPOSITION_DEFAULT_VALUE "0"
+//#define TEXT2_VALIGN_DEFAULT_VALUE "bottom"
+//#define TEXT2_VPOSITION_DEFAULT_VALUE "8"
 
 
 MyTextEdit2::MyTextEdit2(QWidget *parent) :
@@ -47,8 +42,9 @@ MyTextEdit2::MyTextEdit2(QWidget *parent) :
     QDesktopWidget *mydesk = QApplication::desktop();
     mPxPerInch = mydesk->logicalDpiY();
 
-//    ui->textLine1->setStyleSheet("background: transparent");
-//    ui->textLine2->setStyleSheet("background: transparent");
+    ui->textLine1->setStyleSheet("background: transparent; border: 1px solid red;");
+    ui->textLine2->setStyleSheet("background: transparent; border: 1px solid blue;");
+
     this->defaultSub();
 
     // Add an event filter on the subtitles textedit object
@@ -57,9 +53,11 @@ MyTextEdit2::MyTextEdit2(QWidget *parent) :
 
     ui->textLine2->setEnabled(false);
     ui->textLine2->hide();
-    mColor = ui->textLine1->textColor();
 
     mIsSettingLines = false;
+
+    mPreviousText1 = "";
+    mPreviousText2 = "";
 
     connect(ui->textLine1, SIGNAL(cursorPositionChanged()), this, SLOT(newCursorPosition()));
     connect(ui->textLine2, SIGNAL(cursorPositionChanged()), this, SLOT(newCursorPosition()));
@@ -74,7 +72,7 @@ MyTextEdit2::~MyTextEdit2()
 void MyTextEdit2::defaultSub() {
 
     TextLine default_line;
-    TextLine default_line2;
+//    TextLine default_line2;
     TextFont default_font;
 
     default_font.setFontId( FONT_ID_DEFAULT_VALUE );
@@ -92,14 +90,19 @@ void MyTextEdit2::defaultSub() {
     default_line.setTextHPosition( TEXT1_HPOSITION_DEFAULT_VALUE );
     default_line.setTextVPosition( TEXT1_VPOSITION_DEFAULT_VALUE );
 
-    default_line2.setTextDirection( TEXT2_DIRECTION_DEFAULT_VALUE );
-    default_line2.setTextHAlign( TEXT2_HALIGN_DEFAULT_VALUE );
-    default_line2.setTextVAlign( TEXT2_VALIGN_DEFAULT_VALUE );
-    default_line2.setTextHPosition( TEXT2_HPOSITION_DEFAULT_VALUE );
-    default_line2.setTextVPosition( TEXT2_VPOSITION_DEFAULT_VALUE );
+//    default_line2.setTextDirection( TEXT2_DIRECTION_DEFAULT_VALUE );
+//    default_line2.setTextHAlign( TEXT2_HALIGN_DEFAULT_VALUE );
+//    default_line2.setTextVAlign( TEXT2_VALIGN_DEFAULT_VALUE );
+//    default_line2.setTextHPosition( TEXT2_HPOSITION_DEFAULT_VALUE );
+//    default_line2.setTextVPosition( TEXT2_VPOSITION_DEFAULT_VALUE );
 
     mDefaultSub.setText(default_line, default_font);
-    mDefaultSub.setText(default_line2, default_font);
+//    mDefaultSub.setText(default_line2, default_font);
+}
+
+MySubtitles MyTextEdit2::getDefaultSub() {
+
+    return mDefaultSub;
 }
 
 QList<TextLine> MyTextEdit2::text() {
@@ -137,20 +140,17 @@ MySubtitles MyTextEdit2::subtitleData() {
 
     new_line = this->text().first();
 
-  //  if ( new_line.Line() != "" ) {
-        //TODO retrieve font
-        this->textPosition(ui->textLine1, new_line, this->size());
-        this->textFont(ui->textLine1, new_font, this->size());
+    this->textPosition(ui->textLine1, new_line, this->size());
+    this->textFont(ui->textLine1, new_font, this->size());
 
+    subtitle.setText(new_line, new_font);
+
+    if ( ui->textLine2->isEnabled() ) {
+
+        this->textPosition(ui->textLine2, new_line, this->size());
+        this->textFont(ui->textLine2, new_font, this->size());
         subtitle.setText(new_line, new_font);
-
-        if ( ui->textLine2->isEnabled() ) {
-
-            this->textPosition(ui->textLine2, new_line, this->size());
-            this->textFont(ui->textLine2, new_font, this->size());
-            subtitle.setText(new_line, new_font);
-        }
-  //  }
+    }
 
     return subtitle;
 }
@@ -187,13 +187,23 @@ bool MyTextEdit2::eventFilter(QObject* watched, QEvent* event) {
                 }
                 return true;
             }
+            else if ( ( key_event->matches(QKeySequence::MoveToNextLine) ) &&
+                      ( ui->textLine2->isEnabled() ) ) {
+
+                ui->textLine2->setFocus(Qt::OtherFocusReason);
+                ui->textLine2->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+
+                return true;
+            }
         }
         else if ( event->type() == QEvent::FocusIn) {
 
             mpLastFocused = ui->textLine1;
             TextFont text_font;
+            TextLine text_line;
             this->textFont(ui->textLine1, text_font, this->size());
-            emit textLineFocusChanged(text_font);
+            this->textPosition(ui->textLine1, text_line, this->size());
+            emit textLineFocusChanged(text_font, text_line);
         }
     }
     else if ( watched == ui->textLine2) {
@@ -215,14 +225,23 @@ bool MyTextEdit2::eventFilter(QObject* watched, QEvent* event) {
                 emit subDatasChanged( subtitleData() );
                 ui->textLine1->setFocus(Qt::OtherFocusReason);
                 ui->textLine1->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+                return true;
+            }
+            else if ( key_event->matches(QKeySequence::MoveToPreviousLine) ) {
+
+                ui->textLine1->setFocus(Qt::OtherFocusReason);
+                ui->textLine1->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+                return true;
             }
         }
         else if ( event->type() == QEvent::FocusIn) {
 
             mpLastFocused = ui->textLine2;
             TextFont text_font;
+            TextLine text_line;
             this->textFont(ui->textLine2, text_font, this->size());
-            emit textLineFocusChanged(text_font);
+            this->textPosition(ui->textLine2, text_line, this->size());
+            emit textLineFocusChanged(text_font, text_line);
         }
     }
 
@@ -279,9 +298,17 @@ void MyTextEdit2::setText(MySubtitles subtitle) {
         ui->textLine1->setText("");
         ui->textLine2->setText("");
 
-        this->setTextFont(ui->textLine1, mDefaultSub.text().last().Font(), this->size());
+        this->setTextFont(ui->textLine1, mDefaultSub.text().first().Font(), this->size());
 
-        this->setTextPosition(ui->textLine1, mDefaultSub.text().last(), this->size());
+        this->setTextPosition(ui->textLine1, mDefaultSub.text().first(), this->size());
+
+//        QPalette palette = ui->textLine1->palette();
+//        palette.setColor(QPalette::Foreground,Qt::red);
+//        ui->textLine1->setPalette(palette);
+
+//        palette = ui->textLine2->palette();
+//        palette.setColor(QPalette::Foreground,Qt::blue);
+//        ui->textLine2->setPalette(palette);
 
         ui->textLine2->setEnabled(false);
         ui->textLine2->hide();
@@ -290,25 +317,15 @@ void MyTextEdit2::setText(MySubtitles subtitle) {
         ui->textLine1->moveCursor(QTextCursor::End);
     }
 
+    mPreviousText1 = ui->textLine1->toPlainText();
+    mPreviousText2 = ui->textLine2->toPlainText();
+
     mIsSettingLines = false;
 }
 
-void MyTextEdit2::updateTextPosition(QList<TextLine> textLines) {
+void MyTextEdit2::updateTextPosition(TextLine textLine) {
 
-    if ( ui->textLine1->isEnabled() ) {
-
-        if ( textLines.size() >= 1 ) {
-            this->setTextPosition(ui->textLine1, textLines.at(0), this->size());
-        }
-    }
-
-    if ( ui->textLine2->isEnabled() ) {
-
-        if ( textLines.size() >= 2 ) {
-            this->setTextPosition(ui->textLine2, textLines.at(1), this->size());
-        }
-    }
-
+    this->setTextPosition(mpLastFocused, textLine, this->size());
     emit subDatasChanged( subtitleData() );
 }
 
@@ -468,8 +485,8 @@ void MyTextEdit2::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widg
 //    QFontMetrics font_metrics( textEdit->currentFont() );
     QFontMetrics font_metrics( textEdit->font() );
 
-    textEdit->setFixedHeight( font_metrics.height() );
-    textEdit->setFixedWidth( font_metrics.width(test_string_width) );
+    textEdit->setFixedHeight( font_metrics.height() + ( textEdit->frameWidth() * 2 ) ) ;
+    textEdit->setFixedWidth( font_metrics.width(test_string_width) + ( textEdit->frameWidth() * 2 ) );
 
 //    textEdit->setText(text);
 }
@@ -526,6 +543,13 @@ void MyTextEdit2::resizeEvent(QResizeEvent *event) {
 void MyTextEdit2::newCursorPosition() {
 
     if ( mIsSettingLines == false ) {
-        emit cursorPositionChanged();
+
+        if ( ( ui->textLine1->toPlainText() != mPreviousText1 ) || (ui->textLine2->toPlainText() != mPreviousText2) ) {
+
+            mPreviousText1 = ui->textLine1->toPlainText();
+            mPreviousText2 = ui->textLine2->toPlainText();
+            emit cursorPositionChanged();
+        }
     }
 }
+

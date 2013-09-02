@@ -99,11 +99,78 @@
             <height>372</height>
            </size>
           </property>
+          <property name="palette">
+           <palette>
+            <active>
+             <colorrole role="Highlight">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>240</red>
+                <green>119</green>
+                <blue>70</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="HighlightedText">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </active>
+            <inactive>
+             <colorrole role="Highlight">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>240</red>
+                <green>119</green>
+                <blue>70</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="HighlightedText">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>240</red>
+                <green>119</green>
+                <blue>70</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </inactive>
+            <disabled>
+             <colorrole role="Highlight">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>240</red>
+                <green>240</green>
+                <blue>240</blue>
+               </color>
+              </brush>
+             </colorrole>
+             <colorrole role="HighlightedText">
+              <brush brushstyle="SolidPattern">
+               <color alpha="255">
+                <red>255</red>
+                <green>255</green>
+                <blue>255</blue>
+               </color>
+              </brush>
+             </colorrole>
+            </disabled>
+           </palette>
+          </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
           </property>
           <property name="alternatingRowColors">
            <bool>true</bool>
@@ -142,7 +209,7 @@
            <bool>true</bool>
           </attribute>
           <attribute name="verticalHeaderVisible">
-           <bool>true</bool>
+           <bool>false</bool>
           </attribute>
           <attribute name="verticalHeaderDefaultSectionSize">
            <number>42</number>
@@ -480,7 +547,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="iconSize">
          <size>
@@ -500,13 +567,13 @@
            <rect>
             <x>0</x>
             <y>0</y>
-            <width>1227</width>
+            <width>631</width>
             <height>41</height>
            </rect>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_2">
            <item>
-            <widget class="QLabel" name="lineDownLabel">
+            <widget class="QLabel" name="lineLabel">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -517,22 +584,22 @@
               </font>
              </property>
              <property name="text">
-              <string>Line Down</string>
+              <string>Position :</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="vAlignDownLabel">
+            <widget class="QLabel" name="vAlignLabel">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>V Align :</string>
+              <string>  V Align :</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="vAlignDownBox">
+            <widget class="QComboBox" name="vAlignBox">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -554,17 +621,17 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="vPosDownLabel">
+            <widget class="QLabel" name="vPosLabel">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>V Pos :</string>
+              <string>  V Pos :</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QDoubleSpinBox" name="vPosDownSpinBox">
+            <widget class="QDoubleSpinBox" name="vPosSpinBox">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -592,17 +659,17 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="hAlignDownLabel">
+            <widget class="QLabel" name="hAlignLabel">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>H Align :</string>
+              <string>  H Align :</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="hAlignDownBox">
+            <widget class="QComboBox" name="hAlignBox">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -624,180 +691,17 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="hPosDownLabel">
+            <widget class="QLabel" name="hPosLabel">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>H Pos :</string>
+              <string>  H Pos :</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QDoubleSpinBox" name="hPosDownSpinBox">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="accelerated">
-              <bool>true</bool>
-             </property>
-             <property name="correctionMode">
-              <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
-             </property>
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-             <property name="minimum">
-              <double>-100.000000000000000</double>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>30</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="lineUpLabel">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Line Up</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="vAlignUpLabel">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>V Align :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="vAlignUpBox">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <item>
-              <property name="text">
-               <string>top</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>center</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>bottom</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="vPosUpLabel">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>V Pos :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="vPosUpSpinBox">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="accelerated">
-              <bool>true</bool>
-             </property>
-             <property name="correctionMode">
-              <enum>QAbstractSpinBox::CorrectToPreviousValue</enum>
-             </property>
-             <property name="suffix">
-              <string>%</string>
-             </property>
-             <property name="decimals">
-              <number>1</number>
-             </property>
-             <property name="singleStep">
-              <double>0.100000000000000</double>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="hAlignUpLabel">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>H Align :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QComboBox" name="hAlignUpBox">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <item>
-              <property name="text">
-               <string>left</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>center</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>right</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="hPosUpLabel">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="text">
-              <string>H Pos :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="hPosUpSpinBox">
+            <widget class="QDoubleSpinBox" name="hPosSpinBox">
              <property name="enabled">
               <bool>false</bool>
              </property>
@@ -974,6 +878,9 @@
                  <property name="text">
                   <string>R</string>
                  </property>
+                 <property name="shortcut">
+                  <string>F5</string>
+                 </property>
                  <property name="checkable">
                   <bool>true</bool>
                  </property>
@@ -1004,6 +911,9 @@
                  </property>
                  <property name="text">
                   <string>G</string>
+                 </property>
+                 <property name="shortcut">
+                  <string>F6</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -1036,6 +946,9 @@
                  <property name="text">
                   <string>B</string>
                  </property>
+                 <property name="shortcut">
+                  <string>F7</string>
+                 </property>
                  <property name="checkable">
                   <bool>true</bool>
                  </property>
@@ -1066,6 +979,9 @@
                  </property>
                  <property name="text">
                   <string>Y</string>
+                 </property>
+                 <property name="shortcut">
+                  <string>F8</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -1098,6 +1014,9 @@
                  <property name="text">
                   <string>Bl</string>
                  </property>
+                 <property name="shortcut">
+                  <string>F9</string>
+                 </property>
                  <property name="checkable">
                   <bool>true</bool>
                  </property>
@@ -1129,6 +1048,9 @@
                  <property name="text">
                   <string>W</string>
                  </property>
+                 <property name="shortcut">
+                  <string>F10</string>
+                 </property>
                  <property name="checkable">
                   <bool>true</bool>
                  </property>
@@ -1159,6 +1081,9 @@
                  </property>
                  <property name="text">
                   <string>...</string>
+                 </property>
+                 <property name="shortcut">
+                  <string>F11</string>
                  </property>
                  <property name="checkable">
                   <bool>true</bool>
@@ -1317,6 +1242,25 @@
         <width>16777215</width>
         <height>250</height>
        </size>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QLabel" name="messageLabel">
+      <property name="text">
+       <string/>
+      </property>
+      <property name="textFormat">
+       <enum>Qt::PlainText</enum>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
       </property>
      </widget>
     </item>

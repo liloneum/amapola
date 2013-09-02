@@ -2,6 +2,8 @@
 #include "mysubtitles.h"
 #include <QTime>
 #include <QTextDocumentFragment>
+#include "mysettings.h"
+#include <QCoreApplication>
 
 #define SUB_NUM_COL 0
 #define SUB_START_TIME_COL 1
@@ -43,10 +45,13 @@
 
 #define SUB_DEFAULT_DURATION_MS 1000
 
+#define SEC_TO_MSEC 1000
+#define FRAME_PER_SEC 25
+#define SUB_MIN_INTERVAL_FRAME 5
+
 MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
     QTableWidget(parent)
 {
-    this->setColumnHidden(5, true);
     // Init the vector
     mPositionMsToStIndex.resize(1);
     mPositionMsToStIndex.fill(-1);
@@ -59,9 +64,14 @@ MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
 
     mSubLoadding = false;
 
+    mSelectedBySoft = false;
+    mSelectedByUser = false;
+
+    mErrorMsg = "";
+
     // Init the connections
     connect(this, SIGNAL(itemSelectionChanged()), this, SLOT(updateSelectedItem()));
-    connect(this, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(updateItem(QTableWidgetItem*)));
+    //connect(this, SIGNAL(itemChanged(QTableWidgetItem*)), this, SLOT(updateItem(QTableWidgetItem*)));
 
 }
 
@@ -72,15 +82,23 @@ void MySubtitlesTable::initStTable (qint32 numberOfRow) {
 
     mStCount = 0;
 
+    this->setRowCount(0);
+
     if ( numberOfRow == 0 ) {
-        this->setRowCount(100);
-    }
-    else {
-        this->setRowCount(numberOfRow);
+        numberOfRow = 100;
     }
 
+    this->addRows(numberOfRow, 0);
+}
+
+void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
+
+    qint32 row_count = this->rowCount();
+    row_count = row_count + numberOfRow;
+    setRowCount(row_count);
+
     for ( qint32 i = 0; i < this->columnCount(); i++ ) {
-        for ( qint32 j = 0; j < this->rowCount(); j++) {
+        for ( qint32 j = fromRowNbr; j < (fromRowNbr + numberOfRow); j++) {
 
             QTableWidgetItem* new_item = new QTableWidgetItem;
 
@@ -102,6 +120,10 @@ void MySubtitlesTable::initStTable (qint32 numberOfRow) {
                 new_item->setTextAlignment(Qt::AlignCenter);
             }
             this->setItem(j, i, new_item);
+
+            if ( i >= SUB_NBR_OF_LINES_COL ) {
+                this->setColumnHidden(i, true);
+            }
         }
     }
 }
@@ -152,8 +174,18 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
             start_time_item = this->item(mStCount, SUB_START_TIME_COL);
             start_time_item->setText( subtitlesList[i].startTime() );
 
+            if ( this->updateStTime(start_time_item) != "" ) {
+                //Errorr
+                continue;
+            }
+
             end_time_item = this->item(mStCount, SUB_END_TIME_COL);
             end_time_item->setText( subtitlesList[i].endTime() );
+
+            if ( this->updateStTime(end_time_item) != "" ) {
+                //Errorr
+                continue;
+            }
 
             text_item = this->item(mStCount, SUB_TEXT_COL);
 
@@ -238,6 +270,10 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
         mSubLoadding = false;
         this->setEnabled(true);
 
+        mPreviousIndex = -1;
+        mCurrentIndex = 0;
+        this->selectRow(mCurrentIndex);
+
     }
 }
 
@@ -247,21 +283,28 @@ QList<MySubtitles> MySubtitlesTable::saveSubtitles() {
 
     for ( qint32 i = 0; i < mStCount; i++) {
 
-//        MySubtitles subtitle;
-//        TextLine text_line;
-//        TextFont text_font;
-
-//        subtitle.setStartTime( this->item(i, SUB_START_TIME_COL)->text() );
-//        subtitle.setEndTime( this->item(i, SUB_END_TIME_COL)->text() );
-//        //subtitle.setText( this->item(i, SUB_TEXT_COL)->text() );
-
         subtitles_list.append(this->fillSubInfos(i));
     }
     return subtitles_list;
 }
 
+bool MySubtitlesTable::insertNewSubAfterCurrent(MySubtitles newSubtitle) {
+
+    QTableWidgetItem* end_time_item;
+    QTime time_base(0, 0, 0, 0);
+    QTime end_time_HMS;
+    qint32 end_time_ms;
+
+    end_time_item = this->item(mCurrentIndex,SUB_END_TIME_COL);
+    end_time_HMS = QTime::fromString(end_time_item->text(), "hh:mm:ss.zzz");
+    end_time_ms = qAbs( end_time_HMS.msecsTo(time_base) );
+
+    qint64 position_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / (qreal)FRAME_PER_SEC ) * (qreal)SUB_MIN_INTERVAL_FRAME );
+    return insertNewSub(newSubtitle, position_ms);
+}
+
 // Insert or modify a subtitle in the table
-void MySubtitlesTable::insertNewSub(MySubtitles newSubtitle) {
+bool MySubtitlesTable::insertNewSub(MySubtitles newSubtitle, qint64 positionMs, bool shiftNextSub) {
 
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
@@ -271,32 +314,83 @@ void MySubtitlesTable::insertNewSub(MySubtitles newSubtitle) {
     qint32 end_time_ms;
     QTime time_base(0, 0, 0, 0);
 
-    if ( !newSubtitle.text().isEmpty() ) {
+    if ( positionMs == -1 ) {
+        start_time_ms = mVideoPositionMs;
+    }
+    else {
+        start_time_ms = positionMs;
+    }
+    end_time_ms = start_time_ms + SUB_DEFAULT_DURATION_MS;
 
-        TextLine text_line = newSubtitle.text().first();
+    if ( ( mPositionMsToStIndex[start_time_ms] == -1 ) && ( mPositionMsToStIndex[end_time_ms] == -1 ) ) {
 
-        if ( ( text_line.Line() != "" ) || (newSubtitle.text().size() > 1) ) {
+        // Retrieive the first empty item, set the start/end time and text
+        start_time_HMS = time_base.addMSecs(start_time_ms);
+        start_time_item = this->item(mStCount, SUB_START_TIME_COL);
+        start_time_item->setText(start_time_HMS.toString("hh:mm:ss.zzz"));
 
-            start_time_ms = mVideoPositionMs;
-            end_time_ms = mVideoPositionMs + SUB_DEFAULT_DURATION_MS;
+        QString status_msg = this->updateStTime(start_time_item);
+        if ( status_msg !="" ) {
+            mErrorMsg = status_msg;
+            return false;
+        }
 
-            if ( mPositionMsToStIndex[start_time_ms] == -1) {
+        end_time_HMS = time_base.addMSecs(end_time_ms);
+        end_time_item = this->item(mStCount, SUB_END_TIME_COL);
+        end_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
 
-                // Retrieive the first empty item, set the start/end time and text
-                start_time_HMS = time_base.addMSecs(start_time_ms);
-                start_time_item = this->item(mStCount, SUB_START_TIME_COL);
-                start_time_item->setText(start_time_HMS.toString("hh:mm:ss.zzz"));
+        status_msg = this->updateStTime(start_time_item);
+        if ( status_msg !="" ) {
+            mErrorMsg = status_msg;
+            return false;
+        }
 
-                end_time_HMS = time_base.addMSecs(end_time_ms);
-                end_time_item = this->item(mStCount, SUB_END_TIME_COL);
-                end_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
+        if ( ( this->rowCount() - mStCount ) < 10 ) {
 
-                this->updateText(newSubtitle.text());
-                this->updateDatas(newSubtitle);
-                //this->item(mPositionMsToStIndex[start_time_ms], SUB_TEXT_COL)->setText(stText);
-            }
+           this->addRows(100, this->rowCount());
+        }
+
+        this->updateText(newSubtitle.text(), start_time_ms);
+        this->updateDatas(newSubtitle, start_time_ms);
+        //this->item(mPositionMsToStIndex[start_time_ms], SUB_TEXT_COL)->setText(stText);
+    }
+    else if ( shiftNextSub == true ) {
+
+    }
+    else {
+        mErrorMsg = "Not enought space to insert subtile";
+        return false;
+    }
+
+    return true;
+}
+
+void MySubtitlesTable::deleteCurrentSub() {
+
+    qint32 start_time_ms;
+
+    start_time_ms = mPositionMsToStIndex.indexOf(mCurrentIndex);
+
+    // Remove the index in the lookup table
+    for ( qint32 i = start_time_ms; i < mPositionMsToStIndex.size(); i++ ) {
+
+        if ( mPositionMsToStIndex[i] == mCurrentIndex ) {
+            mPositionMsToStIndex[i] = -1;
+        }
+        else if ( mPositionMsToStIndex[i] != -1 ) {
+            mPositionMsToStIndex[i] = mPositionMsToStIndex[i] - 1;
         }
     }
+
+    // Re-compute all subtitles index and display it
+    for ( qint32 i = mCurrentIndex; i < mStCount; i++ ) {
+        this->item(i, SUB_NUM_COL)->setText(QString::number(i));
+    }
+
+    mStCount = mStCount - 1;
+
+    this->selectRow(mCurrentIndex + 1);
+    this->removeRow(mCurrentIndex);
 }
 
 bool MySubtitlesTable::isNewEntry() {
@@ -312,11 +406,18 @@ bool MySubtitlesTable::isNewEntry() {
     }
 }
 
-void MySubtitlesTable::updateText(QList<TextLine> textLines) {
+void MySubtitlesTable::updateText(QList<TextLine> textLines, qint64 positionMs) {
 
-    qint32 row_index = mPositionMsToStIndex[mVideoPositionMs];
+    qint32 row_index;
     QString plain_text;
     TextLine text_line;
+
+    if ( positionMs == -1 ) {
+        row_index = mPositionMsToStIndex[mVideoPositionMs];
+    }
+    else {
+        row_index = mPositionMsToStIndex[positionMs];
+    }
 
     for ( qint32 i = 0; i < textLines.count(); i++ ) {
 
@@ -343,7 +444,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
     this->item(row_index, SUB_TEXT_COL)->setText(plain_text);
 }
 
-void MySubtitlesTable::updateDatas(MySubtitles subtitle) {
+void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint64 positionMs) {
 
     qint32 index;
 
@@ -374,9 +475,14 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle) {
     QTableWidgetItem* font_script2_item;
     QTableWidgetItem* font_size2_item;
 
-    if ( mPositionMsToStIndex[mVideoPositionMs] != -1) {
-
+    if ( positionMs == -1 ) {
         index = mPositionMsToStIndex[mVideoPositionMs];
+    }
+    else {
+        index = mPositionMsToStIndex[positionMs];
+    }
+
+    if ( index != -1) {
 
         for ( qint32 i = 0; i < subtitle.text().size(); i++) {
 
@@ -455,16 +561,71 @@ void MySubtitlesTable::updateItem(QTableWidgetItem *item) {
         // Bypass during the table init
         if ( ( item->text() != "") && ( item->text() != "New Entry" ) ) {
 
-            if ( !updateStTime(item) ) {
+            if ( updateStTime(item) != "" ) {
 
-                this->editItem(item);
+                //this->editItem(item);
             }
         }
     }
 }
 
+
+bool MySubtitlesTable::setEndTime(qint64 positionMs) {
+
+    QTime start_time_HMS;
+    QTime end_time_HMS;
+    QTime time_base(0, 0, 0, 0);
+    QTableWidgetItem* end_time_item;
+
+    start_time_HMS = QTime::fromString(this->item(mCurrentIndex, SUB_START_TIME_COL)->text(), "hh:mm:ss.zzz");
+    end_time_HMS = time_base.addMSecs(positionMs);
+
+    if ( end_time_HMS > start_time_HMS ) {
+        end_time_item = this->item(mCurrentIndex, SUB_END_TIME_COL);
+        end_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
+        QString status_msg = this->updateStTime(end_time_item);
+        if ( status_msg != "" ) {
+            mErrorMsg = status_msg;
+            return false;
+        }
+    }
+    else {
+        mErrorMsg = "end time < start time";
+        return false;
+    }
+
+    return true;
+}
+
+bool MySubtitlesTable::setStartTime(qint64 positionMs) {
+
+    QTime start_time_HMS;
+    QTime end_time_HMS;
+    QTime time_base(0, 0, 0, 0);
+    QTableWidgetItem* start_time_item;
+
+    end_time_HMS = QTime::fromString(this->item(mCurrentIndex, SUB_END_TIME_COL)->text(), "hh:mm:ss.zzz");
+    start_time_HMS = time_base.addMSecs(positionMs);
+
+    if ( end_time_HMS > start_time_HMS ) {
+        start_time_item = this->item(mCurrentIndex, SUB_START_TIME_COL);
+        start_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
+        QString status_msg = this->updateStTime(start_time_item);
+        if ( status_msg != "" ) {
+            mErrorMsg = status_msg;
+            return false;
+        }
+    }
+    else {
+        mErrorMsg = "end time < start time";
+        return false;
+    }
+
+    return true;
+}
+
 // Manage time change of an start/end time item
-bool MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
+QString MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
 
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
@@ -503,7 +664,7 @@ bool MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
             }
         }
         else { // The new start entry is not a valid entry
-            return false;
+            return "The new start entry is not a valid entry - hh:mm:ss.zzz";
         }
     }
     else if ( time_item->column() == SUB_END_TIME_COL ) {
@@ -525,7 +686,7 @@ bool MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
             }
         }
         else { // The new end entry is not a valid entry
-            return false;
+            return "The new end entry is not a valid entry - hh:mm:ss.zzz";
         }
     }
 
@@ -591,7 +752,11 @@ bool MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
                 for ( qint32 i = new_row_index; i < mStCount; i++ ) {
                     this->item(i, SUB_NUM_COL)->setText(QString::number(i + 1));
                 }
-                mPreviousIndex = new_row_index;
+                //mPreviousIndex = new_row_index;
+                mCurrentIndex = new_row_index;
+                //mSelectedBySoft = true;
+                this->selectRow(mCurrentIndex);
+
             }
             else { // Resize entry
 
@@ -636,7 +801,7 @@ bool MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
             }
         }
     }
-    return true;
+    return "";
 }
 
 void MySubtitlesTable::updateSelectedItem() {
@@ -647,16 +812,26 @@ void MySubtitlesTable::updateSelectedItem() {
 
     // Center scroll area at the selected item line
     QList<QTableWidgetItem*> selected_items = this->selectedItems();
-    this->scrollToItem(selected_items.first(), QAbstractItemView::PositionAtCenter);
 
-    // If the selected item start time is valid, emit a signal sending this start time
-    QString start_time_str = selected_items.at(SUB_START_TIME_COL)->text();
+    if ( !selected_items.isEmpty() ) {
+        this->scrollToItem(selected_items.first(), QAbstractItemView::PositionAtCenter);
 
-    start_time_HMS = QTime::fromString(start_time_str, "hh:mm:ss.zzz");
+        if ( mSelectedBySoft == false ) {
+            // If the selected item start time is valid, emit a signal sending this start time
+            QString start_time_str = selected_items.at(SUB_START_TIME_COL)->text();
 
-    if ( start_time_HMS.isValid() ) {
-        start_time_ms = qAbs( start_time_HMS.msecsTo(time_base) );
-        emit itemSelectionChanged(start_time_ms);
+            start_time_HMS = QTime::fromString(start_time_str, "hh:mm:ss.zzz");
+
+            if ( start_time_HMS.isValid() ) {
+                start_time_ms = qAbs( start_time_HMS.msecsTo(time_base) );
+                emit itemSelectionChanged(start_time_ms);
+            }
+            mSelectedByUser = true;
+        }
+        else {
+            mSelectedByUser = false;
+            mSelectedBySoft = false;
+        }
     }
 }
 
@@ -684,6 +859,14 @@ void MySubtitlesTable::updateStDisplay(qint64 videoPositionMs) {
         if ( st_index != -1 ) {
             // Retrieve the subtitle infos
             subtitle = fillSubInfos(st_index);
+            mCurrentIndex = st_index;
+            if ( mSelectedByUser == false ) {
+                mSelectedBySoft = true;
+                this->selectRow(mCurrentIndex);
+            }
+            else {
+                mSelectedByUser = false;
+            }
         }
 
         // Send a signal to display the subtilte or nothing if it's empty
@@ -757,4 +940,8 @@ MySubtitles MySubtitlesTable::fillSubInfos(qint32 stIndex) {
     }
 
     return new_subtitle;
+}
+
+QString MySubtitlesTable::errorMsg() {
+    return mErrorMsg;
 }

@@ -21,14 +21,15 @@ public:
 signals:
     void cursorPositionChanged();
     void subDatasChanged(MySubtitles);
-    void textLineFocusChanged(TextFont);
+    void textLineFocusChanged(TextFont, TextLine);
 
 public slots :
     void setText(MySubtitles subtitle);
     QList<TextLine> text();
     MySubtitles subtitleData();
-    void updateTextPosition(QList<TextLine> textLines);
+    void updateTextPosition(TextLine textLine);
     void updateTextFont(TextFont textFont);
+    MySubtitles getDefaultSub();
 
 private slots:
      bool eventFilter(QObject* watched, QEvent* event);
@@ -49,6 +50,8 @@ private:
     QSize mPreviousWidgetSize;
     qint32 mPxPerInch;
     QTextEdit* mpLastFocused;
+    QString mPreviousText1;
+    QString mPreviousText2;
 };
 
 #endif // MYTEXTEDIT2_H

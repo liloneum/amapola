@@ -7,7 +7,7 @@
 #include <QMouseEvent>
 
 #define SEC_TO_MSEC 1000
-#define FRAME_PS_SEC 1000
+#define FRAME_PS_SEC 25
 
 MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     QWidget(parent),
@@ -209,5 +209,9 @@ void MyVideoPlayer::on_timeSlider_valueChanged(int sliderPosition)
 
 void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
     mpPlayer->setPosition(videoPlayerPositionMs);
+}
+
+qint64 MyVideoPlayer::playerPosition() {
+    return mpPlayer->position();
 }
 

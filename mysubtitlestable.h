@@ -15,23 +15,30 @@ public:
 signals:
     void itemSelectionChanged(qint32);
     void newTextToDisplay(MySubtitles);
+    void currentSubChanged(qint32);
 
 public slots:
-    void insertNewSub(MySubtitles newSubtitle);
+    bool insertNewSub(MySubtitles newSubtitle, qint64 positionMs = -1, bool shiftNextSub = false);
+    bool insertNewSubAfterCurrent(MySubtitles newSubtitle);
+    void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
     QList<MySubtitles> saveSubtitles();
     bool isNewEntry();
-    void updateText(QList<TextLine> textLines);
-    void updateDatas(MySubtitles subtitle);
+    void updateText(QList<TextLine> textLines, qint64 positionMs = -1);
+    void updateDatas(MySubtitles subtitle, qint64 positionMs = -1);
+    bool setEndTime(qint64 positionMs);
+    bool setStartTime(qint64 positionMs);
+    QString errorMsg();
 
 private slots:
     void updateSelectedItem();
     void videoDurationChanged(qint64 videoDurationMs);
     void updateStDisplay(qint64 videoPositionMs);
     void updateItem(QTableWidgetItem* item);
-    bool updateStTime(QTableWidgetItem* time_item);
+    QString updateStTime(QTableWidgetItem* time_item);
     MySubtitles fillSubInfos(qint32 stIndex);
+    void addRows(qint32 numberOfRow, qint32 fromRowNbr);
 
 
 private:
@@ -48,6 +55,12 @@ private:
     qint32 mStCount;
 
     bool mSubLoadding;
+    bool mSelectedBySoft;
+    bool mSelectedByUser;
+
+    qint32 mCurrentIndex;
+
+    QString mErrorMsg;
 };
 
 #endif // MYSUBTITLESTABLE_H
