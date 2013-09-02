@@ -29,6 +29,8 @@ private slots:
 
     void on_actionImport_Subtitles_triggered();
 
+    void on_settingsButton_clicked();
+
     void on_actionExport_Subtitles_triggered();
 
 private:

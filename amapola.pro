@@ -15,8 +15,8 @@ SOURCES += main.cpp\
     myfilereader.cpp \
     SubtitlesParsers/SubRip/subripparser.cpp \
     mysubtitles.cpp \
-    myfilewriter.cpp
-
+    myfilewriter.cpp \
+    mysettings.cpp \
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -26,11 +26,12 @@ HEADERS  += mainwindow.h \
     myfilereader.h \
     SubtitlesParsers/SubRip/subripparser.h \
     mysubtitles.h \
-    myfilewriter.h
-
+    myfilewriter.h \
+    mysettings.h \
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
-    myvideoplayer.ui
+    myvideoplayer.ui \
+    mysettings.ui
 
 CONFIG += qwt

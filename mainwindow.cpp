@@ -137,3 +137,18 @@ void MainWindow::on_actionExport_Subtitles_triggered() {
        file_writer.toFile();
    }
 }
+
+void MainWindow::on_settingsButton_clicked()
+{
+    switch ( ui->stackedWidget->currentIndex() ) {
+    case 0 :
+        ui->stackedWidget->setCurrentIndex(1);
+        break;
+    case 1 :
+        ui->stackedWidget->setCurrentIndex(0);
+        break;
+    default:
+        ui->stackedWidget->setCurrentIndex(0);
+        break;
+    }
+}
