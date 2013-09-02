@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "myfilereader.h"
+#include "myfilewriter.h"
 #include "SubtitlesParsers/SubRip/subripparser.h"
 #include <QFileDialog>
 
@@ -120,4 +121,19 @@ void MainWindow::on_actionImport_Subtitles_triggered()
     }
 
 
+}
+
+void MainWindow::on_actionExport_Subtitles_triggered() {
+
+    QString file_name = QFileDialog::getSaveFileName(this, tr("Save Subtitles"),QDir::homePath());
+    MyFileWriter file_writer(file_name, "UTF-8");
+    SubRipParser* parser = new SubRipParser();
+
+    QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();
+
+   if ( !subtitles_list.isEmpty() ) {
+
+       parser->save(file_writer, subtitles_list);
+       file_writer.toFile();
+   }
 }

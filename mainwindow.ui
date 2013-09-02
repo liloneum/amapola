@@ -324,6 +324,7 @@
     </property>
     <addaction name="actionOpen"/>
     <addaction name="actionImport_Subtitles"/>
+    <addaction name="actionExport_Subtitles"/>
     <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -351,6 +352,11 @@
   <action name="actionImport_Subtitles">
    <property name="text">
     <string>Import Subtitles</string>
+   </property>
+  </action>
+  <action name="actionExport_Subtitles">
+   <property name="text">
+    <string>Export Subtitles</string>
    </property>
   </action>
  </widget>

@@ -52,3 +52,23 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
     }
     return subtitles_list;
 }
+
+void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
+
+    for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
+
+        QString sub_num;
+        sub_num.setNum(i + 1);
+
+        QString time(subtitlesList[i].startTime() + " --> " + subtitlesList[i].endTime());
+        time.replace(".", ",");
+
+        QString text_to_write( sub_num + "\n"
+                               + time + "\n"
+                               + subtitlesList[i].text() + "\n"
+                               + "\n");
+
+        file.write(text_to_write);
+
+    }
+}

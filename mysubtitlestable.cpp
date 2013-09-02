@@ -98,6 +98,23 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
     }
 }
 
+QList<MySubtitles> MySubtitlesTable::saveSubtitles() {
+
+    QList<MySubtitles> subtitles_list;
+
+    for ( qint32 i = 0; i < mStCount; i++) {
+
+        MySubtitles subtitle;
+
+        subtitle.setStartTime( this->item(i, SUB_START_TIME_COL)->text() );
+        subtitle.setEndTime( this->item(i, SUB_END_TIME_COL)->text() );
+        subtitle.setText( this->item(i, SUB_TEXT_COL)->text() );
+
+        subtitles_list.append(subtitle);
+    }
+    return subtitles_list;
+}
+
 // Insert or modify a subtitle in the table
 void MySubtitlesTable::updateStTable(QString stText) {
 

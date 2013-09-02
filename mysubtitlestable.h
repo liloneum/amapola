@@ -20,6 +20,7 @@ public slots:
     void updateStTable(QString stText);
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
+    QList<MySubtitles> saveSubtitles();
 
 private slots:
     void updateSelectedItem();

@@ -14,7 +14,9 @@ SOURCES += main.cpp\
     mysubtitlestable.cpp \
     myfilereader.cpp \
     SubtitlesParsers/SubRip/subripparser.cpp \
-    mysubtitles.cpp
+    mysubtitles.cpp \
+    myfilewriter.cpp
+
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -23,7 +25,9 @@ HEADERS  += mainwindow.h \
     mysubtitlestable.h \
     myfilereader.h \
     SubtitlesParsers/SubRip/subripparser.h \
-    mysubtitles.h
+    mysubtitles.h \
+    myfilewriter.h
+
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
