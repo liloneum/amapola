@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <myvideoplayer.h>
+#include "mysubtitles.h"
 
 namespace Ui {
 class MainWindow;
@@ -23,7 +24,7 @@ private slots:
     void on_actionQuit_triggered();
     void updateSubTable();
     void updateVideoPosition(qint32 positionMs);
-    void updateTextEdit(QString stText);
+    void updateTextEdit(MySubtitles subtitle);
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
 

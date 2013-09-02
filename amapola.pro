@@ -1,5 +1,5 @@
 
-QT       += core gui multimedia multimediawidgets
+QT       += core gui multimedia multimediawidgets xml
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -17,6 +17,9 @@ SOURCES += main.cpp\
     mysubtitles.cpp \
     myfilewriter.cpp \
     mysettings.cpp \
+    SubtitlesParsers/DcSubtitle/dcsub.cpp \
+    mytextedit2.cpp \
+    myattributesconverter.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -28,10 +31,14 @@ HEADERS  += mainwindow.h \
     mysubtitles.h \
     myfilewriter.h \
     mysettings.h \
+    SubtitlesParsers/DcSubtitle/dcsub.h \
+    mytextedit2.h \
+    myattributesconverter.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
     myvideoplayer.ui \
-    mysettings.ui
+    mysettings.ui \
+    mytextedit2.ui
 
 CONFIG += qwt

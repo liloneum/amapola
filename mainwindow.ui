@@ -33,224 +33,6 @@
     <property name="verticalSpacing">
      <number>6</number>
     </property>
-    <item row="0" column="0">
-     <widget class="QStackedWidget" name="stackedWidget">
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-     <widget class="MySubtitlesTable" name="subTable">
-      <property name="enabled">
-       <bool>false</bool>
-      </property>
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="minimumSize">
-       <size>
-        <width>340</width>
-        <height>372</height>
-       </size>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Sunken</enum>
-      </property>
-      <property name="alternatingRowColors">
-       <bool>true</bool>
-      </property>
-      <property name="selectionBehavior">
-       <enum>QAbstractItemView::SelectRows</enum>
-      </property>
-      <property name="showGrid">
-       <bool>true</bool>
-      </property>
-      <property name="gridStyle">
-       <enum>Qt::SolidLine</enum>
-      </property>
-      <property name="rowCount">
-       <number>100</number>
-      </property>
-      <property name="columnCount">
-       <number>5</number>
-      </property>
-      <attribute name="horizontalHeaderVisible">
-       <bool>true</bool>
-      </attribute>
-      <attribute name="horizontalHeaderCascadingSectionResizes">
-       <bool>false</bool>
-      </attribute>
-      <attribute name="horizontalHeaderDefaultSectionSize">
-       <number>100</number>
-      </attribute>
-      <attribute name="horizontalHeaderHighlightSections">
-       <bool>true</bool>
-      </attribute>
-      <attribute name="horizontalHeaderMinimumSectionSize">
-       <number>0</number>
-      </attribute>
-      <attribute name="horizontalHeaderStretchLastSection">
-       <bool>true</bool>
-      </attribute>
-      <attribute name="verticalHeaderVisible">
-       <bool>false</bool>
-      </attribute>
-      <attribute name="verticalHeaderDefaultSectionSize">
-       <number>42</number>
-      </attribute>
-      <attribute name="verticalHeaderMinimumSectionSize">
-       <number>42</number>
-      </attribute>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <row/>
-      <column>
-       <property name="text">
-        <string>#</string>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Start time</string>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>End time</string>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Duration</string>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      <column>
-       <property name="text">
-        <string>Text</string>
-       </property>
-       <property name="textAlignment">
-        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
-       </property>
-      </column>
-      </widget>
-      <widget class="MySettings" name="page2">
-       <layout class="QGridLayout" name="gridLayout_3"/>
-      </widget>
-     </widget>
-    </item>
     <item row="0" column="1">
      <widget class="MyVideoPlayer" name="videoPlayer" native="true">
       <property name="sizePolicy">
@@ -265,31 +47,388 @@
         <height>0</height>
        </size>
       </property>
-      <widget class="MyTextEdit" name="stEditDisplay">
+      <widget class="MyTextEdit2" name="stEditDisplay2" native="true">
        <property name="geometry">
         <rect>
-         <x>1</x>
-         <y>240</y>
-         <width>396</width>
-         <height>51</height>
+         <x>50</x>
+         <y>30</y>
+         <width>400</width>
+         <height>300</height>
         </rect>
        </property>
-       <property name="font">
-        <font>
-         <pointsize>15</pointsize>
-         <weight>75</weight>
-         <bold>true</bold>
-        </font>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
+       <property name="autoFillBackground">
+        <bool>false</bool>
        </property>
-       <property name="verticalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
-       <property name="horizontalScrollBarPolicy">
-        <enum>Qt::ScrollBarAlwaysOff</enum>
-       </property>
+      </widget>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="page1">
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="MySubtitlesTable" name="subTable">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>340</width>
+            <height>372</height>
+           </size>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::StyledPanel</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Sunken</enum>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionBehavior">
+           <enum>QAbstractItemView::SelectRows</enum>
+          </property>
+          <property name="showGrid">
+           <bool>true</bool>
+          </property>
+          <property name="gridStyle">
+           <enum>Qt::SolidLine</enum>
+          </property>
+          <property name="rowCount">
+           <number>100</number>
+          </property>
+          <property name="columnCount">
+           <number>33</number>
+          </property>
+          <attribute name="horizontalHeaderVisible">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderCascadingSectionResizes">
+           <bool>false</bool>
+          </attribute>
+          <attribute name="horizontalHeaderDefaultSectionSize">
+           <number>100</number>
+          </attribute>
+          <attribute name="horizontalHeaderHighlightSections">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="horizontalHeaderMinimumSectionSize">
+           <number>0</number>
+          </attribute>
+          <attribute name="horizontalHeaderStretchLastSection">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderVisible">
+           <bool>true</bool>
+          </attribute>
+          <attribute name="verticalHeaderDefaultSectionSize">
+           <number>42</number>
+          </attribute>
+          <attribute name="verticalHeaderMinimumSectionSize">
+           <number>42</number>
+          </attribute>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <row/>
+          <column>
+           <property name="text">
+            <string>#</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Start time</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>End time</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Duration</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Text</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Line1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>VPosition1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>VAlign1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>HPosition1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>HAlign1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Direction1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontId1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontColor1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontEffect1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontEffectColor1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontItalic1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontUnderlined1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontScript1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontSize1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Line2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>VPosition2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>VAlign2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>HPosition2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>HAlign2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Direction2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontId2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontColor2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontEffect2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontEffectColor2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontItalic2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontUnderlined2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontScript2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>FontSize2</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="MySettings" name="page2">
+       <layout class="QGridLayout" name="gridLayout_3"/>
       </widget>
      </widget>
     </item>
@@ -393,11 +532,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MyTextEdit</class>
-   <extends>QTextEdit</extends>
-   <header location="global">mytextedit.h</header>
-  </customwidget>
-  <customwidget>
    <class>MySubtitlesTable</class>
    <extends>QTableWidget</extends>
    <header location="global">mysubtitlestable.h</header>
@@ -406,6 +540,12 @@
    <class>MySettings</class>
    <extends>QWidget</extends>
    <header location="global">mysettings.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MyTextEdit2</class>
+   <extends>QWidget</extends>
+   <header location="global">mytextedit2.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

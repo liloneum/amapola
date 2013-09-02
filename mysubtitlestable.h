@@ -14,13 +14,15 @@ public:
 
 signals:
     void itemSelectionChanged(qint32);
-    void newTextToDisplay(QString);
+    void newTextToDisplay(MySubtitles);
 
 public slots:
-    void updateStTable(QString stText);
+    void updateStTable(MySubtitles newSubtitle);
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
     QList<MySubtitles> saveSubtitles();
+    bool isNewEntry();
+    void updateText(QList<TextLine> textLines);
 
 private slots:
     void updateSelectedItem();
@@ -28,6 +30,8 @@ private slots:
     void updateStDisplay(qint64 videoPositionMs);
     void updateItem(QTableWidgetItem* item);
     bool updateStTime(QTableWidgetItem* time_item);
+    MySubtitles fillSubInfos(qint32 stIndex);
+
 
 private:
     // Lookup table to retrieive faster a subtitle number in function of time in millisecond

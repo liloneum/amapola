@@ -183,7 +183,7 @@ bool MyVideoPlayer::eventFilter(QObject* watched, QEvent* event) {
 
 void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
 
-    mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height());
+    mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height() );
     mpVideoItem->setSize(QSizeF(ui->videoView->size()));
     QWidget::resizeEvent(event);
 }

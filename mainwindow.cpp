@@ -3,6 +3,7 @@
 #include "myfilereader.h"
 #include "myfilewriter.h"
 #include "SubtitlesParsers/SubRip/subripparser.h"
+#include "SubtitlesParsers/DcSubtitle/dcsub.h"
 #include <QFileDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -11,17 +12,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
-    ui->stEditDisplay->setFocus(Qt::OtherFocusReason);
+    //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->waveForm, SLOT(updatePostionMarker(qint64)));
     connect(ui->waveForm, SIGNAL(positionChanged(qint64)), ui->videoPlayer, SLOT(setPosition(qint64)));
 
     connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),ui->subTable, SLOT(videoDurationChanged(qint64)));
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->subTable, SLOT(updateStDisplay(qint64)));
-    connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
+    connect(ui->stEditDisplay2, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint32)), this, SLOT(updateVideoPosition(qint32)));
-    connect(ui->subTable, SIGNAL(newTextToDisplay(QString)), this, SLOT(updateTextEdit(QString)));
+    connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
 
     connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
 }
@@ -32,24 +32,23 @@ MainWindow::~MainWindow() {
 
 void MainWindow::updateSubTable() {
 
-    QString st_text;
-
-    st_text = ui->stEditDisplay->toPlainText();
-    ui->subTable->updateStTable(st_text);
+    if ( ui->subTable->isNewEntry() ) {
+        ui->subTable->updateStTable( ui->stEditDisplay2->subtitleData() );
+    }
+    else {
+        ui->subTable->updateText( ui->stEditDisplay2->text() );
+    }
 }
 
 void MainWindow::updateVideoPosition(qint32 positionMs) {
 
     ui->videoPlayer->setPosition(positionMs);
-    ui->stEditDisplay->setFocus(Qt::OtherFocusReason);
-    ui->stEditDisplay->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    //ui->stEditDisplay2->setFocus();
 }
 
-void MainWindow::updateTextEdit(QString stText) {
+void MainWindow::updateTextEdit(MySubtitles subtitle) {
 
-    ui->stEditDisplay->setPlainText(stText);
-    ui->stEditDisplay->setFocus(Qt::OtherFocusReason);
-    ui->stEditDisplay->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    ui->stEditDisplay2->setText(subtitle);
 }
 
 void MainWindow::on_actionOpen_triggered()
@@ -73,27 +72,25 @@ void MainWindow::updateStEditSize() {
 
     QSizeF video_item_size;
     QSizeF video_item_native_size;
-    qint32 row_height;
-    qint32 text_edit_height;
-
-    // Resize the height of subtitles edit zone in function of font size
-    QFontMetrics font_metrics(ui->stEditDisplay->font());
-    row_height = font_metrics.lineSpacing();
-    text_edit_height = (2 * row_height) + 4;
-    ui->stEditDisplay->setFixedHeight(text_edit_height);
 
     // Resize the width of subtitles edit zone in function of video width
     video_item_size = ui->videoPlayer->videoItemSize();
-    ui->stEditDisplay->setFixedWidth(video_item_size.width());
 
     video_item_native_size = ui->videoPlayer->videoItemNativeSize();
     qreal video_ratio = video_item_native_size.width() / video_item_native_size.height();
 
-    qint32 video_height = (qint32) ( video_item_size.width() / video_ratio );
+    qint32 video_height = (qint32) qRound( video_item_size.width() / video_ratio );
 
-    qint32 video_bottom_pos = (qint32)( ( ( video_item_size.height() - (qreal)video_height ) / 2.0 ) + (qreal)video_height );
+    // Set the edit region size and position mapped on video.
+    QSize video_current_size(video_item_size.width(), video_height + 1);
+    ui->stEditDisplay2->setFixedSize(video_current_size);
+    qint32 video_top_pos = (qint32)( qRound( video_item_size.height() - (qreal)video_height ) / 2.0 ) + 9;
+    ui->stEditDisplay2->move(9, video_top_pos);
 
-    ui->stEditDisplay->move(0, video_bottom_pos - text_edit_height - 1);
+//    ui->textEdit->setStyleSheet("background: transparent; color: yellow");
+//    ui->textEdit->setFixedSize(ui->stEditDisplay2->size());
+//    ui->textEdit->move(0, 0);
+
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -110,10 +107,14 @@ void MainWindow::on_actionQuit_triggered()
 
 void MainWindow::on_actionImport_Subtitles_triggered()
 {
+//    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath());
+//    MyFileReader file_reader(file_name,"UTF-8");
+//    SubRipParser* parser = new SubRipParser();
+//    QList<MySubtitles> subtitles_list = parser->open(file_reader);
+
     QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath());
-    MyFileReader file_reader(file_name,"UTF-8");
-    SubRipParser* parser = new SubRipParser();
-    QList<MySubtitles> subtitles_list = parser->open(file_reader);
+    DcSub* parser = new DcSub();
+    QList<MySubtitles> subtitles_list = parser->open(file_name);
 
     if ( !subtitles_list.isEmpty() ) {
 
