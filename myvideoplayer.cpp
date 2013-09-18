@@ -6,9 +6,12 @@
 #include <QTime>
 #include <QMouseEvent>
 
+// Convert second in milliseconds
 #define SEC_TO_MSEC 1000
+// Number of frame per second
 #define FRAME_PS_SEC 25
 
+// This widget manage a media player with a position slider, a clock and a play/pause button
 MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MyVideoPlayer)
@@ -33,6 +36,7 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     mpDurationTimeHMS = new QTime(0, 0, 0, 0);
     mpCurrentTimeHMS = new QTime(0, 0, 0, 0);
 
+    // Init graphics scene to display the player clock
     mpTimeGraphicsScene = new QGraphicsScene;
     mpTimeTextItem = new QGraphicsTextItem;
     ui->timeView->setStyleSheet("background: transparent");
@@ -54,6 +58,7 @@ MyVideoPlayer::~MyVideoPlayer()
     delete ui;
 }
 
+// Swith the player state to "play/pause" when play/pause button clicked
 void MyVideoPlayer::on_playButton_clicked() {
 
     switch ( mpPlayer->state() ) {
@@ -66,6 +71,7 @@ void MyVideoPlayer::on_playButton_clicked() {
     }
 }
 
+// Update the play/pause icon displayed in function of the player state
 void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
 {
     switch ( state ) {
@@ -78,6 +84,7 @@ void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
     }
 }
 
+// Open a media file
 QString MyVideoPlayer::openFile() {
 
     QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath() +"/Videos",
@@ -91,18 +98,22 @@ QString MyVideoPlayer::openFile() {
     return file_name;
 }
 
+// Update de duration of the current media
 void MyVideoPlayer::updateDuration() {
 
     mVideoDuration = mpPlayer->duration();
 
+    // Send the new duration to other module
     emit durationChanged(mVideoDuration);
 
+    // Compute the slider range in function of the video duration and the player position notification interval time
     mTimeSliderMaxRange = (qint32)( mVideoDuration / (qint64)mPlayerPositionNotifyIntervalMs );
     ui->timeSlider->setRange(0, mTimeSliderMaxRange);
 
     MyVideoPlayer::updateTime();
 }
 
+// Update the position of the slider in function of the player position in millisecond
 void MyVideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
 
     qint32 slider_position;
@@ -110,10 +121,11 @@ void MyVideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
     if ( playerPositionMs <= mVideoDuration ) {
         emit positionChanged(playerPositionMs);
 
+        // If the player position was changed by software, move the slider
         if ( mTimeSliderPositionChangedByGui == false ) {
             slider_position = (qint32)(playerPositionMs / mPlayerPositionNotifyIntervalMs);
             ui->timeSlider->setSliderPosition(slider_position);
-        }
+        } // If the user moved the cursor, do nothing
         else {
             mTimeSliderPositionChangedByGui = false;
         }
@@ -139,6 +151,7 @@ void MyVideoPlayer::on_timeSlider_sliderMoved(int sliderPosition)
 //    MyVideoPlayer::updateTime();
 }
 
+// Update and display the player clock
 void MyVideoPlayer::updateTime() {
 
     QTime temp_time;
@@ -166,6 +179,7 @@ bool MyVideoPlayer::eventFilter(QObject* watched, QEvent* event) {
 
     bool status = QWidget::eventFilter(watched, event);
 
+    // Move the slider at mouse released position
     if ( watched == ui->timeSlider ) {
         if ( event->type() == QEvent::MouseButtonRelease ) {
             QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
@@ -181,7 +195,6 @@ bool MyVideoPlayer::eventFilter(QObject* watched, QEvent* event) {
     return status;
 }
 
-
 void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
 
     mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height() );
@@ -189,28 +202,35 @@ void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
 }
 
+// Get the video item size
 QSizeF MyVideoPlayer::videoItemSize() {
 
     return mpVideoItem->size();
 }
 
+// Get the video item native size (the native size of the media)
 QSizeF MyVideoPlayer::videoItemNativeSize() {
 
     return mpVideoItem->nativeSize();
 }
+
+// Update the player position in function of slider position
 void MyVideoPlayer::on_timeSlider_valueChanged(int sliderPosition)
 {
     qint64 player_position_ms;
 
+    // Slider was moved by user
     mTimeSliderPositionChangedByGui = true;
     player_position_ms = sliderPosition * mPlayerPositionNotifyIntervalMs;
     setPosition(player_position_ms);
 }
 
+// Interface to set the player position
 void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
     mpPlayer->setPosition(videoPlayerPositionMs);
 }
 
+// get the player position
 qint64 MyVideoPlayer::playerPosition() {
     return mpPlayer->position();
 }

@@ -3,6 +3,7 @@
 
 #include <Qt>
 
+// Class to define some converters statics methods
 class MyAttributesConverter
 {
 public:

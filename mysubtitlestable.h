@@ -4,6 +4,9 @@
 #include <QTableWidget>
 #include "mysubtitles.h"
 
+// This widget manage a subtitles table.
+// It's a database to stock text, timecode, position, font.
+// Display only text and timecode.
 class MySubtitlesTable : public QTableWidget
 {
     Q_OBJECT
@@ -54,12 +57,19 @@ private:
     // Total number of subtitles
     qint32 mStCount;
 
+    // Subtitles are loading in the table flag. Avoid all other operation on the table
     bool mSubLoadding;
+
+    // An item was selected by software
     bool mSelectedBySoft;
+
+    // An item was selected by user
     bool mSelectedByUser;
 
+    // Save the current item index.
     qint32 mCurrentIndex;
 
+    // Error message
     QString mErrorMsg;
 };
 

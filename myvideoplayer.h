@@ -12,11 +12,11 @@ class MyVideoPlayer;
 }
 
 class QMediaPlayer;
-//class QVideoWidget;
 class QGraphicsVideoItem;
 class QTime;
 class QGraphicsScene;
 
+// This widget manage a media player with a position slider, a clock and a play/pause button
 class MyVideoPlayer : public QWidget
 {
     Q_OBJECT

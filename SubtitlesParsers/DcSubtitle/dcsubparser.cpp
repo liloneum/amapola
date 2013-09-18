@@ -6,6 +6,10 @@
 #include <mainwindow.h>
 #include "myattributesconverter.h"
 
+
+// See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
+
+// Define default values
 #define FONT_ID_DEFAULT_VALUE ""
 #define FONT_COLOR_DEFAULT_VALUE "FFFFFFFF"
 #define FONT_EFFECT_DEFAULT_VALUE "shadow"
@@ -42,7 +46,9 @@ DcSubParser::DcSubParser() {
 
 }
 
-
+// Parse the xml tree to retrieve the subtitles infos.
+// This function is RECURSIVE to be able to handle "Font" tag in cascade
+// So be carefull if you change something in the code
 void DcSubParser::parseTree(QDomElement xmlElement) {
 
     bool font_inside_text = false;
@@ -50,16 +56,19 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
 
     while ( !xmlElement.isNull() ) {
 
+        // If the tag name is "Font", retrieve the font parameters changed
         if (xmlElement.tagName() == "Font") {
 
             changeFont(xmlElement);
         }
+        // If the tag name is "Subtitle"
         else if (xmlElement.tagName() == "Subtitle") {
 
             // attribute SpotNumber ignored, not usefull
             // attribute FadeUpTime, ignored
             // attribute FadeDownTime, ignored
 
+            // Save previous subtitle and clear the container
             if ( mNewSubtitle.isValid() ) {
                 mSubtitlesList.append(mNewSubtitle);
                 mNewSubtitle.clear();
@@ -86,6 +95,7 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                 mNewSubtitle.setEndTime(end_time);
             }
         }
+        // If the tag name is "Text"
         else if (xmlElement.tagName() == "Text") {
 
             if ( !xmlElement.text().isEmpty() ) {
@@ -130,8 +140,10 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                      mNewText.setTextVPosition( TEXT_VPOSITION_DEFAULT_VALUE );
                 }
 
-                QString text(xmlElement.text());
+
+                // Check for "Font" tag inside text
                 QDomNodeList font_node_list = xmlElement.elementsByTagName("Font");
+                QString text(xmlElement.text());
                 QString text_with_font_changed;
 
                 for ( qint32 j = 0; j < font_node_list.size(); j++ ) {
@@ -141,13 +153,16 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                     font_inside_text = true;
 
                     text_with_font_changed = xml_font_changed.text();
+                    // If the "Font" tag catch whole text, change the font parameter
                     if ( text_with_font_changed == text) {
                         changeFont(xml_font_changed);
                         font_inside_whole_text = true;
                         continue;
                     }
+                    // If the "Font" tag catch only a part of the text, look for "Italic", "Color" attribute
                     if ( xml_font_changed.hasAttribute("Italic") ) {
 
+                        // If "Italic" attribute = "yes", add "<i></i>" markup inside text
                         if (xml_font_changed.attribute("Italic") == "yes") {
                             text.replace(text.indexOf(text_with_font_changed),
                                          text_with_font_changed.size(),
@@ -158,7 +173,7 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
 
                         QString current_color;
                         current_color.setNum(mColor.rgba(), 16);
-
+                        // If "Color" attribute is different than current color, add "<font color = #AARRGGBB></font>" markup inside text
                         if ( xml_font_changed.attribute("Color") != current_color ){
                             text.replace(text.indexOf(text_with_font_changed),
                                          text_with_font_changed.size(),
@@ -168,6 +183,7 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                     }
                 }
 
+                // Set text and font attributes in MySubtitltes container
                 mNewText.setLine(text);
                 mNewSubtitle.setText(mNewText, mFontList.last());
 
@@ -178,30 +194,36 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
             }
         }
 
+        // Go to next child node if exist (Recursive)
         if ( !xmlElement.firstChild().isNull() ) {
             if ( font_inside_text == false) {
                 parseTree( xmlElement.firstChild().toElement() );
             }
         }
 
+        // Exit from "Font" tag
         if ( xmlElement.tagName() == "Font" ) {
             mFontList.removeLast();
         }
 
+        // Go to next sibling node
         xmlElement = xmlElement.nextSibling().toElement();
     }
 }
 
-
+// Parse DCSub file, retrieve subtitles infos.
+// Subtitles read are saved in "MySubtitles" container
 QList<MySubtitles> DcSubParser::open(MyFileReader file) {
 
     QFile file_read( file.getFileName() );
 
+    // Try to open the file
     if ( !file_read.open(QIODevice::ReadOnly) ) {
         // QMessageBox::warning(this, "loading", "Failed to load file.");
         return mSubtitlesList;
     }
 
+    // Copy content of the file in QDomDocument
     QDomDocument doc("dcsub");
     if( !doc.setContent(&file_read)) {
         // QMessageBox::warning(this, "Loading", "Failed to load file." );
@@ -211,21 +233,23 @@ QList<MySubtitles> DcSubParser::open(MyFileReader file) {
 
     file_read.close();
 
+    // Search for a "DCSubtitle" tag name
     QDomElement xml_root = doc.documentElement();
     if(xml_root.tagName() != "DCSubtitle") {
         // QMessageBox::warning( this, "Loading", "Invalid file." );
         return mSubtitlesList;
     }
 
+    // Retrieve the font Id
     QDomElement xml_load_font = xml_root.firstChildElement("LoadFont");
     mFontList.first().setFontId( xml_load_font.attribute("Id") );
-    //mFontList.first().setFontSize( QString::number( MyAttributesConverter::fontHeightToSize(mFontList.first().fontId(), FONT_SIZE_DEFAULT_VALUE) ) );
-    mFontList.first().setFontSize(FONT_SIZE_DEFAULT_VALUE);
 
     QDomElement xml_element = xml_load_font.nextSibling().toElement();
 
+    // Parse all the tree
     parseTree(xml_element);
 
+    // Save the last subtitle
     if ( mNewSubtitle.isValid() ) {
         mSubtitlesList.append(mNewSubtitle);
         mNewSubtitle.clear();
@@ -234,6 +258,7 @@ QList<MySubtitles> DcSubParser::open(MyFileReader file) {
     return mSubtitlesList;
 }
 
+// Create an xml DCSub document from the subtitle list
 void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
     QDomDocument doc("dcsub");
@@ -278,15 +303,18 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
     xml_LoadFont.setAttribute("URI", (font_id +".ttf"));
     xml_root.appendChild(xml_LoadFont);
 
+    // Add first "Font" tag with attributes
     TextFont text_font0 = subtitlesList.first().text().first().Font();
     QDomElement xml_font0 = doc.createElement("Font");
     this->writeFont(&xml_font0, mFontList.first(), text_font0);
     xml_root.appendChild(xml_font0);
 
+    // For each subtitles
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
         MySubtitles current_subtitle = subtitlesList.at(i);
 
+        // Add "Subtitle" tag with attributes
         QDomElement xml_Subtitle = doc.createElement("Subtitle");
         xml_Subtitle.setAttribute("SpotNumber", QString::number(i+1));
         xml_Subtitle.setAttribute("FadeUpTime", "TO DO");
@@ -297,8 +325,10 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
         QList<TextLine> text_list = current_subtitle.text();
 
+        // Number of lines
         for ( qint32 j = 0; j < text_list.size(); j++ ) {
 
+            // Add "Font" tag for each line if a font attribute is different than its parent font attribute
             TextLine text_line = text_list.at(j);
             TextFont text_font = text_line.Font();
             QDomElement xml_newfont = doc.createElement("Font");
@@ -314,6 +344,7 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
                 xml_current_element = xml_Subtitle;
             }
 
+            // Add "Text" tag with position attributes
             QDomElement xml_text = doc.createElement("Text");
 
             if ( text_line.textDirection() == "") {
@@ -358,10 +389,12 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
         }
     }
 
+    // Write the document in file
     QString xml = doc.toString();
     file.write( xml );
 }
 
+// Compare old and new font attributes, return a font container with only the changed attributes setted
 void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont) {
 
     if ( previousFont.findDiff(newFont) ) {
@@ -395,13 +428,14 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
         }
 
         if ( newFont.fontSize() != "" ) {
-            //QString new_font_size = QString::number( MyAttributesConverter::fontSizeToHeight(previousFont.fontId(), newFont.fontSize()) );
             QString new_font_size = newFont.fontSize();
             xmlElement->setAttribute("Size", new_font_size);
         }
     }
 }
 
+// Append a new font container in the font list.
+// When an attribute is null, retrieve the parent font attribute
 void DcSubParser::changeFont(QDomElement xmlElement) {
 
     if ( ( xmlElement.isNull() ) || ( xmlElement.tagName() != "Font") ) {
@@ -419,7 +453,6 @@ void DcSubParser::changeFont(QDomElement xmlElement) {
     }
 
     // attribute Color
-    //mColor = QColor::fromRgba(xmlElement.attribute("Color").toUInt(&ok,16));
     if ( !xmlElement.attribute("Color").isNull() ) {
         new_font.setFontColor( xmlElement.attribute("Color") );
     }
@@ -446,7 +479,6 @@ void DcSubParser::changeFont(QDomElement xmlElement) {
     // attribute Size
     QString font_size;
     if ( !xmlElement.attribute("Size").isNull() ) {
-        //font_size = QString::number( MyAttributesConverter::fontHeightToSize(new_font.fontId(), xmlElement.attribute("Size")) );
         font_size = xmlElement.attribute("Size");
     }
     else {

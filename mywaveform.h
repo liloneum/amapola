@@ -14,6 +14,9 @@ class QwtPlotCurve;
 class QwtPlotMarker;
 class QwtPlotTextLabel;
 
+// This widget manage an audio waveform displaying, with zoom and shift.
+// Display a position marker at the input time,
+// allow media control by sending output time of the position clicked.
 class MyWaveForm : public QWidget
 {
     Q_OBJECT

@@ -2,12 +2,35 @@
 
 #include <QColor>
 
+// The "MySubtitles" class is a string container for text and font, position properties
+// MySubtitles :
+//  - Start time (format HH:MM:SS.zzz)
+//  - End time (format HH:MM:SS.zzz)
+//  - Text :
+//      - line (1 line of text)
+//      - horizontal alignment (left, center, right)
+//      - vertical alignment (top, center, bottom)
+//      - horizontal position (in %)
+//      - vertical position (in %)
+//      - direction (vertical (not used), horizontal).
+//      - Font :
+//          - name
+//          - size (in pt)
+//          - effect (border, shadow, none) - not used yet
+//          - effect color (#AARRGGBB)
+//          - color (#AARRGGBB)
+//          - italic (yes / no)
+//          - underlined (yes / no)
+//          - script (normal, super, sub) - not used
 
+
+//*************************************************//
+//               Class MySubtitles                 //
+//*************************************************//
 MySubtitles::MySubtitles()
 {
     mStartTime = "";
     mEndTime = "";
-    //mText = "";
     mText.clear();
 }
 
@@ -15,9 +38,10 @@ void MySubtitles::clear() {
 
     mStartTime = "";
     mEndTime = "";
-    //mText = "";
     mText.clear();
 }
+
+// Mutators
 
 void MySubtitles::setStartTime(QString startTime) {
 
@@ -29,11 +53,6 @@ void MySubtitles::setEndTime(QString endTime) {
     mEndTime = endTime;
 }
 
-//void MySubtitles::setText(QString text) {
-
-//    mText = text;
-//}
-
 void MySubtitles::setText(TextLine textLine, TextFont font) {
 
     textLine.setFont(font);
@@ -41,6 +60,7 @@ void MySubtitles::setText(TextLine textLine, TextFont font) {
     mText.append(textLine);
 }
 
+// Assessors
 QString MySubtitles::startTime() {
 
     return mStartTime;
@@ -51,16 +71,12 @@ QString MySubtitles::endTime() {
     return mEndTime;
 }
 
-//QString MySubtitles::text() {
-
-//    return mText;
-//}
-
 QList<TextLine> MySubtitles::text() {
 
     return mText;
 }
 
+// A subtitle is valid if there are "time in", "time out", and text
 bool MySubtitles::isValid() {
 
     if ( ( !mStartTime.isEmpty() ) && ( !mEndTime.isEmpty() ) && ( !mText.isEmpty() ) ) {
@@ -79,7 +95,14 @@ bool MySubtitles::isValid() {
 TextLine::TextLine() {
 
     mLine = "";
+    mVPosition = "";
+    mHPosition = "";
+    mVAlign = "";
+    mHAlign = "";
+    mDirection = "";
 }
+
+// Mutators
 
 void TextLine::setLine(QString line) {
 
@@ -115,6 +138,7 @@ void TextLine::setTextDirection(QString textDirection) {
     mDirection = textDirection;
 }
 
+// Assessors
 
 QString TextLine::textVPosition() {
 
@@ -184,6 +208,8 @@ TextFont::TextFont() {
     mScript = "";
 }
 
+// Mutators
+
 void TextFont::setFontId(QString fontId) {
     mFontId = fontId;
 }
@@ -215,6 +241,8 @@ void TextFont::setFontUnderlined(QString fontUnderlined) {
 void TextFont::setFontScript(QString fontScript) {
     mScript = fontScript;
 }
+
+// Assessors
 
 QString TextFont::fontId() {
     return mFontId;
@@ -248,6 +276,8 @@ QString TextFont::fontScript() {
     return mScript;
 }
 
+// Compare two font containers and return a font containers
+// with only the different properties. All the equal properties are setted to empty string
 bool TextFont::findDiff(TextFont & font) {
 
     bool is_different = false;

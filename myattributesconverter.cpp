@@ -4,10 +4,12 @@
 #include <QFontMetrics>
 #include <QRegExp>
 
+// Class to define some converters statics methods
 MyAttributesConverter::MyAttributesConverter()
 {
 }
 
+// Convert an horizontal alignment string to Qt::Aligment enum
 Qt::Alignment MyAttributesConverter::hAlignFromString(QString hAlignAttribute) {
 
     if ( hAlignAttribute == "left") {
@@ -24,6 +26,7 @@ Qt::Alignment MyAttributesConverter::hAlignFromString(QString hAlignAttribute) {
     }
 }
 
+// Convert a vertical alignment string to Qt::Aligment enum
 Qt::Alignment MyAttributesConverter::vAlignFromString(QString vAlignAttribute) {
 
     if ( vAlignAttribute == "top" ) {
@@ -40,6 +43,7 @@ Qt::Alignment MyAttributesConverter::vAlignFromString(QString vAlignAttribute) {
     }
 }
 
+// Convert a boolean to string "yes" or "no"
 QString MyAttributesConverter::isItalic(bool italic) {
 
     if ( italic == true ) {
@@ -49,6 +53,7 @@ QString MyAttributesConverter::isItalic(bool italic) {
         return "no";
 }
 
+// Convert a boolean to string "yes" or "no"
 QString MyAttributesConverter::isUnderlined(bool underlined) {
 
     if ( underlined == true ) {
@@ -58,49 +63,15 @@ QString MyAttributesConverter::isUnderlined(bool underlined) {
         return "no";
 }
 
-qint16 MyAttributesConverter::fontHeightToSize(QString fontName, QString fontHeight) {
-
-    QFont font(fontName);
-    qint16 font_size_int = fontHeight.toInt();
-    font.setPointSize(font_size_int);
-
-    qint16 font_height;
-    QFontMetrics font_metrics(font);
-    font_height = font_metrics.height();
-    qint16 i = 0;
-    while (font_height > font_size_int) {
-        font.setPointSize(font_size_int - i);
-        QFontMetrics font_metrics2(font);
-        font_height = font_metrics2.height();
-        i++;
-    }
-
-    font_size_int = font_size_int - i;
-
-    //return font_size_int;
-    return 72;
-}
-
-qint16 MyAttributesConverter::fontSizeToHeight(QString fontName, QString fontSize) {
-    
-    QFont font(fontName);
-    qint16 font_size_int = fontSize.toInt();
-    font.setPointSize(font_size_int);
-
-    QFontMetrics font_metrics(font);
-
-    qint16 font_height = font_metrics.height();
-
-    return font_height;
-}
-
+// Convert time given with "ticks" or "1/10 second" to time with millisecond,
+// with HH:MM:SS:zzz format.
+// One tick equal to 4 milliseconds
 QString MyAttributesConverter::toTimeHMSms(QString time) {
 
     QRegExp time_format1("^\\d{2}:\\d{2}:\\d{2}\\.\\d+$");
-    //time_format1.setPatternSyntax(QRegExp::Wildcard);
     QRegExp time_format2("^\\d{2}:\\d{2}:\\d{2}:\\d{3}$");
-    //time_format2.setPatternSyntax(QRegExp::Wildcard);
 
+    // Format is HH:MM:SS.zzz (or .zz, or .z) where "z" is given in 1/10 second
     if ( time_format1.exactMatch(time) ) {
 
         qint32 tenth_sec = time.section(".",-1).toInt();
@@ -117,6 +88,7 @@ QString MyAttributesConverter::toTimeHMSms(QString time) {
 
         return time;
     }
+    // Format is HH:MM:SS.zzz, where "zzz" is given in "ticks"
     else if ( time_format2.exactMatch(time) ) {
 
         qint32 ticks = time.section(":", -1).toInt();
@@ -140,6 +112,8 @@ QString MyAttributesConverter::toTimeHMSms(QString time) {
     }
 }
 
+// Convert time given with millisecond to time with "ticks".
+// Where a tick equal 4 milliseconds.
 QString MyAttributesConverter::toTimeHMSticks(QString time) {
 
     qint32 millisecond = time.section(".",-1).toInt();

@@ -5,6 +5,7 @@
 #include "myfilewriter.h"
 #include "mysubtitles.h"
 
+// Class with virtual methods used to parse subtitles file
 class MySubtitleFileParser
 {
 public:

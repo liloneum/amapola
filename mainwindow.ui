@@ -47,7 +47,7 @@
         <height>0</height>
        </size>
       </property>
-      <widget class="MyTextEdit2" name="stEditDisplay2" native="true">
+      <widget class="MyTextEdit" name="stEditDisplay" native="true">
        <property name="geometry">
         <rect>
          <x>50</x>
@@ -1343,9 +1343,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MyTextEdit2</class>
+   <class>MyTextEdit</class>
    <extends>QWidget</extends>
-   <header location="global">mytextedit2.h</header>
+   <header location="global">mytextedit.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

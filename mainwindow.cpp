@@ -25,14 +25,18 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    // Init UI
     ui->setupUi(this);
 
+    // Hide columns to user
     for ( qint32 i = 5; i < ui->subTable->columnCount(); i++ ) {
         ui->subTable->setColumnHidden(i, true);
     }
 
+    // Install an event filter on all the MainWindow
     this->installEventFilter(this);
 
+    // Init flags
     mTextPosChangedBySoft = false;
     mTextPosChangedByUser = false;
     mTextFontChangedBySoft = false;
@@ -40,32 +44,37 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
+    // Init the SIGNAL / SLOT connections
+    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),ui->subTable, SLOT(videoDurationChanged(qint64)));
+    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->waveForm, SLOT(updatePostionMarker(qint64)));
+    connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->subTable, SLOT(updateStDisplay(qint64)));
+
     connect(ui->waveForm, SIGNAL(positionChanged(qint64)), ui->videoPlayer, SLOT(setPosition(qint64)));
 
-    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),ui->subTable, SLOT(videoDurationChanged(qint64)));
-    connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->subTable, SLOT(updateStDisplay(qint64)));
-    connect(ui->stEditDisplay2, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
-    connect(ui->stEditDisplay2, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
-    connect(ui->stEditDisplay2, SIGNAL(textLineFocusChanged(TextFont, TextLine)), this, SLOT(updateToolBox(TextFont, TextLine)));
+    connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
+    connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
+    connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged(TextFont, TextLine)), this, SLOT(updateToolBox(TextFont, TextLine)));
+
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint32)), this, SLOT(updateVideoPosition(qint32)));
     connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
-
-    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
 }
 
 MainWindow::~MainWindow() {
     delete ui;
 }
 
+
 bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
+    // Catch shortcut key events
     if ( event->type() == QEvent::KeyPress ) {
 
         QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
 
         if ( key_event->key() == Qt::Key_F1 ) {
 
+            // F1 set current subtitle start time
             if ( ui->subTable->setStartTime( ui->videoPlayer->playerPosition()) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
                 QMessageBox::warning(this, "Set start time", error_msg);
@@ -73,6 +82,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         }
         else if ( key_event->key() == Qt::Key_F2 ) {
 
+            // F2 set current subtitle end time
             if ( ui->subTable->setEndTime( ui->videoPlayer->playerPosition()) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
                 QMessageBox::warning(this, "Set end time", error_msg);
@@ -82,6 +92,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             qint64 end_time_ms = ui->videoPlayer->playerPosition();
 
+            // F3 set current subtitle end time + add new subtitle entry
             if ( ui->subTable->setEndTime(end_time_ms) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
                 QMessageBox::warning(this, "Set end time", error_msg);
@@ -90,7 +101,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
                 qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / (qreal)FRAME_PER_SEC ) * (qreal)SUB_MIN_INTERVAL_FRAME );
 
-                if ( ui->subTable->insertNewSub( ui->stEditDisplay2->getDefaultSub(), start_time_ms  ) == false ) {
+                if ( ui->subTable->insertNewSub( ui->stEditDisplay->getDefaultSub(), start_time_ms  ) == false ) {
                     QString error_msg = ui->subTable->errorMsg();
                     QMessageBox::warning(this, "Insert subtitle", error_msg);
                 }
@@ -98,13 +109,15 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         }
         else if ( key_event->key() == Qt::Key_F4 ) {
 
-            if ( ui->subTable->insertNewSubAfterCurrent( ui->stEditDisplay2->getDefaultSub() ) == false ) {
+            // F4 add new subtitle entry after current subtitle
+            if ( ui->subTable->insertNewSubAfterCurrent( ui->stEditDisplay->getDefaultSub() ) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
                 QMessageBox::warning(this, "Insert subtitle", error_msg);
             }
         }
         else if ( key_event->key() == Qt::Key_Backspace ) {
 
+            // Ctrl + BackSpace remove current subtitle
             Qt::KeyboardModifiers event_keybord_modifier = key_event->modifiers();
 
             if ( event_keybord_modifier == Qt::ControlModifier ) {
@@ -116,71 +129,88 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     return QMainWindow::eventFilter(watched, event);
 }
 
+// Update the subtitle text in the database
 void MainWindow::updateSubTable() {
 
+    // There are no subtitle for the current time. Try to add new subtitle entry
     if ( ui->subTable->isNewEntry() ) {
-        if ( ui->subTable->insertNewSub( ui->stEditDisplay2->subtitleData()) == false ) {
+        if ( ui->subTable->insertNewSub( ui->stEditDisplay->subtitleData()) == false ) {
+
             QString error_msg = ui->subTable->errorMsg();
             QMessageBox::warning(this, "Insert subtitle", error_msg);
             MySubtitles empty_subtitle;
             updateTextEdit(empty_subtitle);
         }
-    }
+        else {
+            ui->subTable->updateText( ui->stEditDisplay->text());
+        }
+    } // There are a subtitle for the current time. Update the text in the database
     else {
-        ui->subTable->updateText( ui->stEditDisplay2->text());
+        ui->subTable->updateText( ui->stEditDisplay->text());
     }
 }
 
+// Interface to update the position of the player
 void MainWindow::updateVideoPosition(qint32 positionMs) {
 
     ui->videoPlayer->setPosition(positionMs);
-    //ui->stEditDisplay2->setFocus();
+    //ui->stEditDisplay->setFocus();
 }
 
+// Interface to update the text of the text edit area
 void MainWindow::updateTextEdit(MySubtitles subtitle) {
 
-    ui->stEditDisplay2->setText(subtitle);
+    ui->stEditDisplay->setText(subtitle);
 }
 
+// Manage the openning of video file when "Open" button is triggered
 void MainWindow::on_actionOpen_triggered()
 {
+    // Open a video file with the palyer
     QString video_file_name = ui->videoPlayer->openFile();
 
+    // If the media player has openned the video
     if ( !video_file_name.isEmpty() ) {
 
+        // Open the corresponding waveform
         QString wf_file_name = video_file_name;
         wf_file_name.truncate(wf_file_name.lastIndexOf("."));
         wf_file_name.append(".wf");
 
         ui->waveForm->openFile(wf_file_name, video_file_name);
 
+        // Reset the subtitles database
         ui->subTable->initStTable(0);
 
     }
 }
 
+// Inteface to resize the edit zone in function of the current video size
 void MainWindow::updateStEditSize() {
 
     QSizeF video_item_size;
     QSizeF video_item_native_size;
+    qint32 video_height;
 
     // Resize the width of subtitles edit zone in function of video width
     video_item_size = ui->videoPlayer->videoItemSize();
 
     video_item_native_size = ui->videoPlayer->videoItemNativeSize();
-    qreal video_ratio = video_item_native_size.width() / video_item_native_size.height();
 
-    qint32 video_height = (qint32) qRound( video_item_size.width() / video_ratio );
+    if ( video_item_native_size.isValid() ) {
+        qreal video_ratio = video_item_native_size.width() / video_item_native_size.height();
+
+        video_height = (qint32) qRound( video_item_size.width() / video_ratio );
+    }
+    else {
+        video_height = video_item_size.height();
+    }
 
     // Set the edit region size and position mapped on video.
     QSize video_current_size(video_item_size.width(), video_height + 1);
-    ui->stEditDisplay2->setFixedSize(video_current_size);
+    ui->stEditDisplay->setFixedSize(video_current_size);
     qint32 video_top_pos = (qint32)( qRound( video_item_size.height() - (qreal)video_height ) / 2.0 ) + 9;
-    ui->stEditDisplay2->move(9, video_top_pos);
-
-//    ui->textEdit->setStyleSheet("background: transparent; color: yellow");
-//    ui->textEdit->setFixedSize(ui->stEditDisplay2->size());
-//    ui->textEdit->move(0, 0);
+    ui->stEditDisplay->move(9, video_top_pos);
 
 }
 
@@ -196,15 +226,12 @@ void MainWindow::on_actionQuit_triggered()
     close();
 }
 
+// Manage the subtitles import when "Import" button triggered
 void MainWindow::on_actionImport_Subtitles_triggered()
 {
-//    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath());
-//    MyFileReader file_reader(file_name,"UTF-8");
-//    SubRipParser* parser = new SubRipParser();
-//    QList<MySubtitles> subtitles_list = parser->open(file_reader);
-
     QString selected_filter;
 
+    // Open a subtitle file
     QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath() + "/Videos",
                                                      tr("SubRip (*.srt);;DCSubtitle (*.xml);;All Files(*)"),
                                                      &selected_filter);
@@ -212,6 +239,13 @@ void MainWindow::on_actionImport_Subtitles_triggered()
 
     MyFileReader file_reader(file_name, "UTF-8");
 
+    if ( file_reader.readFile(file_name, "UTF-8") == false ) {
+        QString error_msg = file_reader.errorMsg();
+        QMessageBox::warning(this, "Import subtitles", error_msg);
+        return;
+    }
+
+    // Choose a parser to parse the file
     MySubtitleFileParser* parser;
 
     if ( selected_filter ==  ("SubRip (*.srt)") ) {
@@ -224,27 +258,30 @@ void MainWindow::on_actionImport_Subtitles_triggered()
         //TO DO
     }
 
-    //DcSubParser* parser = new DcSubParser();
+    // Parse the file
     QList<MySubtitles> subtitles_list = parser->open(file_reader);
 
+    // If parsing is successfull, load the subtitles list in the database
     if ( !subtitles_list.isEmpty() ) {
 
         ui->subTable->loadSubtitles(subtitles_list);
     }
 }
 
+// Manage the subtitles export when "Export" button triggered
 void MainWindow::on_actionExport_Subtitles_triggered() {
 
     QString selected_filter;
 
+    // Create or open file to write datas
     QString file_name = QFileDialog::getSaveFileName(this, tr("Open Subtitles"),QDir::homePath() + "/Videos",
                                                      tr("SubRip (*.srt);;DCSubtitle (*.xml);;All Files(*)"),
                                                      &selected_filter);
 
 
     MyFileWriter file_writer(file_name, "UTF-8");
-    //SubRipParser* parser = new SubRipParser();
 
+    // Choose the good parser
     MySubtitleFileParser* parser;
 
     if ( selected_filter ==  ("SubRip (*.srt)") ) {
@@ -257,14 +294,18 @@ void MainWindow::on_actionExport_Subtitles_triggered() {
         //TO DO
     }
 
-    //DcSubParser* parser = new DcSubParser();
-
+    // Retreive the subtitles datas from databases
     QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();
 
+    // If there are datas, write it to asked format
    if ( !subtitles_list.isEmpty() ) {
 
        parser->save(file_writer, subtitles_list);
-       file_writer.toFile();
+
+       if ( file_writer.toFile() == false ) {
+           QString error_msg = file_writer.errorMsg();
+           QMessageBox::warning(this, "Export subtitles", error_msg);
+       }
    }
 }
 
@@ -288,6 +329,8 @@ void MainWindow::displayErrorMsg(QString errorMsg) {
     QMessageBox::warning(this, "Error", errorMsg);
 }
 
+
+
 // ******************************** Tool Box ***************************************************************//
 
 void MainWindow::updateToolBox(TextFont textFont, TextLine textLine) {
@@ -297,12 +340,16 @@ void MainWindow::updateToolBox(TextFont textFont, TextLine textLine) {
     this->updateFontToolBox(textFont);
 }
 
+// Update the "position" tool boxes
 void MainWindow::updatePosToolBox(TextLine textLine) {
 
+    // Update only if the user is not changing the parameters with tool boxes
     if ( mTextPosChangedByUser != true ) {
 
+        // Set the flag to indicate that toolboxes states are changing
         mTextPosChangedBySoft = true;
 
+        // If tool boxes are disable, enable all of them
         if ( ui->lineLabel->isEnabled() == false )  {
             ui->lineLabel->setEnabled(true);
             ui->hAlignBox->setEnabled(true);
@@ -315,6 +362,7 @@ void MainWindow::updatePosToolBox(TextLine textLine) {
             ui->vPosLabel->setEnabled(true);
         }
 
+        // Set the parameters to the boxes
         ui->hAlignBox->setCurrentText( textLine.textHAlign() );
         ui->hPosSpinBox->setValue( textLine.textHPosition().toDouble() );
         ui->vAlignBox->setCurrentText( textLine.textVAlign() );
@@ -324,6 +372,7 @@ void MainWindow::updatePosToolBox(TextLine textLine) {
     mTextPosChangedBySoft = false;
 }
 
+// Change the "position" of the current "edit line" from the toolboxes parameters
 void MainWindow::updateTextPosition() {
 
     mTextPosChangedByUser = true;
@@ -340,18 +389,22 @@ void MainWindow::updateTextPosition() {
     QString vPos_str = QString::number(ui->vPosSpinBox->value(), 'f', 1);
     text_line.setTextVPosition( vPos_str );
 
-    ui->stEditDisplay2->updateTextPosition(text_line);
+    ui->stEditDisplay->updateTextPosition(text_line);
 
     mTextPosChangedByUser = false;
 }
 
+// Vertical alignment toolbox value changed
 void MainWindow::on_vAlignBox_activated(const QString &arg1) {
 
+    // Tool box changed by user
     if ( mTextPosChangedBySoft == false ) {
+        // Update the text edit position
         updateTextPosition();
     }
 }
 
+// Vertical position toolbox value changed
 void MainWindow::on_vPosSpinBox_valueChanged(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
@@ -359,6 +412,7 @@ void MainWindow::on_vPosSpinBox_valueChanged(const QString &arg1) {
     }
 }
 
+// Horizontal alignment toolbox value changed
 void MainWindow::on_hAlignBox_activated(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
@@ -366,6 +420,7 @@ void MainWindow::on_hAlignBox_activated(const QString &arg1) {
     }
 }
 
+// Horizontal position toolbox value changed
 void MainWindow::on_hPosSpinBox_valueChanged(const QString &arg1) {
 
     if ( mTextPosChangedBySoft == false ) {
@@ -373,13 +428,16 @@ void MainWindow::on_hPosSpinBox_valueChanged(const QString &arg1) {
     }
 }
 
-
+// Update the "font" tool boxes
 void MainWindow::updateFontToolBox(TextFont textFont) {
 
+    // Update only if the user is not changing the parameters with tool boxes
     if ( mTextFontChangedByUser != true ) {
 
+        // Set the flag to indicate that toolboxes states are changing
         mTextFontChangedBySoft = true;
 
+        // If tool boxes are disable, enable all of them
         if ( ui->fontLabel->isEnabled() == false )  {
 
             ui->fontLabel->setEnabled(true);
@@ -398,6 +456,7 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
             ui->fontUnderlinedButton->setEnabled(true);
         }
 
+        // Set the parameters to the boxes
         QFont font(textFont.fontId());
         ui->fontIdComboBox->setCurrentFont(font);
         ui->fontSizeSpinBox->setValue(textFont.fontSize().toInt());
@@ -448,6 +507,7 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
     mTextFontChangedBySoft = false;
 }
 
+// Change the "font" of the current "edit line" from the font toolboxes parameters
 void MainWindow::updateTextFont(bool customColorClicked) {
 
     mTextFontChangedByUser = true;
@@ -515,19 +575,22 @@ void MainWindow::updateTextFont(bool customColorClicked) {
         }
     }
 
-    ui->stEditDisplay2->updateTextFont(text_font);
+    ui->stEditDisplay->updateTextFont(text_font);
 
     mTextFontChangedByUser = false;
 }
 
-
+// Font size toolbox changed
 void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &arg1) {
 
+    // Tool box changed by user
     if ( mTextFontChangedBySoft == false ) {
+        // Update the text edit font
         updateTextFont(false);
     }
 }
 
+// Font color selected (the 7 colors boxes are exclusive, if one is checked, the others are unchecked)
 void MainWindow::on_fontColorRButton_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
@@ -570,6 +633,14 @@ void MainWindow::on_fontColorWButton_toggled(bool checked) {
     }
 }
 
+void MainWindow::on_fontColorOtherButton_clicked() {
+
+    if ( mTextFontChangedBySoft == false ) {
+        updateTextFont(true);
+    }
+}
+
+// Italic value changed
 void MainWindow::on_fontItalicButton_toggled(bool checked) {
 
     if ( mTextFontChangedBySoft == false ) {
@@ -577,6 +648,7 @@ void MainWindow::on_fontItalicButton_toggled(bool checked) {
     }
 }
 
+// Underlined value changed
 void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 
     if ( mTextFontChangedBySoft == false ) {
@@ -584,16 +656,10 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
     }
 }
 
+// Font name changed
 void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
 
     if ( mTextFontChangedBySoft == false ) {
         updateTextFont(false);
-    }
-}
-
-void MainWindow::on_fontColorOtherButton_clicked() {
-
-    if ( mTextFontChangedBySoft == false ) {
-        updateTextFont(true);
     }
 }

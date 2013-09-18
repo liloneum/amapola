@@ -24,28 +24,19 @@ private:
     void parseTree(QDomElement xmlElement);
     void writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont);
 
+    // TextFont containers list
     QList<TextFont> mFontList;
+    // TextLine container
     TextLine mNewText;
+    // TextFont container
     TextFont mNewFont;
+    // Subtitles container
     MySubtitles mNewSubtitle;
+    // MySubtitles containers list
     QList<MySubtitles> mSubtitlesList;
 
-    // attribute Id
-    QString mFontId;
     // attribute Color
     QColor mColor;
-    // attribute Effect
-    QString mEffect;
-    // attribute EffectColor
-    QColor mEffectColor;
-    // attribute Size
-    qint16 mSize;
-    // attribute Italic
-    bool mItalic;
-    // attribute Underlined
-    bool mUnderlined;
-    // attribute Script
-    QString mScript;
 };
 
 #endif // DCSUBPARSER_H

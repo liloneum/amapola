@@ -13,13 +13,24 @@
 #include <qwt_scale_widget.h>
 #include <qwt_plot_textlabel.h>
 
-#define SAMPLE_PER_SEC 1000
+// Number of audio samples per second displayed.
+// If there are too much samples, the navigation may be not fluid
+// If there are not enought samples, the wave displayed will be not precise
+// 1000 samples per second is fine for Amapola application
+#define SAMPLES_PER_SEC 1000
+// Sample size in bytes (here it's 16 bits -> 2 Bytes)
 #define SAMPLE_SIZE_BYTES 2
+// Number of bits in one bytes
 #define BYTE_IN_BITS 8
+// Convert second in milliseconds
 #define SEC_TO_MSEC 1000
+// The zoom factor. Mean that one step of zoom in (zoom-out) will show 2 time less (more) of samples
 #define ZOOM_FACTOR 2
+// Time shift factor. Shift the waveform of 0.1 * time displayed
 #define TIME_SHIFT_FACTOR 0.1
+// Minimum time displayed
 #define MIN_TIME_SCALE_MS 5000
+// Maximum time displayed
 #define MAX_TIME_SCALE_MS 60000
 
 // Class to convert the time label from "milliseconds" to "hh:mm:ss"
@@ -39,7 +50,9 @@ private:
     QTime baseTime;
 };
 
-// MyWaveForm class constructor
+// This widget manage an audio waveform displaying, with zoom and shift.
+// Display a position marker at the input time,
+// allow media control by sending output time of the position clicked.
 MyWaveForm::MyWaveForm(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::MyWaveForm)
@@ -119,7 +132,7 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
         desired_format.setChannelCount(1);
         desired_format.setCodec("audio/pcm");
         desired_format.setSampleType(QAudioFormat::SignedInt);
-        desired_format.setSampleRate(SAMPLE_PER_SEC);
+        desired_format.setSampleRate(SAMPLES_PER_SEC);
         desired_format.setSampleSize(SAMPLE_SIZE_BYTES * BYTE_IN_BITS);
         desired_format.setByteOrder(QAudioFormat::LittleEndian);
 
@@ -184,7 +197,7 @@ void MyWaveForm::initWaveForm() {
     }
 
     size_of_file = mpFile->size();
-    time_accuracy_ms = (qreal)SEC_TO_MSEC / (qreal)SAMPLE_PER_SEC;
+    time_accuracy_ms = (qreal)SEC_TO_MSEC / (qreal)SAMPLES_PER_SEC;
     mAmplitudeVector.resize(size_of_file / SAMPLE_SIZE_BYTES);
     mTimeVectorMs.resize(size_of_file / SAMPLE_SIZE_BYTES);
 
@@ -227,13 +240,13 @@ void MyWaveForm::plotWaveForm() {
     QVector<double> amplitude_vector;
     QVector<double> time_vector;
 
-    vector_size = (qint32)( (qreal)(mMaxPlotTimeMs - mMinPlotTimeMs) * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) ) + 1;
+    vector_size = (qint32)( (qreal)(mMaxPlotTimeMs - mMinPlotTimeMs) * ( (qreal)SAMPLES_PER_SEC / (qreal)SEC_TO_MSEC ) ) + 1;
 
     amplitude_vector.resize(vector_size);
     time_vector.resize(vector_size);
 
-    qint32 min_index = (qint32)( (qreal)mMinPlotTimeMs * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) );
-    qint32 max_index = (qint32)( (qreal)mMaxPlotTimeMs * ( (qreal)SAMPLE_PER_SEC / (qreal)SEC_TO_MSEC ) );
+    qint32 min_index = (qint32)( (qreal)mMinPlotTimeMs * ( (qreal)SAMPLES_PER_SEC / (qreal)SEC_TO_MSEC ) );
+    qint32 max_index = (qint32)( (qreal)mMaxPlotTimeMs * ( (qreal)SAMPLES_PER_SEC / (qreal)SEC_TO_MSEC ) );
 
     for ( qint32 i = min_index; i <= max_index; i++ ) {
         amplitude_vector[i - min_index] = mAmplitudeVector[i];

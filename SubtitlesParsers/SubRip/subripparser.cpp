@@ -3,13 +3,31 @@
 #include <QStringList>
 #include <mysubtitles.h>
 
+
+// SubRip format
+
+// 1
+// 00:00:54,210 --> 00:00:58,072
+// text line 1
+// text line 2
+
+// 2
+// 00:00:58,147 --> 00:01:03,021
+// text line 1
+
+// 3
+// 00:01:04,125 --> 00:01:05,222
+// text line 1
+
 SubRipParser::SubRipParser()
 {
 }
 
+// Parse SubRip file, retrieve subtitles infos.
+// Subtitles read are saved in "MySubtitles" container
 QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
-    QVector<QString> lines = file.lines();
+    QStringList lines = file.lines();
 
     QRegExp time_regexp("^(\\d+):(\\d+):(\\d+),(\\d+)\\s-->\\s(\\d+):(\\d+):(\\d+),(\\d+)");
 
@@ -32,6 +50,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
             new_subtitle.setStartTime(times_list.first());
             new_subtitle.setEndTime(times_list.last());
 
+            // If text line 1 exist, retrieve it
             if ( !( lines[i + 1].isEmpty() ) ) {
 
                 TextLine text_line;
@@ -41,6 +60,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
                 new_subtitle.setText(text_line, text_font);
 
+                // If text line 2 exist, retrieve it
                 if ( !( lines[i + 2].isEmpty() ) ) {
 
                     text_line.setLine(lines[i + 2]);
@@ -50,12 +70,13 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
             }
 
             subtitles_list.append(new_subtitle);
-
         }
     }
     return subtitles_list;
 }
 
+
+// Write the subtitles list in a file (SubRip format)
 void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
