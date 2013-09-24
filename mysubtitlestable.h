@@ -16,7 +16,7 @@ public:
     //~MySubtitlesTable();
 
 signals:
-    void itemSelectionChanged(qint32);
+    void itemSelectionChanged(qint64);
     void newTextToDisplay(MySubtitles);
     void currentSubChanged(qint32);
 
@@ -32,12 +32,11 @@ public slots:
     void updateDatas(MySubtitles subtitle, qint64 positionMs = -1);
     bool setEndTime(qint64 positionMs);
     bool setStartTime(qint64 positionMs);
+    void updateStDisplay(qint64 positionMs);
     QString errorMsg();
 
 private slots:
     void updateSelectedItem();
-    void videoDurationChanged(qint64 videoDurationMs);
-    void updateStDisplay(qint64 videoPositionMs);
     void updateItem(QTableWidgetItem* item);
     QString updateStTime(QTableWidgetItem* time_item);
     MySubtitles fillSubInfos(qint32 stIndex);
@@ -49,7 +48,7 @@ private:
     QVector<qint32> mPositionMsToStIndex;
 
     // Position time of the video in millisecond
-    qint64 mVideoPositionMs;
+    qint64 mCurrentPositionMs;
 
     // Previous subtitle displayed index.
     qint32 mPreviousIndex;

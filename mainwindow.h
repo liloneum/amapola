@@ -23,7 +23,10 @@ private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
     void updateSubTable();
-    void updateVideoPosition(qint32 positionMs);
+    void videoPositionChanged(qint64 positionMs);
+    void currentItemChanged(qint64 positionMs);
+    void waveformMarerkPosChanged(qint64 positionMs);
+    void updateVideoPosition(qint64 positionMs);
     void updateTextEdit(MySubtitles subtitle);
     bool eventFilter(QObject* watched, QEvent* event);
     void resizeEvent(QResizeEvent* event);
@@ -44,19 +47,19 @@ private slots:
     void updatePosToolBox(TextLine textLine);
     void updateTextPosition();
 
-    void on_vPosSpinBox_valueChanged(const QString &arg1);
+    void on_vPosSpinBox_valueChanged(const QString &value);
 
-    void on_hPosSpinBox_valueChanged(const QString &arg1);
+    void on_hPosSpinBox_valueChanged(const QString &value);
 
-    void on_vAlignBox_activated(const QString &arg1);
+    void on_vAlignBox_activated(const QString &value);
 
-    void on_hAlignBox_activated(const QString &arg1);
+    void on_hAlignBox_activated(const QString &value);
 
 
     void updateFontToolBox(TextFont textFont);
     void updateTextFont(bool customColorClicked);
 
-    void on_fontSizeSpinBox_valueChanged(const QString &arg1);
+    void on_fontSizeSpinBox_valueChanged(const QString &value);
 
     void on_fontColorRButton_toggled(bool checked);
 
@@ -80,10 +83,17 @@ private slots:
 
 private:
     Ui::MainWindow* ui;
+
+    // Flag if the toolbox was changed by user or by software
+    // To only treat the user changment
     bool mTextPosChangedBySoft;
     bool mTextPosChangedByUser;
     bool mTextFontChangedBySoft;
     bool mTextFontChangedByUser;
+
+    // Flag to avoid infinite inter call between video-player and waveform
+    bool mVideoPositionChanged;
+    bool mMarkerPosChanged;
 };
 
 #endif // MAINWINDOW_H

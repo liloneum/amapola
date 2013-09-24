@@ -18,13 +18,24 @@
     <widget class="QListWidget" name="listWidget">
      <property name="maximumSize">
       <size>
-       <width>200</width>
+       <width>120</width>
        <height>16777215</height>
       </size>
      </property>
      <item>
       <property name="text">
        <string>Timing</string>
+      </property>
+      <property name="textAlignment">
+       <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+      </property>
+      <property name="flags">
+       <set>ItemIsSelectable|ItemIsUserCheckable|ItemIsEnabled</set>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Position</string>
       </property>
       <property name="textAlignment">
        <set>AlignHCenter|AlignVCenter|AlignCenter</set>
@@ -55,7 +66,7 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="timingPage">
       <widget class="QLabel" name="label">
@@ -138,9 +149,108 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="horizontalLayoutWidget_3">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>130</y>
+         <width>315</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QLabel" name="frameRateLabel">
+          <property name="text">
+           <string>Frame rate (fps) :</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="frameRateComboBox">
+          <item>
+           <property name="text">
+            <string>23.976</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>24</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>25</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>29.97</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>30</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>Other ...</string>
+           </property>
+          </item>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="frameRateSpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="buttonSymbols">
+           <enum>QAbstractSpinBox::NoButtons</enum>
+          </property>
+          <property name="accelerated">
+           <bool>false</bool>
+          </property>
+          <property name="correctionMode">
+           <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="suffix">
+           <string>fps</string>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.010000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+     <widget class="QWidget" name="positionPage">
+      <widget class="QLabel" name="label2">
+       <property name="geometry">
+        <rect>
+         <x>90</x>
+         <y>10</y>
+         <width>67</width>
+         <height>17</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Position</string>
+       </property>
+      </widget>
      </widget>
      <widget class="QWidget" name="page2">
-      <widget class="QLabel" name="label_2">
+      <widget class="QLabel" name="label3">
        <property name="geometry">
         <rect>
          <x>100</x>

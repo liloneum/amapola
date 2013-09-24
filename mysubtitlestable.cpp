@@ -61,13 +61,15 @@ MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
     QTableWidget(parent)
 {
     // Init the lookup table
-    mPositionMsToStIndex.resize(1);
+    mPositionMsToStIndex.reserve(14400000);
+    mPositionMsToStIndex.resize(3600000);
     mPositionMsToStIndex.fill(-1);
 
     // Init the variables
-    mVideoPositionMs = 0;
+    mCurrentPositionMs = 0;
     mPreviousIndex = 0;
     mStCount = 0;
+    mCurrentIndex = 0;
 
     // Init flags
     mSubLoadding = false;
@@ -97,6 +99,8 @@ void MySubtitlesTable::initStTable (qint32 numberOfRow) {
     }
 
     this->addRows(numberOfRow, 0);
+
+    this->setEnabled(true);
 }
 
 // Add new rows to the table. "numberOfRow" define the number of rows to add.
@@ -219,8 +223,15 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
                     this->item(mStCount, SUB_NBR_OF_LINES_COL)->setText("1");
                     line1_item  = this->item(mStCount, SUB_LINE1_COL);
                     line1_item->setText( text_line.Line() );
+
                     vposition1_item  = this->item(mStCount, SUB_VPOSITION1_COL);
-                    vposition1_item->setText( text_line.textVPosition() );
+                    if ( text_line.textVPosition().isEmpty() ) {
+                        //TO DO
+                    }
+                    else {
+                        vposition1_item->setText( text_line.textVPosition() );
+                    }
+
                     valign1_item  = this->item(mStCount, SUB_VALIGN1_COL);
                     valign1_item->setText( text_line.textVAlign() );
                     hposition1_item  = this->item(mStCount, SUB_HPOSITION1_COL);
@@ -313,12 +324,18 @@ bool MySubtitlesTable::insertNewSubAfterCurrent(MySubtitles newSubtitle) {
     QTime time_base(0, 0, 0, 0);
     QTime end_time_HMS;
     qint32 end_time_ms;
+    qint64 position_ms;
 
-    end_time_item = this->item(mCurrentIndex,SUB_END_TIME_COL);
-    end_time_HMS = QTime::fromString(end_time_item->text(), "hh:mm:ss.zzz");
-    end_time_ms = qAbs( end_time_HMS.msecsTo(time_base) );
+    if ( mStCount == 0 ) {
+        position_ms = 0;
+    }
+    else {
+        end_time_item = this->item(mCurrentIndex,SUB_END_TIME_COL);
+        end_time_HMS = QTime::fromString(end_time_item->text(), "hh:mm:ss.zzz");
+        end_time_ms = qAbs( end_time_HMS.msecsTo(time_base) );
 
-    qint64 position_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / (qreal)FRAME_PER_SEC ) * (qreal)SUB_MIN_INTERVAL_FRAME );
+        position_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
+    }
     return insertNewSub(newSubtitle, position_ms);
 }
 
@@ -335,14 +352,23 @@ bool MySubtitlesTable::insertNewSub(MySubtitles newSubtitle, qint64 positionMs, 
 
     // Insert new sub at the current video position
     if ( positionMs == -1 ) {
-        start_time_ms = mVideoPositionMs;
+        start_time_ms = mCurrentPositionMs;
     } // If a time position is given, insert new sub at this given time
     else {
         start_time_ms = positionMs;
     }
-    end_time_ms = start_time_ms + SUB_DEFAULT_DURATION_MS;
+
+    end_time_ms = start_time_ms + qApp->property("prop_SubMinDuration_ms").toInt();
 
     if ( ( mPositionMsToStIndex[start_time_ms] == -1 ) && ( mPositionMsToStIndex[end_time_ms] == -1 ) ) {
+
+        // Only 10 minutes (60000ms) remaining in the lookup table. Add 30 minutes.
+        if ( end_time_ms > mPositionMsToStIndex.size() - 600000 ) {
+            QVector<qint32> temp_vector;
+            temp_vector.resize(1800000);
+            temp_vector.fill(-1);
+            mPositionMsToStIndex += temp_vector;
+        }
 
         // Retrieive the first empty item, set the start/end time and text
         start_time_HMS = time_base.addMSecs(start_time_ms);
@@ -373,6 +399,8 @@ bool MySubtitlesTable::insertNewSub(MySubtitles newSubtitle, qint64 positionMs, 
 
         this->updateText(newSubtitle.text(), start_time_ms);
         this->updateDatas(newSubtitle, start_time_ms);
+
+        this->selectRow(mCurrentIndex);
     }
     else if ( shiftNextSub == true ) {
 
@@ -409,14 +437,19 @@ void MySubtitlesTable::deleteCurrentSub() {
     }
 
     mStCount = mStCount - 1;
+    mPreviousIndex = -1;
 
-    this->selectRow(mCurrentIndex + 1);
+    this->clearSelection();
+
     this->removeRow(mCurrentIndex);
+    this->selectRow(mCurrentIndex);
 }
 
 bool MySubtitlesTable::isNewEntry() {
 
-    qint32 row_index = mPositionMsToStIndex[mVideoPositionMs];
+    qint32 row_index;
+
+    row_index = mPositionMsToStIndex[mCurrentPositionMs];
 
     // The subtitle exist
     if (row_index != -1) {
@@ -436,7 +469,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines, qint64 positionMs) 
 
     // Update the text for the index at the current video position
     if ( positionMs == -1 ) {
-        row_index = mPositionMsToStIndex[mVideoPositionMs];
+        row_index = mPositionMsToStIndex[mCurrentPositionMs];
     } // If a time position is given, update the text for the index at this given time
     else {
         row_index = mPositionMsToStIndex[positionMs];
@@ -501,7 +534,7 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint64 positionMs) {
 
     // Update the informations for the index at the current video position
     if ( positionMs == -1 ) {
-        index = mPositionMsToStIndex[mVideoPositionMs];
+        index = mPositionMsToStIndex[mCurrentPositionMs];
     } // If a time position is given, update the informations for the index at this given time
     else {
         index = mPositionMsToStIndex[positionMs];
@@ -641,7 +674,7 @@ bool MySubtitlesTable::setStartTime(qint64 positionMs) {
     // Check if a new start time entry is < to the current item end time
     if ( end_time_HMS > start_time_HMS ) {
         start_time_item = this->item(mCurrentIndex, SUB_START_TIME_COL);
-        start_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
+        start_time_item->setText(start_time_HMS.toString("hh:mm:ss.zzz"));
         // Try to update the current item start time
         QString status_msg = this->updateStTime(start_time_item);
         if ( status_msg != "" ) {
@@ -741,6 +774,14 @@ QString MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
         // When loading a subtitle file, it's not necessary to sort items
         if ( mSubLoadding == true ) {
 
+            // No more place in the lookup table. Add 30 minutes (1800000 ms).
+            if ( end_time_ms >= mPositionMsToStIndex.size() ) {
+                QVector<qint32> temp_vector;
+                temp_vector.resize(1800000);
+                temp_vector.fill(-1);
+                mPositionMsToStIndex += temp_vector;
+            }
+
             // Just insert the new index in the lookup table
             for ( qint32 i = start_time_ms; i <= end_time_ms; i++ ) {
 
@@ -785,11 +826,8 @@ QString MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
                 for ( qint32 i = new_row_index; i < mStCount; i++ ) {
                     this->item(i, SUB_NUM_COL)->setText(QString::number(i + 1));
                 }
-                //mPreviousIndex = new_row_index;
-                mCurrentIndex = new_row_index;
-                //mSelectedBySoft = true;
-                this->selectRow(mCurrentIndex);
 
+                mCurrentIndex = new_row_index;
             }
             else { // Resize entry
 
@@ -852,16 +890,20 @@ void MySubtitlesTable::updateSelectedItem() {
 
         // If the row was selected by user, send the new time information
         if ( mSelectedBySoft == false ) {
-            // If the selected item start time is valid, emit a signal sending this start time
+
+            mSelectedByUser = true;
+
+            // If the selected item start time is valid
             QString start_time_str = selected_items.at(SUB_START_TIME_COL)->text();
 
             start_time_HMS = QTime::fromString(start_time_str, "hh:mm:ss.zzz");
 
             if ( start_time_HMS.isValid() ) {
+
+                // Emit a signal sending this start time
                 start_time_ms = qAbs( start_time_HMS.msecsTo(time_base) );
                 emit itemSelectionChanged(start_time_ms);
             }
-            mSelectedByUser = true;
         } // If the row was selected by software, just reset the flags
         else {
             mSelectedByUser = false;
@@ -870,28 +912,25 @@ void MySubtitlesTable::updateSelectedItem() {
     }
 }
 
-void MySubtitlesTable::videoDurationChanged(qint64 videoDurationMs) {
-
-    // First video loaded, Enable the table
-    if ( this->isEnabled() == false) {
-
-        this->setEnabled(true);
-        // Resize the lookup table
-        mPositionMsToStIndex.resize(videoDurationMs + 1);
-        mPositionMsToStIndex.fill(-1);
-    }
-}
 
 // Check if display need to be refresh for a given time.
 // Send the subtitle information if refresh is needed
-void MySubtitlesTable::updateStDisplay(qint64 videoPositionMs) {
+void MySubtitlesTable::updateStDisplay(qint64 positionMs) {
 
     MySubtitles subtitle;
 
     // Save the current player position
-    mVideoPositionMs = videoPositionMs;
+    mCurrentPositionMs = positionMs;
 
-    qint32 st_index = mPositionMsToStIndex[videoPositionMs];
+    // Position doesn't exist in the lookup table. Resize lookup table to positionMs + 10 minutes (600000 ms)
+    if ( positionMs >= mPositionMsToStIndex.size() ) {
+        QVector<qint32> temp_vector;
+        temp_vector.resize(positionMs - mPositionMsToStIndex.size() + 600000);
+        temp_vector.fill(-1);
+        mPositionMsToStIndex += temp_vector;
+    }
+
+    qint32 st_index = mPositionMsToStIndex[positionMs];
 
     // Check in the lookup table if there is a valid subtitle index for this position
     if ( st_index != mPreviousIndex ) {

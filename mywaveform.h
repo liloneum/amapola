@@ -26,10 +26,11 @@ public:
     ~MyWaveForm();
 
 signals:
-    void positionChanged(qint64);
+    void markerPositionChanged(qint64);
 
 public slots:
     void openFile(QString waveform_file_name, QString video_file_name);
+    void updatePostionMarker(qint64 positionMs);
 
 private slots:
     void readBuffer();
@@ -39,8 +40,8 @@ private slots:
     void plotWaveForm();
     bool computeZoom(qint16 step, qint16 xPos);
     bool timeScaleShift(qint16 step);
-    void setPosition(int xPos);
-    void updatePostionMarker(qint64 playerPositionMs);
+    void setMarkerPosFromClick(int xPos);
+
 
 private:
     // Qt designer ui reference
@@ -78,6 +79,7 @@ private:
 
     // Current media duration in millisecond
     qint32 mMediaDurationMs;
+
 };
 
 #endif // MYWAVEFORM_H

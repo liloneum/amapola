@@ -51,15 +51,13 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
     ui->textLine2->setStyleSheet("background: transparent; border: 1px solid blue;");
 
     // Temp : Init a default subtitle container with the default font and position
-    this->defaultSub();
+    //this->defaultSub();
 
     // Add an event filter on the subtitles textedit object
     ui->textLine1->installEventFilter(this);
     ui->textLine2->installEventFilter(this);
 
     // Disable and hide the 2nd text lines
-    ui->textLine1->setEnabled(false);
-    ui->textLine1->hide();
     ui->textLine2->setEnabled(false);
     ui->textLine2->hide();
 
@@ -72,6 +70,9 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
 
     // Save of the size of the widget before resizing
     mPreviousWidgetSize = this->size();
+
+    // Init the focus on textline1
+    mpLastFocused = ui->textLine1;
 
     // Init connections
     connect(ui->textLine1, SIGNAL(cursorPositionChanged()), this, SLOT(newCursorPosition()));
@@ -90,20 +91,22 @@ void MyTextEdit::defaultSub() {
     TextLine default_line;
     TextFont default_font;
 
-    default_font.setFontId( FONT_ID_DEFAULT_VALUE );
-    default_font.setFontColor( FONT_COLOR_DEFAULT_VALUE );
+    //mDefaultSub.clear();
+
+    default_font.setFontId( qApp->property("prop_FontName").toString() );
+    default_font.setFontColor( qApp->property("prop_FontColor_rgba").toString() );
     default_font.setFontEffect( FONT_EFFECT_DEFAULT_VALUE );
     default_font.setFontEffectColor( FONT_EFFECT_COLOR_DEFAULT_VALUE );
-    default_font.setFontItalic( FONT_ITALIC_DEFAULT_VALUE );
+    default_font.setFontItalic( qApp->property("prop_FontItalic").toString() );
     default_font.setFontScript( FONT_SCRIPT_DEFAULT_VALUE );
-    default_font.setFontSize( FONT_SIZE_DEFAULT_VALUE );
-    default_font.setFontUnderlined( FONT_UNDERLINED_DEFAULT_VALUE );
+    default_font.setFontSize( qApp->property("prop_FontSize_pt").toString() );
+    default_font.setFontUnderlined( qApp->property("prop_FontUnderlined").toString() );
 
     default_line.setTextDirection( TEXT1_DIRECTION_DEFAULT_VALUE );
-    default_line.setTextHAlign( TEXT1_HALIGN_DEFAULT_VALUE );
-    default_line.setTextVAlign( TEXT1_VALIGN_DEFAULT_VALUE );
-    default_line.setTextHPosition( TEXT1_HPOSITION_DEFAULT_VALUE );
-    default_line.setTextVPosition( TEXT1_VPOSITION_DEFAULT_VALUE );
+    default_line.setTextHAlign( qApp->property("prop_Halign").toString() );
+    default_line.setTextVAlign( qApp->property("prop_Valign").toString() );
+    default_line.setTextHPosition( qApp->property("prop_Hposition_percent").toString() );
+    default_line.setTextVPosition( qApp->property("prop_Vposition_percent").toString() );
 
     mDefaultSub.setText(default_line, default_font);
 }
@@ -145,10 +148,15 @@ QList<TextLine> MyTextEdit::text() {
 MySubtitles MyTextEdit::subtitleData() {
 
     MySubtitles subtitle;
+    QList<TextLine> text_lines;
     TextLine new_line;
     TextFont new_font;
 
+    text_lines = this->text();
+
     // Line 1
+    // Get text, position and font
+    new_line = text_lines.first();
     this->textPosition(ui->textLine1, new_line, this->size());
     this->textFont(ui->textLine1, new_font, this->size());
 
@@ -157,6 +165,12 @@ MySubtitles MyTextEdit::subtitleData() {
     // Line 2 if exist
     if ( ui->textLine2->isEnabled() ) {
 
+        // Get text if exist
+        if ( text_lines.count() >= 2 ) {
+            new_line = text_lines.last();
+        }
+
+        // Get position and font
         this->textPosition(ui->textLine2, new_line, this->size());
         this->textFont(ui->textLine2, new_font, this->size());
         subtitle.setText(new_line, new_font);
@@ -279,11 +293,6 @@ void MyTextEdit::setText(MySubtitles subtitle) {
 
     // Indicate that text is updating
     mIsSettingLines = true;
-
-    if ( ui->textLine1->isEnabled() == false ) {
-        ui->textLine1->setEnabled(true);
-        ui->textLine1->show();
-    }
 
     // If there are text to display
     if ( subtitle.isValid() ) {
@@ -468,6 +477,7 @@ void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize wid
 
     // Vertical position : alignment is always "bottom"
     textLine.setTextVAlign("bottom");
+
     v_position = ( widget_height - textEdit->y() - textEdit->height() + font_metrics.descent() /*+ ( font_metrics.leading() / 2 )*/ );
 
     textLine.setTextHPosition(  QString::number(( ( (qreal)h_position * (qreal)100 ) / (qreal)widget_width ), 'f', 1  ) );

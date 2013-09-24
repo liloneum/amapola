@@ -36,6 +36,7 @@ public slots:
     QString openFile();
     void setPosition(qint64 videoPlayerPositionMs);
     qint64 playerPosition();
+    bool videoAvailable();
 
 private slots:
     void on_playButton_clicked();

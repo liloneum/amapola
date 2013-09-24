@@ -118,6 +118,11 @@ MyWaveForm::~MyWaveForm()
 
 void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
 
+    if ( video_file_name.isEmpty() ) {
+        initWaveForm();
+        return;
+    }
+
     mpFile->setFileName(waveform_file_name);
 
     // Erase previous waveform
@@ -192,24 +197,34 @@ void MyWaveForm::initWaveForm() {
     qint32 size_of_file;
     qreal time_accuracy_ms;
 
-    if (!mpFile->open(QIODevice::ReadOnly)) {
-        // Error msg
-    }
-
-    size_of_file = mpFile->size();
     time_accuracy_ms = (qreal)SEC_TO_MSEC / (qreal)SAMPLES_PER_SEC;
-    mAmplitudeVector.resize(size_of_file / SAMPLE_SIZE_BYTES);
-    mTimeVectorMs.resize(size_of_file / SAMPLE_SIZE_BYTES);
 
-    // Copy the data from ".wf" file to a vector
-    for (qint32 i = 0; i < mTimeVectorMs.size(); ++i) {
-        qint16 buffer;
-        *mpStream >> buffer;
-        mAmplitudeVector[i] = (double)buffer;
-        mTimeVectorMs[i] = time_accuracy_ms * i;
+    if (!mpFile->open(QIODevice::ReadOnly)) {
+
+        // No wave form to load. Genrate 4 hours of empty waveform
+        mAmplitudeVector.resize(14400000*time_accuracy_ms);
+        mTimeVectorMs.resize(14400000*time_accuracy_ms);
+
+        mAmplitudeVector.fill(0);
+
+        for (qint32 i = 0; i < mTimeVectorMs.size(); i++) {
+            mTimeVectorMs[i] = time_accuracy_ms * i;
+        }
     }
+    else {
 
-    mpFile->close();
+        size_of_file = mpFile->size();
+
+        // Copy the data from ".wf" file to a vector
+        for (qint32 i = 0; i < (size_of_file / SAMPLE_SIZE_BYTES); ++i) {
+            qint16 buffer;
+            *mpStream >> buffer;
+            mAmplitudeVector[i] = (double)buffer;
+            mTimeVectorMs[i] = time_accuracy_ms * i;
+        }
+
+        mpFile->close();
+    }
 
     mMediaDurationMs = (qint32)mTimeVectorMs.last();
 
@@ -220,10 +235,6 @@ void MyWaveForm::initWaveForm() {
     if ( mMaxPlotTimeMs > mMediaDurationMs ) {
         mMaxPlotTimeMs = mMediaDurationMs;
     }
-
-//    mpWaveFormCurve->setSamples(mTimeVectorMs, mAmplitudeVector);
-//    mpWaveFormCurve->attach(ui->waveFormPlot);
-//    ui->waveFormPlot->replot();
 
     // Plot the wave-form and the marker
     mpWaveFormCurve->attach(ui->waveFormPlot);
@@ -298,7 +309,7 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
             // Set the marker position to position clicked
             QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
 
-            setPosition(mouse_event->x());
+            setMarkerPosFromClick(mouse_event->x());
             return true;
         }
     }
@@ -400,7 +411,7 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
 }
 
 // Compute new position in fonction of mouse click position
-void MyWaveForm::setPosition(int xPos) {
+void MyWaveForm::setMarkerPosFromClick(int xPos) {
 
     qint32 scale_size_ms;
     qint32 position_ms;
@@ -421,23 +432,27 @@ void MyWaveForm::setPosition(int xPos) {
     // Convert mouse position in pixel to a position in millisecond
     position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
-    emit positionChanged(position_ms);
+    // Replot the marker
+    mpPositionMarker->setXValue((double)position_ms);
+    ui->waveFormPlot->replot();
+
+    emit markerPositionChanged(position_ms);
 }
 
 // Draw the marker in function of the player current position
-void MyWaveForm::updatePostionMarker(qint64 playerPositionMs) {
+void MyWaveForm::updatePostionMarker(qint64 positionMs) {
 
     qint32 scale_size_ms;
 
-    if ( playerPositionMs > mMediaDurationMs ) {
+    if ( positionMs > mMediaDurationMs ) {
         return;
     }
 
     // Shift the scope when the marker arrive at end of viewed scope
-    if ( ( playerPositionMs > mMaxPlotTimeMs ) || ( playerPositionMs < mMinPlotTimeMs ) ) {
+    if ( ( positionMs > mMaxPlotTimeMs ) || ( positionMs < mMinPlotTimeMs ) ) {
 
         scale_size_ms = mMaxPlotTimeMs - mMinPlotTimeMs;
-        mMinPlotTimeMs =  (qint32)playerPositionMs;
+        mMinPlotTimeMs =  (qint32)positionMs;
         mMaxPlotTimeMs = mMinPlotTimeMs + scale_size_ms;
 
         // Limit the time shift at end of media
@@ -449,6 +464,8 @@ void MyWaveForm::updatePostionMarker(qint64 playerPositionMs) {
         plotWaveForm();
     }
     // Replot the marker
-    mpPositionMarker->setXValue((double)playerPositionMs);
+    mpPositionMarker->setXValue((double)positionMs);
     ui->waveFormPlot->replot();
+
+    emit markerPositionChanged(positionMs);
 }

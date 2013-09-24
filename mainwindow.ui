@@ -85,7 +85,7 @@
         <item row="0" column="0">
          <widget class="MySubtitlesTable" name="subTable">
           <property name="enabled">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Expanding">
@@ -575,7 +575,7 @@
            <item>
             <widget class="QLabel" name="lineLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="font">
               <font>
@@ -591,7 +591,7 @@
            <item>
             <widget class="QLabel" name="vAlignLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>  V Align :</string>
@@ -601,7 +601,10 @@
            <item>
             <widget class="QComboBox" name="vAlignBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
+             </property>
+             <property name="currentIndex">
+              <number>2</number>
              </property>
              <item>
               <property name="text">
@@ -623,6 +626,9 @@
            <item>
             <widget class="QLabel" name="vPosLabel">
              <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="mouseTracking">
               <bool>false</bool>
              </property>
              <property name="text">
@@ -633,7 +639,7 @@
            <item>
             <widget class="QDoubleSpinBox" name="vPosSpinBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="accelerated">
               <bool>true</bool>
@@ -654,14 +660,14 @@
               <double>0.100000000000000</double>
              </property>
              <property name="value">
-              <double>0.000000000000000</double>
+              <double>8.000000000000000</double>
              </property>
             </widget>
            </item>
            <item>
             <widget class="QLabel" name="hAlignLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>  H Align :</string>
@@ -671,7 +677,10 @@
            <item>
             <widget class="QComboBox" name="hAlignBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
+             </property>
+             <property name="currentIndex">
+              <number>1</number>
              </property>
              <item>
               <property name="text">
@@ -693,7 +702,7 @@
            <item>
             <widget class="QLabel" name="hPosLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="text">
               <string>  H Pos :</string>
@@ -703,7 +712,7 @@
            <item>
             <widget class="QDoubleSpinBox" name="hPosSpinBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="accelerated">
               <bool>true</bool>
@@ -745,7 +754,7 @@
            <item>
             <widget class="QLabel" name="fontLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
@@ -767,7 +776,7 @@
            <item>
             <widget class="QFontComboBox" name="fontIdComboBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
@@ -775,12 +784,18 @@
                <height>16777215</height>
               </size>
              </property>
+             <property name="currentFont">
+              <font>
+               <family>Arial</family>
+               <pointsize>11</pointsize>
+              </font>
+             </property>
             </widget>
            </item>
            <item>
             <widget class="QSpinBox" name="fontSizeSpinBox">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
@@ -790,6 +805,9 @@
              </property>
              <property name="suffix">
               <string>pt</string>
+             </property>
+             <property name="value">
+              <number>42</number>
              </property>
             </widget>
            </item>
@@ -812,7 +830,7 @@
            <item>
             <widget class="QLabel" name="fontColorLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
@@ -861,7 +879,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorRButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -895,7 +913,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorGButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -929,7 +947,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorBButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -963,7 +981,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorYButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -986,6 +1004,9 @@
                  <property name="checkable">
                   <bool>true</bool>
                  </property>
+                 <property name="checked">
+                  <bool>true</bool>
+                 </property>
                  <property name="autoExclusive">
                   <bool>true</bool>
                  </property>
@@ -997,7 +1018,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorBlButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1031,7 +1052,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorWButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1065,7 +1086,7 @@
                <item>
                 <widget class="QPushButton" name="fontColorOtherButton">
                  <property name="enabled">
-                  <bool>false</bool>
+                  <bool>true</bool>
                  </property>
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1126,7 +1147,7 @@
            <item>
             <widget class="QLabel" name="fontStyleLabel">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
@@ -1148,7 +1169,7 @@
            <item>
             <widget class="QPushButton" name="fontItalicButton">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1181,7 +1202,7 @@
            <item>
             <widget class="QPushButton" name="fontUnderlinedButton">
              <property name="enabled">
-              <bool>false</bool>
+              <bool>true</bool>
              </property>
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

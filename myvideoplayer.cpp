@@ -227,11 +227,19 @@ void MyVideoPlayer::on_timeSlider_valueChanged(int sliderPosition)
 
 // Interface to set the player position
 void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
-    mpPlayer->setPosition(videoPlayerPositionMs);
+
+
+    if ( mpPlayer->isVideoAvailable() ) {
+        mpPlayer->setPosition(videoPlayerPositionMs);
+    }
 }
 
 // get the player position
 qint64 MyVideoPlayer::playerPosition() {
     return mpPlayer->position();
+}
+
+bool MyVideoPlayer::videoAvailable() {
+    return mpPlayer->isVideoAvailable();
 }
 

@@ -32,6 +32,7 @@ public slots :
     void updateTextPosition(TextLine textLine);
     void updateTextFont(TextFont textFont);
     MySubtitles getDefaultSub();
+    void defaultSub();
 
 private slots:
      bool eventFilter(QObject* watched, QEvent* event);
@@ -41,8 +42,6 @@ private slots:
      void textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize);
      void setTextFont(QTextEdit* textEdit, TextFont textFont, QSize widgetSize);
      void textFont(QTextEdit* textEdit, TextFont &textFont, QSize widgetSize);
-
-     void defaultSub();
     
 private:
     Ui::MyTextEdit *ui;

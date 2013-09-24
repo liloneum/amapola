@@ -41,22 +41,78 @@ MainWindow::MainWindow(QWidget *parent) :
     mTextPosChangedByUser = false;
     mTextFontChangedBySoft = false;
     mTextFontChangedByUser = false;
+    mVideoPositionChanged = false;
+
+    // Init the subtitles database
+    ui->subTable->initStTable(0);
 
     //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
-    // Init the SIGNAL / SLOT connections
-    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),ui->subTable, SLOT(videoDurationChanged(qint64)));
-    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
-    connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->waveForm, SLOT(updatePostionMarker(qint64)));
-    connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), ui->subTable, SLOT(updateStDisplay(qint64)));
 
-    connect(ui->waveForm, SIGNAL(positionChanged(qint64)), ui->videoPlayer, SLOT(setPosition(qint64)));
+    // Init default properties
+    qApp->setProperty("prop_FontSize_pt", ui->fontSizeSpinBox->cleanText());
+    qApp->setProperty("prop_FontName", ui->fontIdComboBox->currentText());
+
+    if ( ui->fontItalicButton->isChecked() ) {
+        qApp->setProperty("prop_FontItalic", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontItalic", "no");
+    }
+
+    if ( ui->fontUnderlinedButton->isChecked() ) {
+        qApp->setProperty("prop_FontUnderlined", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontUnderlined", "no");
+    }
+
+    if ( ui->fontColorRButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
+    }
+    else if ( ui->fontColorGButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF00FF00");
+    }
+    else if ( ui->fontColorBButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
+    }
+    else if ( ui->fontColorYButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFFFF00");
+    }
+    else if ( ui->fontColorBlButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF000000");
+    }
+    else if ( ui->fontColorWButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFFFFFF");
+    }
+    else if ( ui->fontColorOtherButton->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba",  ui->fontColorOtherText->text());
+    }
+
+    qApp->setProperty("prop_Valign", ui->vAlignBox->currentText());
+    qApp->setProperty("prop_Halign", ui->hAlignBox->currentText());
+    qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
+    qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
+
+    ui->stEditDisplay->defaultSub();
+
+    ui->waveForm->openFile("", "");
+
+    // Init text edit parameter from tool boxes
+    this->updateTextPosition();
+    this->updateTextFont(false);
+
+    // Init the SIGNAL / SLOT connections
+    connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
+    connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(videoPositionChanged(qint64)));
+
+    connect(ui->waveForm, SIGNAL(markerPositionChanged(qint64)), this, SLOT(waveformMarerkPosChanged(qint64)));
 
     connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
     connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
     connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged(TextFont, TextLine)), this, SLOT(updateToolBox(TextFont, TextLine)));
 
-    connect(ui->subTable, SIGNAL(itemSelectionChanged(qint32)), this, SLOT(updateVideoPosition(qint32)));
+    connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentItemChanged(qint64)));
     connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
 }
 
@@ -129,6 +185,13 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     return QMainWindow::eventFilter(watched, event);
 }
 
+// Current item selection changed in the database.
+void MainWindow::currentItemChanged(qint64 positionMs) {
+
+    // Update the waveform marker position
+    ui->waveForm->updatePostionMarker(positionMs);
+}
+
 // Update the subtitle text in the database
 void MainWindow::updateSubTable() {
 
@@ -141,20 +204,50 @@ void MainWindow::updateSubTable() {
             MySubtitles empty_subtitle;
             updateTextEdit(empty_subtitle);
         }
-        else {
-            ui->subTable->updateText( ui->stEditDisplay->text());
-        }
     } // There are a subtitle for the current time. Update the text in the database
     else {
         ui->subTable->updateText( ui->stEditDisplay->text());
     }
 }
 
-// Interface to update the position of the player
-void MainWindow::updateVideoPosition(qint32 positionMs) {
+// Video positon changed. Update the waveform marker position
+void MainWindow::videoPositionChanged(qint64 positionMs) {
 
-    ui->videoPlayer->setPosition(positionMs);
-    //ui->stEditDisplay->setFocus();
+    // Update only if it's not the marker that commanded video position changment
+    if ( mMarkerPosChanged == false ) {
+        mVideoPositionChanged = true;
+        ui->waveForm->updatePostionMarker(positionMs);
+    }
+    else {
+        mMarkerPosChanged = false;
+    }
+}
+
+// Interface to update the position of the player
+void MainWindow::updateVideoPosition(qint64 positionMs) {
+
+    if ( ui->videoPlayer->videoAvailable() ) {
+        ui->videoPlayer->setPosition(positionMs);
+    }
+    else {
+        mMarkerPosChanged = false;
+    }
+}
+
+// Manage the waveform marker position changment
+void MainWindow::waveformMarerkPosChanged(qint64 positionMs) {
+
+    // Change the video positon if its not the mediaplayer that has changed the waveform marker position
+    if ( mVideoPositionChanged == false ) {
+        mMarkerPosChanged = true;
+        this->updateVideoPosition(positionMs);
+    }
+    else {
+        mVideoPositionChanged = false;
+    }
+
+    // Change the current item selection
+    ui->subTable->updateStDisplay(positionMs);
 }
 
 // Interface to update the text of the text edit area
@@ -178,10 +271,6 @@ void MainWindow::on_actionOpen_triggered()
         wf_file_name.append(".wf");
 
         ui->waveForm->openFile(wf_file_name, video_file_name);
-
-        // Reset the subtitles database
-        ui->subTable->initStTable(0);
-
     }
 }
 
@@ -349,19 +438,6 @@ void MainWindow::updatePosToolBox(TextLine textLine) {
         // Set the flag to indicate that toolboxes states are changing
         mTextPosChangedBySoft = true;
 
-        // If tool boxes are disable, enable all of them
-        if ( ui->lineLabel->isEnabled() == false )  {
-            ui->lineLabel->setEnabled(true);
-            ui->hAlignBox->setEnabled(true);
-            ui->hAlignLabel->setEnabled(true);
-            ui->hPosSpinBox->setEnabled(true);
-            ui->hPosLabel->setEnabled(true);
-            ui->vAlignBox->setEnabled(true);
-            ui->vAlignLabel->setEnabled(true);
-            ui->vPosSpinBox->setEnabled(true);
-            ui->vPosLabel->setEnabled(true);
-        }
-
         // Set the parameters to the boxes
         ui->hAlignBox->setCurrentText( textLine.textHAlign() );
         ui->hPosSpinBox->setValue( textLine.textHPosition().toDouble() );
@@ -395,7 +471,9 @@ void MainWindow::updateTextPosition() {
 }
 
 // Vertical alignment toolbox value changed
-void MainWindow::on_vAlignBox_activated(const QString &arg1) {
+void MainWindow::on_vAlignBox_activated(const QString &value) {
+
+    qApp->setProperty("prop_Valign", value);
 
     // Tool box changed by user
     if ( mTextPosChangedBySoft == false ) {
@@ -405,7 +483,9 @@ void MainWindow::on_vAlignBox_activated(const QString &arg1) {
 }
 
 // Vertical position toolbox value changed
-void MainWindow::on_vPosSpinBox_valueChanged(const QString &arg1) {
+void MainWindow::on_vPosSpinBox_valueChanged(const QString &value) {
+
+    qApp->setProperty("prop_Vposition_percent", value);
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
@@ -413,7 +493,9 @@ void MainWindow::on_vPosSpinBox_valueChanged(const QString &arg1) {
 }
 
 // Horizontal alignment toolbox value changed
-void MainWindow::on_hAlignBox_activated(const QString &arg1) {
+void MainWindow::on_hAlignBox_activated(const QString &value) {
+
+    qApp->setProperty("prop_Halign", value);
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
@@ -421,7 +503,9 @@ void MainWindow::on_hAlignBox_activated(const QString &arg1) {
 }
 
 // Horizontal position toolbox value changed
-void MainWindow::on_hPosSpinBox_valueChanged(const QString &arg1) {
+void MainWindow::on_hPosSpinBox_valueChanged(const QString &value) {
+
+    qApp->setProperty("prop_Hposition_percent", value);
 
     if ( mTextPosChangedBySoft == false ) {
         updateTextPosition();
@@ -437,31 +521,14 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
         // Set the flag to indicate that toolboxes states are changing
         mTextFontChangedBySoft = true;
 
-        // If tool boxes are disable, enable all of them
-        if ( ui->fontLabel->isEnabled() == false )  {
-
-            ui->fontLabel->setEnabled(true);
-            ui->fontIdComboBox->setEnabled(true);
-            ui->fontSizeSpinBox->setEnabled(true);
-            ui->fontColorLabel->setEnabled(true);
-            ui->fontColorRButton->setEnabled(true);
-            ui->fontColorGButton->setEnabled(true);
-            ui->fontColorBButton->setEnabled(true);
-            ui->fontColorYButton->setEnabled(true);
-            ui->fontColorBlButton->setEnabled(true);
-            ui->fontColorWButton->setEnabled(true);
-            ui->fontColorOtherButton->setEnabled(true);
-            ui->fontStyleLabel->setEnabled(true);
-            ui->fontItalicButton->setEnabled(true);
-            ui->fontUnderlinedButton->setEnabled(true);
-        }
-
         // Set the parameters to the boxes
         QFont font(textFont.fontId());
         ui->fontIdComboBox->setCurrentFont(font);
         ui->fontSizeSpinBox->setValue(textFont.fontSize().toInt());
 
         QString font_color = textFont.fontColor();
+
+        qApp->setProperty("prop_FontColor_rgba", font_color);
 
         ui->fontColorOtherText->setEnabled(false);
 
@@ -485,7 +552,7 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
         }
         else {
             ui->fontColorOtherButton->setChecked(true);
-            ui->fontColorOtherText->setEnabled("true");
+            ui->fontColorOtherText->setEnabled(true);
             ui->fontColorOtherText->setText(textFont.fontColor());
         }
 
@@ -517,7 +584,6 @@ void MainWindow::updateTextFont(bool customColorClicked) {
     if ( ui->fontLabel->isEnabled() == true )  {
 
         QFont font = ui->fontIdComboBox->currentFont();
-        QString font_familly = font.family();
         text_font.setFontId( font.family() );
 
         text_font.setFontSize(ui->fontSizeSpinBox->cleanText());
@@ -526,21 +592,27 @@ void MainWindow::updateTextFont(bool customColorClicked) {
 
         if ( ui->fontColorRButton->isChecked() ) {
             text_font.setFontColor("FFFF0000");
+            qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
         }
         else if ( ui->fontColorGButton->isChecked() ) {
             text_font.setFontColor("FF00FF00");
+            qApp->setProperty("prop_FontColor_rgba", "FF00FF00");
         }
         else if ( ui->fontColorBButton->isChecked() ) {
             text_font.setFontColor("FF0000FF");
+            qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
         }
         else if ( ui->fontColorYButton->isChecked() ) {
             text_font.setFontColor("FFFFFF00");
+            qApp->setProperty("prop_FontColor_rgba", "FFFFFF00");
         }
         else if ( ui->fontColorBlButton->isChecked() ) {
             text_font.setFontColor("FF000000");
+            qApp->setProperty("prop_FontColor_rgba", "FF000000");
         }
         else if ( ui->fontColorWButton->isChecked() ) {
             text_font.setFontColor("FFFFFFFF");
+            qApp->setProperty("prop_FontColor_rgba", "FFFFFFFF");
         }
         else if ( ui->fontColorOtherButton->isChecked() ) {
 
@@ -558,6 +630,7 @@ void MainWindow::updateTextFont(bool customColorClicked) {
             }
             ui->fontColorOtherText->setEnabled(true);
             text_font.setFontColor(font_color_str);
+            qApp->setProperty("prop_FontColor_rgba", font_color_str);
         }
 
         if ( ui->fontItalicButton->isChecked() ) {
@@ -581,7 +654,9 @@ void MainWindow::updateTextFont(bool customColorClicked) {
 }
 
 // Font size toolbox changed
-void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &arg1) {
+void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &value) {
+
+    qApp->setProperty("prop_FontSize_pt", value);
 
     // Tool box changed by user
     if ( mTextFontChangedBySoft == false ) {
@@ -643,6 +718,13 @@ void MainWindow::on_fontColorOtherButton_clicked() {
 // Italic value changed
 void MainWindow::on_fontItalicButton_toggled(bool checked) {
 
+    if ( checked ) {
+        qApp->setProperty("prop_FontItalic", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontItalic", "no");
+    }
+
     if ( mTextFontChangedBySoft == false ) {
         updateTextFont(false);
     }
@@ -651,6 +733,13 @@ void MainWindow::on_fontItalicButton_toggled(bool checked) {
 // Underlined value changed
 void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 
+    if ( checked ) {
+        qApp->setProperty("prop_FontUnderlined", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontUnderlined", "no");
+    }
+
     if ( mTextFontChangedBySoft == false ) {
         updateTextFont(false);
     }
@@ -658,6 +747,8 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 
 // Font name changed
 void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
+
+    qApp->setProperty("prop_FontName", f.family());
 
     if ( mTextFontChangedBySoft == false ) {
         updateTextFont(false);
