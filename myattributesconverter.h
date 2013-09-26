@@ -16,6 +16,7 @@ public:
     static qint16 fontSizeToHeight(QString fontName, QString fontSize);
     static QString toTimeHMSms(QString time);
     static QString toTimeHMSticks(QString time);
+    static qint64 timeStrHMStoMs(QString time);
 };
 
 #endif // MYATTRIBUTESCONVERTER_H

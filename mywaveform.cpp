@@ -7,11 +7,14 @@
 #include <QWheelEvent>
 #include <QAudioDeviceInfo>
 #include <QTime>
+#include <mysubtitles.h>
 #include <qwt_plot_curve.h>
 #include <qwt_scale_engine.h>
 #include <qwt_plot_marker.h>
 #include <qwt_scale_widget.h>
 #include <qwt_plot_textlabel.h>
+#include <qwt_plot_zoneitem.h>
+#include <qwt_plot_grid.h>
 
 // Number of audio samples per second displayed.
 // If there are too much samples, the navigation may be not fluid
@@ -77,6 +80,9 @@ MyWaveForm::MyWaveForm(QWidget *parent) :
     mMinPlotTimeMs = 0;
     mMaxPlotTimeMs = 0;
 
+    // Init the current position
+    mCurrentPositonMs = 0;
+
     // Create the waveform curve to plot
     mpWaveFormCurve = new QwtPlotCurve("WaveForm");
 
@@ -102,6 +108,15 @@ MyWaveForm::MyWaveForm(QWidget *parent) :
     mpPositionMarker = new QwtPlotMarker("PositionMarker");
     mpPositionMarker->setLineStyle(QwtPlotMarker::VLine);
     mpPositionMarker->setLinePen(pen);
+
+    // Create and init the grid
+    mpGrid = new QwtPlotGrid();
+    mpGrid->enableY(false);
+    mpGrid->enableXMin(true);
+    mpGrid->setPen(QColor(Qt::gray), 0.0, Qt::DotLine);
+    mpGrid->setMinorPen(QColor(Qt::lightGray), 0.0, Qt::DotLine);
+
+    mpZoneItemList.clear();
 
     // Create text label to display "Loading..."
     mpLoadingTextItem = new QwtPlotTextLabel();
@@ -239,6 +254,8 @@ void MyWaveForm::initWaveForm() {
     // Plot the wave-form and the marker
     mpWaveFormCurve->attach(ui->waveFormPlot);
     mpPositionMarker->attach(ui->waveFormPlot);
+//    mpZoneItem->attach(ui->waveFormPlot);
+    mpGrid->attach(ui->waveFormPlot);
     mpLoadingTextItem->detach();
     plotWaveForm();
 
@@ -309,13 +326,36 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
             // Set the marker position to position clicked
             QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
 
-            setMarkerPosFromClick(mouse_event->x());
-            return true;
+            if ( mouse_event->modifiers() == Qt::ControlModifier ) {
+
+                // Ctrl + left click
+                if ( mouse_event->button() == Qt::LeftButton ) {
+                    emit ctrlLeftClickEvent( this->posMsFromPosPx( mouse_event->x() ) );
+                    return true;
+                } // Ctrl + right click
+                else if ( mouse_event->button() == Qt::RightButton ) {
+                    emit ctrlRightClickEvent( this->posMsFromPosPx( mouse_event->x() ) );
+                    return true;
+                }
+            } // Shift + left clik
+            else if ( mouse_event->modifiers() == Qt::ShiftModifier ) {
+
+                if ( mouse_event->button() == Qt::LeftButton ) {
+                    emit shiftLeftClickEvent( this->posMsFromPosPx( mouse_event->x() ) );
+                    return true;
+                }
+            } // Only click (right, mid or left)
+            else {
+                // Move the marker to the mouse position
+                setMarkerPosFromClick(mouse_event->x());
+                return true;
+            }
         }
     }
     return QWidget::eventFilter(watched, event);
 }
 
+// Rescale the waveform in function of the zoom (in or out) and the mouse position
 bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
 
     quint32 scale_size_ms;
@@ -371,6 +411,7 @@ bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
     return true;
 }
 
+// Shift the waveform the number of step, left (step<0) or right(step>0)
 bool MyWaveForm::timeScaleShift(qint16 step) {
 
     quint32 scale_size_ms;
@@ -413,11 +454,22 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
 // Compute new position in fonction of mouse click position
 void MyWaveForm::setMarkerPosFromClick(int xPos) {
 
+    mCurrentPositonMs = this->posMsFromPosPx(xPos);
+
+    // Replot the marker
+    mpPositionMarker->setXValue((double)mCurrentPositonMs);
+    ui->waveFormPlot->replot();
+
+    emit markerPositionChanged(mCurrentPositonMs);
+}
+
+// Retrieve the position in millisecond from the mouse horizontal position (X coordonates)
+qint64 MyWaveForm::posMsFromPosPx(int xPos) {
+
     qint32 scale_size_ms;
     qint32 position_ms;
     int start_scale_dist_from_border, end_scale_dist_from_border;
     int plot_width_px;
-
     ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->getBorderDistHint(start_scale_dist_from_border, end_scale_dist_from_border);
 
     // Calculate the mouse position relative to the horizontale scale
@@ -432,11 +484,7 @@ void MyWaveForm::setMarkerPosFromClick(int xPos) {
     // Convert mouse position in pixel to a position in millisecond
     position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
-    // Replot the marker
-    mpPositionMarker->setXValue((double)position_ms);
-    ui->waveFormPlot->replot();
-
-    emit markerPositionChanged(position_ms);
+    return position_ms;
 }
 
 // Draw the marker in function of the player current position
@@ -447,6 +495,8 @@ void MyWaveForm::updatePostionMarker(qint64 positionMs) {
     if ( positionMs > mMediaDurationMs ) {
         return;
     }
+
+    mCurrentPositonMs = positionMs;
 
     // Shift the scope when the marker arrive at end of viewed scope
     if ( ( positionMs > mMaxPlotTimeMs ) || ( positionMs < mMinPlotTimeMs ) ) {
@@ -468,4 +518,141 @@ void MyWaveForm::updatePostionMarker(qint64 positionMs) {
     ui->waveFormPlot->replot();
 
     emit markerPositionChanged(positionMs);
+}
+
+qint64 MyWaveForm::currentPositonMs() {
+
+    return mCurrentPositonMs;
+}
+
+// Draw one or more subtitles zones
+void MyWaveForm::drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subtitleIndex) {
+
+    qint32 start_time_ms;
+    qint32 end_time_ms;
+    QTime time_base(0, 0, 0, 0);
+    MySubtitles subtitle;
+
+    // Set the "non-active zone" color
+    QString color_str = "FF96CA2D";
+    bool ok;
+    QColor color_zone(color_str.toUInt(&ok,16));
+    QColor color_border = color_zone;
+    color_border.setAlpha(50);
+
+    QList<MySubtitles>::iterator it;
+    for ( it = subtitlesList.begin(); it != subtitlesList.end(); ++it ) {
+
+        subtitle = *it;
+        start_time_ms = qAbs( QTime::fromString(subtitle.startTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
+        end_time_ms = qAbs( QTime::fromString(subtitle.endTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
+
+        // Create zone item and draw it from "start time" to "end time"
+        QwtPlotZoneItem* zone_item;
+        zone_item = new QwtPlotZoneItem;
+        zone_item->setOrientation(Qt::Vertical);
+        zone_item->setInterval(start_time_ms, end_time_ms);
+        zone_item->setPen(QPen(color_zone));
+        zone_item->setBrush(QBrush(color_border));
+
+        zone_item->attach(ui->waveFormPlot);
+
+        // Save the item memory adresse in a list at the same as the subtitle index
+        // Allow to retrieve the zone item corresponding to a subtitle to modify it later
+        mpZoneItemList.insert(subtitleIndex, zone_item);
+        subtitleIndex++;
+    }
+
+    ui->waveFormPlot->replot();
+}
+
+// Change the color of a given zone and reset all others zones colors
+// to the "non-active zone" color
+// The subtitle index is the same as its zone item
+void MyWaveForm::changeZoneColor(qint32 subtitleIndex) {
+
+    if ( mpZoneItemList.size() > subtitleIndex ) {
+
+        // Set the "non-active zone" color
+        QString color_str = "FF96CA2D";
+        bool ok;
+        QColor color_zone(color_str.toUInt(&ok,16));
+        QColor color_border = color_zone;
+        color_border.setAlpha(50);
+
+        QwtPlotZoneItem* zone_item;
+
+        // Reset all zones colors to the "non-active zone" color
+        QList<QwtPlotZoneItem*>::iterator it;
+        for ( it = mpZoneItemList.begin(); it != mpZoneItemList.end(); ++it ) {
+            zone_item = *it.operator->();
+            zone_item->setPen(QPen(color_zone));
+            zone_item->setBrush(QBrush(color_border));
+        }
+
+        // Set the "active zone" color to given zone index
+        color_str = "FFF07746";
+        color_zone.setRgba(color_str.toUInt(&ok,16));
+        color_border = color_zone;
+        color_border.setAlpha(50);
+
+        mpZoneItemList.at(subtitleIndex)->setPen(QPen(color_zone));
+        mpZoneItemList.at(subtitleIndex)->setBrush(QBrush(color_border));
+
+        ui->waveFormPlot->replot();
+    }
+}
+
+// Redraw zone item corresponding to the given index with a new start time
+void MyWaveForm::changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs) {
+
+    if ( mpZoneItemList.size() > subtitleIndex ) {
+
+        qint64 end_time_ms = mpZoneItemList.at(subtitleIndex)->interval().maxValue();
+        mpZoneItemList.at(subtitleIndex)->setInterval(startTimeMs, end_time_ms);
+
+        ui->waveFormPlot->replot();
+    }
+}
+
+// Redraw zone item corresponding to the given index with a new end time
+void MyWaveForm::changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs) {
+
+    if ( mpZoneItemList.size() > subtitleIndex ) {
+
+        qint64 start_time_ms = mpZoneItemList.at(subtitleIndex)->interval().minValue();
+        mpZoneItemList.at(subtitleIndex)->setInterval(start_time_ms, endTimeMs);
+
+        ui->waveFormPlot->replot();
+    }
+}
+
+// Remove zone item corresponding to the given index
+void MyWaveForm::removeSubtitleZone(qint32 subtitleIndex) {
+
+    if ( mpZoneItemList.size() > subtitleIndex ) {
+        mpZoneItemList.at(subtitleIndex)->detach();
+        mpZoneItemList.removeAt(subtitleIndex);
+
+        ui->waveFormPlot->replot();
+    }
+}
+
+// Remove all zones items
+void MyWaveForm::removeAllSubtitlesZones() {
+
+    if ( !mpZoneItemList.isEmpty() ) {
+
+        QwtPlotZoneItem* zone_item;
+
+        QList<QwtPlotZoneItem*>::iterator it;
+        for ( it = mpZoneItemList.begin(); it != mpZoneItemList.end(); ++it ) {
+            zone_item = *it.operator->();
+            zone_item->detach();
+        }
+
+        mpZoneItemList.clear();
+
+        ui->waveFormPlot->replot();
+    }
 }

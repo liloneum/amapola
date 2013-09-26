@@ -2,6 +2,7 @@
 #define MYWAVEFORM_H
 
 #include <QWidget>
+#include <mysubtitles.h>
 
 namespace Ui {
 class MyWaveForm;
@@ -13,6 +14,8 @@ class QFile;
 class QwtPlotCurve;
 class QwtPlotMarker;
 class QwtPlotTextLabel;
+class QwtPlotZoneItem;
+class QwtPlotGrid;
 
 // This widget manage an audio waveform displaying, with zoom and shift.
 // Display a position marker at the input time,
@@ -27,10 +30,21 @@ public:
 
 signals:
     void markerPositionChanged(qint64);
+    void ctrlLeftClickEvent(qint64);
+    void ctrlRightClickEvent(qint64);
+    void shiftLeftClickEvent(qint64);
 
 public slots:
     void openFile(QString waveform_file_name, QString video_file_name);
     void updatePostionMarker(qint64 positionMs);
+    void drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subtitleIndex);
+    void changeZoneColor(qint32 subtitleIndex);
+    void removeSubtitleZone(qint32 subtitleIndex);
+    void removeAllSubtitlesZones();
+    void changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs);
+    void changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs);
+    qint64 currentPositonMs();
+    qint64 posMsFromPosPx(int xPos);
 
 private slots:
     void readBuffer();
@@ -79,6 +93,16 @@ private:
 
     // Current media duration in millisecond
     qint32 mMediaDurationMs;
+
+    //
+    QList<QwtPlotZoneItem*> mpZoneItemList;
+
+    QwtPlotGrid* mpGrid;
+
+    // The current position in millisecond
+    qint64 mCurrentPositonMs;
+
+
 
 };
 

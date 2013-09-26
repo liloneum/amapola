@@ -3,6 +3,7 @@
 #include "myfilereader.h"
 #include "myfilewriter.h"
 #include "mysubtitlefileparser.h"
+#include "myattributesconverter.h"
 #include "SubtitlesParsers/SubRip/subripparser.h"
 #include "SubtitlesParsers/DcSubtitle/dcsubparser.h"
 #include <QFileDialog>
@@ -11,14 +12,8 @@
 #include <QKeyEvent>
 #include <QMessageBox>
 
-#define TEXT_HALIGN_DEFAULT_VALUE "center"
-#define TEXT_HPOSITION_DEFAULT_VALUE 0.0
-#define TEXT_VALIGN_DEFAULT_VALUE "bottom"
-#define TEXT_VPOSITION_DEFAULT_VALUE 8.0
 
 #define SEC_TO_MSEC 1000
-#define FRAME_PER_SEC 25
-#define SUB_MIN_INTERVAL_FRAME 5
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -107,6 +102,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(videoPositionChanged(qint64)));
 
     connect(ui->waveForm, SIGNAL(markerPositionChanged(qint64)), this, SLOT(waveformMarerkPosChanged(qint64)));
+    connect(ui->waveForm, SIGNAL(ctrlLeftClickEvent(qint64)), this, SLOT(changeCurrentSubStartTime(qint64)));
+    connect(ui->waveForm, SIGNAL(ctrlRightClickEvent(qint64)), this, SLOT(changeCurrentSubEndTime(qint64)));
+    connect(ui->waveForm, SIGNAL(shiftLeftClickEvent(qint64)), this, SLOT(shiftCurrentSubtitle(qint64)));
 
     connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
     connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
@@ -126,60 +124,112 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     // Catch shortcut key events
     if ( event->type() == QEvent::KeyPress ) {
 
+        MySubtitles new_subtitle;
+        QList<MySubtitles> subtitle_list;
+        qint32 current_subtitle_index;
+        qint64 current_position_ms;
+
         QKeyEvent* key_event = static_cast<QKeyEvent*>(event);
 
         if ( key_event->key() == Qt::Key_F1 ) {
 
-            // F1 set current subtitle start time
-            if ( ui->subTable->setStartTime( ui->videoPlayer->playerPosition()) == false ) {
-                QString error_msg = ui->subTable->errorMsg();
-                QMessageBox::warning(this, "Set start time", error_msg);
+            current_position_ms = ui->waveForm->currentPositonMs();
+
+            if ( key_event->modifiers() == Qt::ShiftModifier ) {
+                // Shift + F1 : shift subtitle to the current position
+                this->shiftCurrentSubtitle(current_position_ms);
+            }
+            else {
+                // F1 set current subtitle start time
+                this->changeCurrentSubStartTime(current_position_ms);
             }
         }
         else if ( key_event->key() == Qt::Key_F2 ) {
 
             // F2 set current subtitle end time
-            if ( ui->subTable->setEndTime( ui->videoPlayer->playerPosition()) == false ) {
-                QString error_msg = ui->subTable->errorMsg();
-                QMessageBox::warning(this, "Set end time", error_msg);
-            }
+            current_position_ms = ui->waveForm->currentPositonMs();
+            this->changeCurrentSubEndTime(current_position_ms);
         }
         else if ( key_event->key() == Qt::Key_F3 ) {
 
-            qint64 end_time_ms = ui->videoPlayer->playerPosition();
+            qint64 end_time_ms = ui->waveForm->currentPositonMs();
+            current_subtitle_index = ui->subTable->currentIndex();
 
-            // F3 set current subtitle end time + add new subtitle entry
-            if ( ui->subTable->setEndTime(end_time_ms) == false ) {
-                QString error_msg = ui->subTable->errorMsg();
-                QMessageBox::warning(this, "Set end time", error_msg);
-            }
-            else {
+            // F3 set current subtitle end time + ( add new subtitle entry or move the next subtitle start time)
 
-                qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / (qreal)FRAME_PER_SEC ) * (qreal)SUB_MIN_INTERVAL_FRAME );
+            // Change the current subtitle "end time", continue if ok
+            if ( this->changeCurrentSubEndTime(end_time_ms) == true ) {
 
-                if ( ui->subTable->insertNewSub( ui->stEditDisplay->getDefaultSub(), start_time_ms  ) == false ) {
-                    QString error_msg = ui->subTable->errorMsg();
-                    QMessageBox::warning(this, "Insert subtitle", error_msg);
+                qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
+
+                // If next subtitle exist
+                if ( ( current_subtitle_index + 1 ) < ui->subTable->subtitlesCount() ) {
+
+                    // Move the next subtitle "start time" at the current subtitle "end time" + X frames,
+                    // where X is the minimum interval between two subtitles
+                    if ( ui->subTable->setStartTime(start_time_ms, ( current_subtitle_index + 1 ) ) == false ) {
+                        QString error_msg = ui->subTable->errorMsg();
+                        QMessageBox::warning(this, "Set start time", error_msg);
+                    }
+                    else {
+                        // Redraw the subtitle zone in the waveform
+                        ui->waveForm->changeZoneStartTime( ( current_subtitle_index + 1 ), start_time_ms);
+                    }
+                } // If next subtitle doesn't exist (current is the last)
+                else {
+
+                    new_subtitle = ui->stEditDisplay->getDefaultSub();
+
+                    // Inserte new subtitle start_time at X frames of the current subtitle
+                    // where X is the minimum interval in frame between two subtitle (defined in "settings" by the user)
+                    if ( ui->subTable->insertNewSub( new_subtitle , start_time_ms  ) == false ) {
+                        QString error_msg = ui->subTable->errorMsg();
+                        QMessageBox::warning(this, "Insert subtitle", error_msg);
+                    }
+                    else {
+                        // Draw subtitle zone in the waveform
+                        subtitle_list.append(new_subtitle);
+                        current_subtitle_index = ui->subTable->currentIndex();
+                        ui->waveForm->drawSubtitlesZone(subtitle_list, current_subtitle_index);
+                        ui->waveForm->changeZoneColor(current_subtitle_index);
+                    }
                 }
             }
         }
         else if ( key_event->key() == Qt::Key_F4 ) {
 
             // F4 add new subtitle entry after current subtitle
-            if ( ui->subTable->insertNewSubAfterCurrent( ui->stEditDisplay->getDefaultSub() ) == false ) {
+            new_subtitle = ui->stEditDisplay->getDefaultSub();
+
+            if ( ui->subTable->insertNewSubAfterCurrent( new_subtitle ) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
                 QMessageBox::warning(this, "Insert subtitle", error_msg);
             }
+            else {
+                subtitle_list.append(new_subtitle);
+                current_subtitle_index = ui->subTable->currentIndex();
+                ui->waveForm->drawSubtitlesZone(subtitle_list, current_subtitle_index);
+                ui->waveForm->changeZoneColor(current_subtitle_index);
+            }
         }
-        else if ( key_event->key() == Qt::Key_Backspace ) {
+        else if ( key_event->key() == Qt::Key_F5 ) {
 
             // Ctrl + BackSpace remove current subtitle
-            Qt::KeyboardModifiers event_keybord_modifier = key_event->modifiers();
+//            Qt::KeyboardModifiers event_keybord_modifier = key_event->modifiers();
 
-            if ( event_keybord_modifier == Qt::ControlModifier ) {
+//            if ( event_keybord_modifier == Qt::ControlModifier ) {
 
+                // Remove the current subtitle item from the waveform
+                current_subtitle_index = ui->subTable->currentIndex();
+                ui->waveForm->removeSubtitleZone(current_subtitle_index);
+
+                // Remove the current subtitle from the database
                 ui->subTable->deleteCurrentSub();
-            }
+
+                // Current subtitle changed, change the item color in the waveform
+                current_subtitle_index = ui->subTable->currentIndex();
+                ui->waveForm->changeZoneColor(current_subtitle_index);
+//            }
         }
     }
     return QMainWindow::eventFilter(watched, event);
@@ -197,12 +247,21 @@ void MainWindow::updateSubTable() {
 
     // There are no subtitle for the current time. Try to add new subtitle entry
     if ( ui->subTable->isNewEntry() ) {
-        if ( ui->subTable->insertNewSub( ui->stEditDisplay->subtitleData()) == false ) {
+        MySubtitles new_subtitle = ui->stEditDisplay->subtitleData();
+        if ( ui->subTable->insertNewSub(new_subtitle) == false ) {
 
             QString error_msg = ui->subTable->errorMsg();
             QMessageBox::warning(this, "Insert subtitle", error_msg);
             MySubtitles empty_subtitle;
             updateTextEdit(empty_subtitle);
+        }
+        else {
+            // Draw subtitle zone in the waveform
+            QList<MySubtitles> subtitle_list;
+            subtitle_list.append(new_subtitle);
+            qint32 current_subtitle_index = ui->subTable->currentIndex();
+            ui->waveForm->drawSubtitlesZone(subtitle_list, current_subtitle_index);
+            ui->waveForm->changeZoneColor(current_subtitle_index);
         }
     } // There are a subtitle for the current time. Update the text in the database
     else {
@@ -254,6 +313,168 @@ void MainWindow::waveformMarerkPosChanged(qint64 positionMs) {
 void MainWindow::updateTextEdit(MySubtitles subtitle) {
 
     ui->stEditDisplay->setText(subtitle);
+    ui->waveForm->changeZoneColor(ui->subTable->currentIndex());
+}
+
+// Change the current subtitle "start time"
+bool MainWindow::changeCurrentSubStartTime(qint64 positionMs) {
+
+    qint32 current_subtitle_index = ui->subTable->currentIndex();
+
+    // Check if there are a subtitle selected
+    if ( current_subtitle_index >= 0 ) {
+        // Check if there are a subtitle before
+        if ( ( current_subtitle_index - 1 ) >= 0) {
+
+            MySubtitles previous_subtitle = ui->subTable->getSubInfos(current_subtitle_index - 1);
+            qint64 previous_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( previous_subtitle.startTime() );
+
+            // Check time validity
+            if ( previous_sub_start_time_ms >= 0 ) {
+
+                // If the current sub new "start time" is before the previous sub "start time" (previous sub completely recover)
+                // Abord
+                if ( positionMs <= previous_sub_start_time_ms ) {
+                    QMessageBox::warning(this, "Set start time", "start time < previous start time");
+                    return false;
+                }
+
+                qint64 previous_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( previous_subtitle.endTime() );
+
+                // Check time validity
+                if ( previous_sub_end_time_ms >=0 ) {
+
+                    // If the current sub new "start time" is between the previous sub "start/end time"
+                    // Move the previous subtitle "end time" at the current subtitle "start time" - X frames,
+                    // where X is the minimum interval between two subtitles
+                    if ( positionMs <= previous_sub_end_time_ms) {
+
+                        qint64 new_end_time_ms = positionMs - ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
+
+                        if ( ui->subTable->setEndTime( new_end_time_ms , ( current_subtitle_index - 1 ) ) == false ) {
+                            QMessageBox::warning(this, "Set start time", "start time < previous start time");
+                            return false;
+                        }
+                        else {
+                            // If ok, redraw the subtitle zone in the waveform
+                            ui->waveForm->changeZoneEndTime( ( current_subtitle_index - 1 ), new_end_time_ms);
+                        }
+                    }
+                } // Time not valid, abord
+                else return false;
+            }   // Time not valid, abord
+            else return false;
+        }
+
+        // Change the current sub "start time"
+        if ( ui->subTable->setStartTime(positionMs, current_subtitle_index) == false ) {
+            QString error_msg = ui->subTable->errorMsg();
+            QMessageBox::warning(this, "Set start time", error_msg);
+            return false;
+        }
+        else {
+            // If ok, redraw the subtitle zone in the waveform
+            ui->waveForm->changeZoneStartTime(current_subtitle_index, positionMs);
+        }
+    }
+    return true;
+}
+
+// Change the current subtitle "start time"
+bool MainWindow::changeCurrentSubEndTime(qint64 positionMs) {
+
+    qint32 current_subtitle_index = ui->subTable->currentIndex();
+
+    // Check if there are a subtitle selected
+    if ( current_subtitle_index < ui->subTable->subtitlesCount() ) {
+        // Check if there are a subtitle after
+        if ( ( current_subtitle_index + 1 ) < ui->subTable->subtitlesCount() ) {
+
+            MySubtitles next_subtitle = ui->subTable->getSubInfos(current_subtitle_index + 1);
+            qint64 next_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( next_subtitle.endTime() );
+
+            // Check time validity
+            if ( next_sub_end_time_ms >= 0 ) {
+
+                // If the current sub new "end time" is after the next sub "end time" (next sub completely recover)
+                // Abord
+                if ( positionMs >= next_sub_end_time_ms ) {
+                    QMessageBox::warning(this, "Set end time", "end time > next end time");
+                    return false;
+                }
+
+                qint64 next_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( next_subtitle.startTime() );
+
+                // Check time validity
+                if ( next_sub_start_time_ms >=0 ) {
+
+                    // If the current sub new "end time" is between the next sub "start/end time"
+                    // Move the next subtitle "start time" at the current subtitle "end time" + X frames,
+                    // where X is the minimum interval between two subtitles
+                    if ( positionMs >= next_sub_start_time_ms) {
+
+                        qint64 new_start_time_ms = positionMs + ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
+
+                        if ( ui->subTable->setStartTime( new_start_time_ms , ( current_subtitle_index + 1 ) ) == false ) {
+                            QMessageBox::warning(this, "Set end time", "end_time > next end time");
+                            return false;
+                        }
+                        else {
+                            // If ok, redraw the subtitle zone in the waveform
+                            ui->waveForm->changeZoneStartTime( ( current_subtitle_index + 1 ), new_start_time_ms);
+                        }
+                    }
+                } // Time not valid, abord
+                else return false;
+            } // Time not valid, abord
+            else return false;
+        }
+
+        // Change the current sub "end time"
+        if ( ui->subTable->setEndTime(positionMs, current_subtitle_index) == false ) {
+            QString error_msg = ui->subTable->errorMsg();
+            QMessageBox::warning(this, "Set end time", error_msg);
+            return false;
+        }
+        else {
+            // If ok, redraw the subtitle zone in the waveform
+            ui->waveForm->changeZoneEndTime(current_subtitle_index, positionMs);
+        }
+    }
+    return true;
+}
+
+// Move the current subtitle at given position
+void MainWindow::shiftCurrentSubtitle(qint64 positionMs) {
+
+    qint32 current_subtitle_index = ui->subTable->currentIndex();
+
+    MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+    qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+    qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+
+    // Check time validity
+    if ( ( current_sub_start_time_ms >= 0 ) &&  ( current_sub_end_time_ms >= 0 ) ) {
+
+        qint32 current_sub_durationMs = current_sub_end_time_ms - current_sub_start_time_ms;
+
+        // Check if the new "start time" is after the actual "start time"
+        if ( positionMs > current_sub_start_time_ms ) {
+
+            // Move the "end time" first
+            if ( this->changeCurrentSubEndTime( positionMs + current_sub_durationMs ) == true ) {
+                // If "end time" well moved, move the "start time"
+                this->changeCurrentSubStartTime(positionMs);
+            }
+        }// Check if the new "start time" is before the actual "start time"
+        else if ( positionMs < current_sub_start_time_ms ) {
+            // Move the "start time" first
+            if ( this->changeCurrentSubStartTime( positionMs ) == true ) {
+                // If "start time" well moved, move the "end time"
+                this->changeCurrentSubEndTime( positionMs + current_sub_durationMs );
+            }
+        }
+    }
 }
 
 // Manage the openning of video file when "Open" button is triggered
@@ -354,6 +575,12 @@ void MainWindow::on_actionImport_Subtitles_triggered()
     if ( !subtitles_list.isEmpty() ) {
 
         ui->subTable->loadSubtitles(subtitles_list);
+
+        // Remove all and draw subtitles zones in the waveform
+        ui->waveForm->removeAllSubtitlesZones();
+        qint32 current_subtitle_index = ui->subTable->currentIndex();
+        ui->waveForm->drawSubtitlesZone(subtitles_list, current_subtitle_index);
+        ui->waveForm->changeZoneColor(current_subtitle_index);
     }
 }
 

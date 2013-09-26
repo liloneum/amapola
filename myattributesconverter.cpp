@@ -3,6 +3,7 @@
 #include <QFont>
 #include <QFontMetrics>
 #include <QRegExp>
+#include <QTime>
 
 // Class to define some converters statics methods
 MyAttributesConverter::MyAttributesConverter()
@@ -130,4 +131,21 @@ QString MyAttributesConverter::toTimeHMSticks(QString time) {
 
     return time;
 
+}
+
+// Convert a time with format HH:MM:SS:zzz, where zzz are millisecond
+// to time in millisecond
+qint64 MyAttributesConverter::timeStrHMStoMs(QString time) {
+
+    QTime time_base(0, 0, 0, 0);
+    QTime time_HMS;
+
+    time_HMS = QTime::fromString(time, "hh:mm:ss.zzz");
+
+    if ( time_HMS.isValid() ) {
+        return qAbs( time_HMS.msecsTo(time_base) );
+    }
+    else {
+        return -1;
+    }
 }

@@ -32,6 +32,9 @@ private slots:
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
     void displayErrorMsg(QString);
+    bool changeCurrentSubStartTime(qint64 positionMs);
+    bool changeCurrentSubEndTime(qint64 positionMs);
+    void shiftCurrentSubtitle(qint64 positionMs);
 
     void on_actionImport_Subtitles_triggered();
 

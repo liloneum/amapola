@@ -21,8 +21,8 @@ signals:
     void currentSubChanged(qint32);
 
 public slots:
-    bool insertNewSub(MySubtitles newSubtitle, qint64 positionMs = -1, bool shiftNextSub = false);
-    bool insertNewSubAfterCurrent(MySubtitles newSubtitle);
+    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs = -1, bool shiftNextSub = false);
+    bool insertNewSubAfterCurrent(MySubtitles &newSubtitle);
     void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
@@ -30,16 +30,18 @@ public slots:
     bool isNewEntry();
     void updateText(QList<TextLine> textLines, qint64 positionMs = -1);
     void updateDatas(MySubtitles subtitle, qint64 positionMs = -1);
-    bool setEndTime(qint64 positionMs);
-    bool setStartTime(qint64 positionMs);
+    bool setEndTime(qint64 positionMs, qint32 stIndex);
+    bool setStartTime(qint64 positionMs, qint32 stIndex);
     void updateStDisplay(qint64 positionMs);
+    qint32 currentIndex();
+    qint32 subtitlesCount();
+    MySubtitles getSubInfos(qint32 stIndex);
     QString errorMsg();
 
 private slots:
     void updateSelectedItem();
     void updateItem(QTableWidgetItem* item);
     QString updateStTime(QTableWidgetItem* time_item);
-    MySubtitles fillSubInfos(qint32 stIndex);
     void addRows(qint32 numberOfRow, qint32 fromRowNbr);
 
 
