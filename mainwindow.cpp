@@ -495,32 +495,55 @@ void MainWindow::on_actionOpen_triggered()
     }
 }
 
-// Inteface to resize the edit zone in function of the current video size
+// Resize the subtitles edit zone in function of the current video size
 void MainWindow::updateStEditSize() {
 
     QSizeF video_item_size;
-    QSizeF video_item_native_size;
-    qint32 video_height;
+    QSizeF video_native_size;
+    QSizeF video_current_size;
+    qreal video_item_ratio;
+    qint32 video_x_pos;
+    qint32 video_y_pos;
 
-    // Resize the width of subtitles edit zone in function of video width
+    // Video item size is the size of the zone where is displayed the video
     video_item_size = ui->videoPlayer->videoItemSize();
+    video_item_ratio = video_item_size.width() / video_item_size.height();
 
-    video_item_native_size = ui->videoPlayer->videoItemNativeSize();
+    // Video native size is the real full size of the media
+    video_native_size = ui->videoPlayer->videoItemNativeSize();
 
-    if ( video_item_native_size.isValid() ) {
-        qreal video_ratio = video_item_native_size.width() / video_item_native_size.height();
+    // Video current size is the displayed size of the video,
+    // scaled on the video item with its ratio kept
 
-        video_height = (qint32) qRound( video_item_size.width() / video_ratio );
-    }
-    else {
-        video_height = video_item_size.height();
+    // When no video loaded, the subtitles edit zone should be mapped on the video item
+    // 9 is the margins value of the mediaplayer;
+    video_current_size = video_item_size;
+    video_x_pos = 9;
+    video_y_pos = 9;
+
+    // If a video is loaded
+    if ( video_native_size.isValid() ) {
+
+        // Retrieve the video current size (native size scaled in item size)
+        video_current_size = video_native_size.scaled(video_item_size, Qt::KeepAspectRatio);
+
+        qreal video_native_ratio = video_native_size.width() / video_native_size.height();
+
+        // Compare the ratio of native video and video item
+        // to knwon if the video is full scale on width or on height of the item
+        if ( video_native_ratio > video_item_ratio ) {
+            video_x_pos = 9;
+            video_y_pos = (qint32)( qRound( video_item_size.height() - video_current_size.height() ) / 2.0 ) + 9;
+        }
+        else if ( video_native_ratio < video_item_ratio ) {
+            video_x_pos = (qint32)( qRound( video_item_size.width() - video_current_size.width() ) / 2.0 ) + 9;
+            video_y_pos = 9;
+        }
     }
 
     // Set the edit region size and position mapped on video.
-    QSize video_current_size(video_item_size.width(), video_height + 1);
-    ui->stEditDisplay->setFixedSize(video_current_size);
-    qint32 video_top_pos = (qint32)( qRound( video_item_size.height() - (qreal)video_height ) / 2.0 ) + 9;
-    ui->stEditDisplay->move(9, video_top_pos);
+    ui->stEditDisplay->setFixedSize(video_current_size.toSize());
+    ui->stEditDisplay->move(video_x_pos, video_y_pos);
 
 }
 
