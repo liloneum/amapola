@@ -29,7 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // Install an event filter on all the MainWindow
-    this->installEventFilter(this);
+    //this->installEventFilter(this);
+    qApp->installEventFilter(this);
 
     // Init flags
     mTextPosChangedBySoft = false;
@@ -143,12 +144,14 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
                 // F1 set current subtitle start time
                 this->changeCurrentSubStartTime(current_position_ms);
             }
+            return true;
         }
         else if ( key_event->key() == Qt::Key_F2 ) {
 
             // F2 set current subtitle end time
             current_position_ms = ui->waveForm->currentPositonMs();
             this->changeCurrentSubEndTime(current_position_ms);
+            return true;
         }
         else if ( key_event->key() == Qt::Key_F3 ) {
 
@@ -195,6 +198,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
                     }
                 }
             }
+            return true;
         }
         else if ( key_event->key() == Qt::Key_F4 ) {
 
@@ -211,25 +215,54 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
                 ui->waveForm->drawSubtitlesZone(subtitle_list, current_subtitle_index);
                 ui->waveForm->changeZoneColor(current_subtitle_index);
             }
+            return true;
         }
-        else if ( key_event->key() == Qt::Key_F5 ) {
+        else if ( key_event->key() == Qt::Key_Delete ) {
 
-            // Ctrl + BackSpace remove current subtitle
-//            Qt::KeyboardModifiers event_keybord_modifier = key_event->modifiers();
+            // Delete key : remove current subtitle
+            // Remove the current subtitle item from the waveform
+            current_subtitle_index = ui->subTable->currentIndex();
+            ui->waveForm->removeSubtitleZone(current_subtitle_index);
 
-//            if ( event_keybord_modifier == Qt::ControlModifier ) {
+            // Remove the current subtitle from the database
+            ui->subTable->deleteCurrentSub();
 
-                // Remove the current subtitle item from the waveform
-                current_subtitle_index = ui->subTable->currentIndex();
-                ui->waveForm->removeSubtitleZone(current_subtitle_index);
+            // Current subtitle changed, change the item color in the waveform
+            current_subtitle_index = ui->subTable->currentIndex();
+            ui->waveForm->changeZoneColor(current_subtitle_index);
+            return true;
+        }
+        else if ( key_event->key() == Qt::Key_PageUp ) {
 
-                // Remove the current subtitle from the database
-                ui->subTable->deleteCurrentSub();
+            current_subtitle_index = ui->subTable->currentIndex();
 
-                // Current subtitle changed, change the item color in the waveform
-                current_subtitle_index = ui->subTable->currentIndex();
-                ui->waveForm->changeZoneColor(current_subtitle_index);
-//            }
+            if ( current_subtitle_index > 0 ) {
+                ui->subTable->selectRow(current_subtitle_index - 1);
+            }
+            return true;
+        }
+        else if ( key_event->key() == Qt::Key_PageDown ) {
+
+            current_subtitle_index = ui->subTable->currentIndex();
+
+            if ( (current_subtitle_index + 1) < ui->subTable->subtitlesCount() ) {
+                ui->subTable->selectRow(current_subtitle_index + 1);
+            }
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_2 ) ) ||
+            ( key_event->key() == Qt::Key_F12 ) ) {
+
+            current_position_ms = ui->waveForm->currentPositonMs();
+            ui->waveForm->updatePostionMarker(current_position_ms + 1000);
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_1 ) ) ||
+         ( key_event->key() == Qt::Key_F11 ) ) {
+
+            current_position_ms = ui->waveForm->currentPositonMs();
+            ui->waveForm->updatePostionMarker(current_position_ms - 1000);
+            return true;
         }
     }
     return QMainWindow::eventFilter(watched, event);
