@@ -214,14 +214,14 @@ void MyWaveForm::initWaveForm() {
 
     time_accuracy_ms = (qreal)SEC_TO_MSEC / (qreal)SAMPLES_PER_SEC;
 
+    mAmplitudeVector.resize(14400000*time_accuracy_ms);
+    mTimeVectorMs.resize(14400000*time_accuracy_ms);
+
+    mAmplitudeVector.fill(0);
+
     if (!mpFile->open(QIODevice::ReadOnly)) {
 
         // No wave form to load. Genrate 4 hours of empty waveform
-        mAmplitudeVector.resize(14400000*time_accuracy_ms);
-        mTimeVectorMs.resize(14400000*time_accuracy_ms);
-
-        mAmplitudeVector.fill(0);
-
         for (qint32 i = 0; i < mTimeVectorMs.size(); i++) {
             mTimeVectorMs[i] = time_accuracy_ms * i;
         }
