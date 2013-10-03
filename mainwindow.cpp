@@ -11,6 +11,7 @@
 #include <QString>
 #include <QKeyEvent>
 #include <QMessageBox>
+#include <QTimer>
 
 
 #define SEC_TO_MSEC 1000
@@ -112,9 +113,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->waveForm, SIGNAL(ctrlRightClickEvent(qint64)), this, SLOT(changeCurrentSubEndTime(qint64)));
     connect(ui->waveForm, SIGNAL(shiftLeftClickEvent(qint64)), this, SLOT(shiftCurrentSubtitle(qint64)));
 
-    connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTable()));
-    connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), ui->subTable, SLOT(updateDatas(MySubtitles)));
-    connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged(TextFont, TextLine)), this, SLOT(updateToolBox(TextFont, TextLine)));
+    connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTableText()));
+    connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), this, SLOT(updateSubTableDatas(MySubtitles)));
+    connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged()), this, SLOT(updateToolBox()));
 
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentItemChanged(qint64)));
     connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
@@ -356,13 +357,20 @@ void MainWindow::currentItemChanged(qint64 positionMs) {
 }
 
 // Update the subtitle text in the database
-void MainWindow::updateSubTable() {
+void MainWindow::updateSubTableText() {
 
     qint64 current_position_ms = ui->waveForm->currentPositonMs();
 
     // There are no subtitle for the current time. Try to add new subtitle entry
     if ( ui->subTable->isNewEntry( current_position_ms ) ) {
-        MySubtitles new_subtitle = ui->stEditDisplay->subtitleData();
+
+        MySubtitles new_subtitle;
+        TextLine new_line = this->getPosToolBox();
+
+        new_line.setLine(ui->stEditDisplay->text().first().Line());
+
+        new_subtitle.setText(new_line, this->getFontToolBox(false));
+
         if ( ui->subTable->insertNewSub(new_subtitle, current_position_ms) == false ) {
 
             QString error_msg = ui->subTable->errorMsg();
@@ -381,6 +389,20 @@ void MainWindow::updateSubTable() {
     } // There are a subtitle for the current time. Update the text in the database
     else {
         ui->subTable->updateText( ui->stEditDisplay->text());
+    }
+}
+
+// Update the subtitle datas in the database
+void MainWindow::updateSubTableDatas(MySubtitles subtitleDatas) {
+
+    qint64 current_position_ms = ui->waveForm->currentPositonMs();
+
+    // There are no subtitle for the current time. Avoid
+    if ( ui->subTable->isNewEntry( current_position_ms ) ) {
+        return;
+    }
+    else {
+        ui->subTable->updateDatas(subtitleDatas);
     }
 }
 
@@ -797,11 +819,29 @@ void MainWindow::eraseInfo() {
 
 // ******************************** Tool Box ***************************************************************//
 
-void MainWindow::updateToolBox(TextFont textFont, TextLine textLine) {
+// Update the parameter tool boxes
+void MainWindow::updateToolBox() {
 
-    this->updatePosToolBox(textLine);
+    MySubtitles current_subtitle_datas;
+    TextLine text_line;
+    TextFont text_font;
+    qint16 line_nbr;
 
-    this->updateFontToolBox(textFont);
+    // Check the line number (1 or 2)
+    line_nbr = ui->stEditDisplay->lastFocused();
+    // Retrieve the current text edit zones paramaters
+    current_subtitle_datas = ui->stEditDisplay->subtitleData();
+
+    if ( line_nbr <= current_subtitle_datas.text().count() ) {
+
+        // Retrieve font and position of the current line
+        text_line = current_subtitle_datas.text().at(line_nbr -1);
+        text_font = text_line.Font();
+
+        // Update the tool boxes with this parameters
+        this->updatePosToolBox(text_line);
+        this->updateFontToolBox(text_font);
+    }
 }
 
 // Update the "position" tool boxes
@@ -828,6 +868,51 @@ void MainWindow::updateTextPosition() {
 
     mTextPosChangedByUser = true;
 
+    // Retrieve position parameters from tool boxes
+    TextLine new_text_line = this->getPosToolBox();
+
+    // Change the text edit zone position
+    ui->stEditDisplay->updateTextPosition( new_text_line );
+
+    qint64 current_psotion_ms = ui->waveForm->currentPositonMs();
+
+    // If there is subtitle indexed in the table for the current position
+    if ( !ui->subTable->isNewEntry(current_psotion_ms) ) {
+
+        // Retrieve the current subtitle datas
+        MySubtitles current_subtitle_datas;
+        current_subtitle_datas = ui->subTable->getSubInfos( ui->subTable->currentIndex() );
+
+        // Check the line number (1 or 2)
+        qint16 line_nbr = ui->stEditDisplay->lastFocused();
+
+        if ( line_nbr > 0 ) {
+
+            // Retrieve the current text properties lines list
+            QList<TextLine> current_text_lines = current_subtitle_datas.text();
+            // Retrieve the line to change
+            TextLine current_line = current_text_lines.at(line_nbr - 1);
+            // Retrieve its font
+            TextFont current_text_font = current_line.Font();
+
+            // Push the font properties in the new line
+            new_text_line.setFont(current_text_font);
+            // Replace the line in the list
+            current_text_lines.replace(line_nbr - 1, new_text_line);
+            // Push the changed list in the subtitle container
+            current_subtitle_datas.setText(current_text_lines);
+        }
+
+        // Push the new datas in the table
+        ui->subTable->updateDatas(current_subtitle_datas);
+    }
+
+    mTextPosChangedByUser = false;
+}
+
+// Get the position paramters from the tool boxes
+TextLine MainWindow::getPosToolBox() {
+
     TextLine text_line;
 
     text_line.setTextHAlign( ui->hAlignBox->currentText() );
@@ -840,18 +925,22 @@ void MainWindow::updateTextPosition() {
     QString vPos_str = QString::number(ui->vPosSpinBox->value(), 'f', 1);
     text_line.setTextVPosition( vPos_str );
 
-    ui->stEditDisplay->updateTextPosition(text_line);
-
-    mTextPosChangedByUser = false;
+    return text_line;
 }
 
 // Vertical alignment toolbox value changed
 void MainWindow::on_vAlignBox_activated(const QString &value) {
 
-    qApp->setProperty("prop_Valign", value);
-
     // Tool box changed by user
     if ( mTextPosChangedBySoft == false ) {
+
+        // If there is not subtitle indexed in the table for the current position
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            // Save the parameter as default parameter
+            qApp->setProperty("prop_Valign", value);
+            ui->stEditDisplay->defaultSub();
+        }
+
         // Update the text edit position
         updateTextPosition();
     }
@@ -860,9 +949,13 @@ void MainWindow::on_vAlignBox_activated(const QString &value) {
 // Vertical position toolbox value changed
 void MainWindow::on_vPosSpinBox_valueChanged(const QString &value) {
 
-    qApp->setProperty("prop_Vposition_percent", value);
-
     if ( mTextPosChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextPosition();
     }
 }
@@ -870,9 +963,13 @@ void MainWindow::on_vPosSpinBox_valueChanged(const QString &value) {
 // Horizontal alignment toolbox value changed
 void MainWindow::on_hAlignBox_activated(const QString &value) {
 
-    qApp->setProperty("prop_Halign", value);
-
     if ( mTextPosChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            qApp->setProperty("prop_Halign", value);
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextPosition();
     }
 }
@@ -880,9 +977,13 @@ void MainWindow::on_hAlignBox_activated(const QString &value) {
 // Horizontal position toolbox value changed
 void MainWindow::on_hPosSpinBox_valueChanged(const QString &value) {
 
-    qApp->setProperty("prop_Hposition_percent", value);
-
     if ( mTextPosChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextPosition();
     }
 }
@@ -949,12 +1050,11 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
     mTextFontChangedBySoft = false;
 }
 
-// Change the "font" of the current "edit line" from the font toolboxes parameters
-void MainWindow::updateTextFont(bool customColorClicked) {
-
-    mTextFontChangedByUser = true;
+// Get the font parameters from the tool boxes
+TextFont MainWindow::getFontToolBox(bool customColorClicked) {
 
     TextFont text_font;
+    QString font_color_str;
 
     if ( ui->fontLabel->isEnabled() == true )  {
 
@@ -966,32 +1066,24 @@ void MainWindow::updateTextFont(bool customColorClicked) {
         ui->fontColorOtherText->setEnabled(false);
 
         if ( ui->fontColorRButton->isChecked() ) {
-            text_font.setFontColor("FFFF0000");
-            qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
+            font_color_str = "FFFF0000";
         }
         else if ( ui->fontColorGButton->isChecked() ) {
-            text_font.setFontColor("FF00FF00");
-            qApp->setProperty("prop_FontColor_rgba", "FF00FF00");
+            font_color_str = "FF00FF00";
         }
         else if ( ui->fontColorBButton->isChecked() ) {
-            text_font.setFontColor("FF0000FF");
-            qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
+            font_color_str = "FF0000FF";
         }
         else if ( ui->fontColorYButton->isChecked() ) {
-            text_font.setFontColor("FFFFFF00");
-            qApp->setProperty("prop_FontColor_rgba", "FFFFFF00");
+            font_color_str = "FFFFFF00";
         }
         else if ( ui->fontColorBlButton->isChecked() ) {
-            text_font.setFontColor("FF000000");
-            qApp->setProperty("prop_FontColor_rgba", "FF000000");
+            font_color_str = "FF000000";
         }
         else if ( ui->fontColorWButton->isChecked() ) {
-            text_font.setFontColor("FFFFFFFF");
-            qApp->setProperty("prop_FontColor_rgba", "FFFFFFFF");
+            font_color_str = "FFFFFFFF";
         }
         else if ( ui->fontColorOtherButton->isChecked() ) {
-
-            QString font_color_str;
 
             if ( customColorClicked == true ) {
                 bool ok;
@@ -1004,9 +1096,15 @@ void MainWindow::updateTextFont(bool customColorClicked) {
                 font_color_str = ui->fontColorOtherText->text();
             }
             ui->fontColorOtherText->setEnabled(true);
-            text_font.setFontColor(font_color_str);
-            qApp->setProperty("prop_FontColor_rgba", font_color_str);
         }
+
+        text_font.setFontColor(font_color_str);
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            qApp->setProperty("prop_FontColor_rgba", font_color_str);
+            ui->stEditDisplay->defaultSub();
+        }
+
 
         if ( ui->fontItalicButton->isChecked() ) {
             text_font.setFontItalic("yes");
@@ -1023,7 +1121,50 @@ void MainWindow::updateTextFont(bool customColorClicked) {
         }
     }
 
-    ui->stEditDisplay->updateTextFont(text_font);
+    return text_font;
+}
+
+// Change the "font" of the current "edit line" from the font toolboxes parameters
+void MainWindow::updateTextFont(bool customColorClicked) {
+
+    mTextFontChangedByUser = true;
+
+    // Retrieve font parameters from tool boxes
+    TextFont new_font = this->getFontToolBox(customColorClicked);
+
+    // Change the text edit zone font
+    ui->stEditDisplay->updateTextFont(new_font, this->getPosToolBox() );
+
+    qint64 current_psotion_ms = ui->waveForm->currentPositonMs();
+
+    // If there is subtitle indexed in the table for the current time
+    if ( !ui->subTable->isNewEntry(current_psotion_ms) ) {
+
+        // Retrieve the current subtitle datas
+        MySubtitles current_subtitle_datas;
+        current_subtitle_datas = ui->subTable->getSubInfos( ui->subTable->currentIndex() );
+
+        // Check the line number (1 or 2)
+        qint16 line_nbr = ui->stEditDisplay->lastFocused();
+
+        if ( line_nbr > 0 ) {
+
+            // Retrieve the current text properties lines list
+            QList<TextLine> current_text_lines = current_subtitle_datas.text();
+            // Retrieve the line to change
+            TextLine current_line = current_text_lines.at(line_nbr - 1);
+
+            // Push the text font properties in the current line
+            current_line.setFont(new_font);
+            // Replace the line in the list
+            current_text_lines.replace(line_nbr - 1, current_line);
+            // Push the changed list in the subtitle container
+            current_subtitle_datas.setText(current_text_lines);
+        }
+
+        // Push the new datas in the table
+        ui->subTable->updateDatas(current_subtitle_datas);
+    }
 
     mTextFontChangedByUser = false;
 }
@@ -1031,10 +1172,16 @@ void MainWindow::updateTextFont(bool customColorClicked) {
 // Font size toolbox changed
 void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &value) {
 
-    qApp->setProperty("prop_FontSize_pt", value);
-
     // Tool box changed by user
     if ( mTextFontChangedBySoft == false ) {
+
+        // If there is no subtitle indexed in the table for the current time
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+            // Save the parameter as default parameter
+            qApp->setProperty("prop_FontSize_pt", ui->fontSizeSpinBox->cleanText());
+            ui->stEditDisplay->defaultSub();
+        }
+
         // Update the text edit font
         updateTextFont(false);
     }
@@ -1093,14 +1240,20 @@ void MainWindow::on_fontColorOtherButton_clicked() {
 // Italic value changed
 void MainWindow::on_fontItalicButton_toggled(bool checked) {
 
-    if ( checked ) {
-        qApp->setProperty("prop_FontItalic", "yes");
-    }
-    else {
-        qApp->setProperty("prop_FontItalic", "no");
-    }
-
     if ( mTextFontChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+
+            if ( checked ) {
+                qApp->setProperty("prop_FontItalic", "yes");
+            }
+            else {
+                qApp->setProperty("prop_FontItalic", "no");
+            }
+
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextFont(false);
     }
 }
@@ -1108,14 +1261,20 @@ void MainWindow::on_fontItalicButton_toggled(bool checked) {
 // Underlined value changed
 void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 
-    if ( checked ) {
-        qApp->setProperty("prop_FontUnderlined", "yes");
-    }
-    else {
-        qApp->setProperty("prop_FontUnderlined", "no");
-    }
-
     if ( mTextFontChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+
+            if ( checked ) {
+                qApp->setProperty("prop_FontUnderlined", "yes");
+            }
+            else {
+                qApp->setProperty("prop_FontUnderlined", "no");
+            }
+
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextFont(false);
     }
 }
@@ -1123,9 +1282,14 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 // Font name changed
 void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
 
-    qApp->setProperty("prop_FontName", f.family());
-
     if ( mTextFontChangedBySoft == false ) {
+
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+
+            qApp->setProperty("prop_FontName", ui->fontIdComboBox->currentText());
+            ui->stEditDisplay->defaultSub();
+        }
+
         updateTextFont(false);
     }
 }

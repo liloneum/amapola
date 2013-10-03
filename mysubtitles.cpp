@@ -60,6 +60,11 @@ void MySubtitles::setText(TextLine textLine, TextFont font) {
     mText.append(textLine);
 }
 
+void MySubtitles::setText(QList<TextLine> textLineList) {
+
+    mText = textLineList;
+}
+
 // Assessors
 QString MySubtitles::startTime() {
 

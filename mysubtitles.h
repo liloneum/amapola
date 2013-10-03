@@ -91,11 +91,10 @@ public:
     void clear();
     void setStartTime(QString startTime);
     void setEndTime(QString endTime);
-    //void setText(QString text);
     void setText(TextLine textLine, TextFont Font);
+    void setText(QList<TextLine> textLineList);
     QString startTime();
     QString endTime();
-    //QString text();
     QList<TextLine> text();
     bool isValid();
 

@@ -22,7 +22,8 @@ public:
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
-    void updateSubTable();
+    void updateSubTableText();
+    void updateSubTableDatas(MySubtitles subtitleDatas);
     void videoPositionChanged(qint64 positionMs);
     void currentItemChanged(qint64 positionMs);
     void waveformMarerkPosChanged(qint64 positionMs);
@@ -47,9 +48,10 @@ private slots:
 
     //***************************Tool Box ***************************//
 
-    void updateToolBox(TextFont textFont, TextLine textLine);
+    void updateToolBox();
 
     void updatePosToolBox(TextLine textLine);
+    TextLine getPosToolBox();
     void updateTextPosition();
 
     void on_vPosSpinBox_valueChanged(const QString &value);
@@ -62,6 +64,7 @@ private slots:
 
 
     void updateFontToolBox(TextFont textFont);
+    TextFont getFontToolBox(bool customColorClicked);
     void updateTextFont(bool customColorClicked);
 
     void on_fontSizeSpinBox_valueChanged(const QString &value);

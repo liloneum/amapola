@@ -23,16 +23,19 @@ public:
 signals:
     void cursorPositionChanged();
     void subDatasChanged(MySubtitles);
-    void textLineFocusChanged(TextFont, TextLine);
+    void lineAdded(MySubtitles);
+    void lineRemoved(MySubtitles);
+    void textLineFocusChanged();
 
 public slots :
     void setText(MySubtitles subtitle);
     QList<TextLine> text();
     MySubtitles subtitleData();
     void updateTextPosition(TextLine textLine);
-    void updateTextFont(TextFont textFont);
+    void updateTextFont(TextFont textFont, TextLine textLine);
     MySubtitles getDefaultSub();
     void defaultSub();
+    qint16 lastFocused();
 
 private slots:
      bool eventFilter(QObject* watched, QEvent* event);
@@ -42,16 +45,18 @@ private slots:
      void textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize);
      void setTextFont(QTextEdit* textEdit, TextFont textFont, QSize widgetSize);
      void textFont(QTextEdit* textEdit, TextFont &textFont, QSize widgetSize);
+     void saveCurrentTextPos(TextLine textLine, QTextEdit *textEdit);
+     void saveCurrentTextFont(TextFont textFont,QTextEdit *textEdit );
     
 private:
     Ui::MyTextEdit *ui;
 
     // Test flag : text is updating from the database
     bool mIsSettingLines;
-    // Temp : defaut subtitle container
+    // Save defaut subtitle container
     MySubtitles mDefaultSub;
-    // Save of the size of the widget before resizing
-    QSize mPreviousWidgetSize;
+    // Save current text edit zones position and font
+    MySubtitles mCurrentTextProp;
     // Number of pixels per inch for the current hardware
     qint32 mPxPerInch;
     // Last text zone focused

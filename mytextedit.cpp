@@ -68,9 +68,6 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
     mPreviousText1 = "";
     mPreviousText2 = "";
 
-    // Save of the size of the widget before resizing
-    mPreviousWidgetSize = this->size();
-
     // Init the focus on textline1
     mpLastFocused = ui->textLine1;
 
@@ -85,13 +82,14 @@ MyTextEdit::~MyTextEdit()
     delete ui;
 }
 
-//TEMP :: DEBUG FUNCTION
+// Save the default position and font parameter
 void MyTextEdit::defaultSub() {
 
     TextLine default_line;
     TextFont default_font;
 
-    //mDefaultSub.clear();
+    mDefaultSub.clear();
+    mCurrentTextProp.clear();
 
     default_font.setFontId( qApp->property("prop_FontName").toString() );
     default_font.setFontColor( qApp->property("prop_FontColor_rgba").toString() );
@@ -109,11 +107,84 @@ void MyTextEdit::defaultSub() {
     default_line.setTextVPosition( qApp->property("prop_Vposition_percent").toString() );
 
     mDefaultSub.setText(default_line, default_font);
+    mCurrentTextProp.setText(default_line, default_font);
 }
 
 MySubtitles MyTextEdit::getDefaultSub() {
 
     return mDefaultSub;
+}
+
+void MyTextEdit::saveCurrentTextPos(TextLine textLine, QTextEdit* textEdit) {
+
+    qint16 line_nbr = 0;
+
+    if ( textEdit == ui->textLine1 ) {
+        line_nbr = 1;
+    }
+    else if( textEdit == ui->textLine2 ) {
+        line_nbr = 2;
+    }
+
+    // Clear the line2 if it doesn't exist anymore
+    if ( ( ui->textLine2->isEnabled() == false ) && ( mCurrentTextProp.text().count() >=2 ) ) {
+        mCurrentTextProp.text().removeLast();
+    }
+
+    if ( line_nbr <= mCurrentTextProp.text().count() ) {
+
+        // Retrieve the current text properties lines list
+        QList<TextLine> current_text_lines = mCurrentTextProp.text();
+        // Retrieve the line to change
+        TextLine current_line = current_text_lines.at(line_nbr - 1);
+        // Retrieve its font
+        TextFont current_text_font = current_line.Font();
+
+        // Push the font properties in the new line
+        textLine.setFont(current_text_font);
+        // Replace the line in the list
+        current_text_lines.replace(line_nbr - 1, textLine);
+        // Push the changed list in the subtitle container
+        mCurrentTextProp.setText(current_text_lines);
+    }
+    else {
+        mCurrentTextProp.setText(textLine, mDefaultSub.text().first().Font());
+    }
+}
+
+void MyTextEdit::saveCurrentTextFont(TextFont textFont, QTextEdit* textEdit) {
+
+    qint16 line_nbr = 0;
+
+    if ( textEdit == ui->textLine1 ) {
+        line_nbr = 1;
+    }
+    else if( textEdit == ui->textLine2 ) {
+        line_nbr = 2;
+    }
+
+    // Clear the line2 if it doesn't exist anymore
+    if ( ( ui->textLine2->isEnabled() == false ) && ( mCurrentTextProp.text().count() >=2 ) ) {
+        mCurrentTextProp.text().removeLast();
+    }
+
+    if ( line_nbr <= mCurrentTextProp.text().count() ) {
+
+        // Retrieve the current text properties lines list
+        QList<TextLine> current_text_lines = mCurrentTextProp.text();
+        // Retrieve the line to change
+        TextLine current_line = current_text_lines.at(line_nbr - 1);
+
+        // Push the text font properties in the current line
+        current_line.setFont(textFont);
+        // Replace the line in the list
+        current_text_lines.replace(line_nbr - 1, current_line);
+        // Push the changed list in the subtitle container
+        mCurrentTextProp.setText(current_text_lines);
+    }
+    else {
+        mCurrentTextProp.setText(mDefaultSub.text().first(), textFont);
+    }
 }
 
 // Get the text from the text edit zones
@@ -147,36 +218,7 @@ QList<TextLine> MyTextEdit::text() {
 // Return a subtitle container
 MySubtitles MyTextEdit::subtitleData() {
 
-    MySubtitles subtitle;
-    QList<TextLine> text_lines;
-    TextLine new_line;
-    TextFont new_font;
-
-    text_lines = this->text();
-
-    // Line 1
-    // Get text, position and font
-    new_line = text_lines.first();
-    this->textPosition(ui->textLine1, new_line, this->size());
-    this->textFont(ui->textLine1, new_font, this->size());
-
-    subtitle.setText(new_line, new_font);
-
-    // Line 2 if exist
-    if ( ui->textLine2->isEnabled() ) {
-
-        // Get text if exist
-        if ( text_lines.count() >= 2 ) {
-            new_line = text_lines.last();
-        }
-
-        // Get position and font
-        this->textPosition(ui->textLine2, new_line, this->size());
-        this->textFont(ui->textLine2, new_font, this->size());
-        subtitle.setText(new_line, new_font);
-    }
-
-    return subtitle;
+    return mCurrentTextProp;
 }
 
 
@@ -199,18 +241,23 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
                     TextLine text_line;
                     TextFont text_font;
 
-                    this->textPosition(ui->textLine1, text_line, this->size());
-                    this->textFont(ui->textLine1, text_font, this->size());
-                    this->setTextFont(ui->textLine2, text_font, this->size());
-                    this->setTextPosition(ui->textLine2, text_line, this->size());
-
-                    // Move line 2 to line 1 position
-                    ui->textLine2->move(ui->textLine1->pos());
-                    // Move line 1 on top of line with spacing defined by LINE_SPACING
-                    ui->textLine1->move( ui->textLine1->x(), ( ui->textLine1->y() - ui->textLine1->height() - LINE_SAPACING ) );
+                    text_line = mCurrentTextProp.text().first();
+                    text_font = text_line.Font();
 
                     ui->textLine2->setEnabled(true);
                     ui->textLine2->show();
+
+                    // Move line 2 to line 1 position
+                    this->setTextFont(ui->textLine2, text_font, this->size());
+                    this->setTextPosition(ui->textLine2, text_line, this->size());
+
+                    // Move line 1 on top of line with spacing defined by LINE_SPACING
+                    ui->textLine1->move( ui->textLine1->x(), ( ui->textLine1->y() - ui->textLine1->height() - LINE_SAPACING ) );
+
+                    // Save line 1 new position
+                    this->textPosition(ui->textLine1, text_line, this->size());
+                    this->saveCurrentTextPos(text_line, ui->textLine1);
+
                     ui->textLine2->setFocus(Qt::OtherFocusReason);
 
                     emit cursorPositionChanged();
@@ -232,11 +279,7 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
 
             // Send the line 1 properties (font, position)
             mpLastFocused = ui->textLine1;
-            TextFont text_font;
-            TextLine text_line;
-            this->textFont(ui->textLine1, text_font, this->size());
-            this->textPosition(ui->textLine1, text_line, this->size());
-            emit textLineFocusChanged(text_font, text_line);
+            emit textLineFocusChanged();
         }
     } // Event in line 2 zone
     else if ( watched == ui->textLine2) {
@@ -253,9 +296,11 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
                       ( ui->textLine2->toPlainText().isEmpty() ) ) {
 
                 // Delete line 2 and move line 1 to line 2 position
-                ui->textLine1->move(ui->textLine2->pos());
                 ui->textLine2->setEnabled(false);
                 ui->textLine2->hide();
+
+                TextLine text_line = mCurrentTextProp.text().last();
+                this->setTextPosition(ui->textLine1, text_line, this->size());
 
                 emit cursorPositionChanged();
                 emit subDatasChanged( subtitleData() );
@@ -277,11 +322,7 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
 
             // Send the line 2 properties (font, position)
             mpLastFocused = ui->textLine2;
-            TextFont text_font;
-            TextLine text_line;
-            this->textFont(ui->textLine2, text_font, this->size());
-            this->textPosition(ui->textLine2, text_line, this->size());
-            emit textLineFocusChanged(text_font, text_line);
+            emit textLineFocusChanged();
         }
     }
 
@@ -294,6 +335,9 @@ void MyTextEdit::setText(MySubtitles subtitle) {
     // Indicate that text is updating
     mIsSettingLines = true;
 
+    ui->textLine1->clearFocus();
+    ui->textLine2->clearFocus();
+
     // If there are text to display
     if ( subtitle.isValid() ) {
 
@@ -304,6 +348,9 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         // There are two lines
         if ( TextLines.count() == 2 ) {
 
+            ui->textLine2->setEnabled(true);
+            ui->textLine2->show();
+
             this->setTextFont(ui->textLine1, TextLines.first().Font(), this->size());
             this->setTextFont(ui->textLine2, TextLines.last().Font(), this->size());
 
@@ -313,14 +360,17 @@ void MyTextEdit::setText(MySubtitles subtitle) {
             this->setTextPosition(ui->textLine1, TextLines.first(), this->size());
             this->setTextPosition(ui->textLine2, TextLines.last(), this->size());
 
-            ui->textLine2->setEnabled(true);
-            ui->textLine2->show();
+            mCurrentTextProp.text().first().setLine(TextLines.first().Line());
+            mCurrentTextProp.text().last().setLine(TextLines.last().Line());
 
             ui->textLine2->setFocus(Qt::OtherFocusReason);
             ui->textLine2->moveCursor(QTextCursor::End);
 
         } // There are one line
         else if ( TextLines.count() == 1 ) {
+
+            ui->textLine2->setEnabled(false);
+            ui->textLine2->hide();
 
             this->setTextFont(ui->textLine1, TextLines.first().Font(), this->size());
 
@@ -329,8 +379,7 @@ void MyTextEdit::setText(MySubtitles subtitle) {
 
             this->setTextPosition(ui->textLine1, TextLines.first(), this->size());
 
-            ui->textLine2->setEnabled(false);
-            ui->textLine2->hide();
+            mCurrentTextProp.text().first().setLine(TextLines.first().Line());
 
             ui->textLine1->setFocus(Qt::OtherFocusReason);
             ui->textLine1->moveCursor(QTextCursor::End);
@@ -341,13 +390,15 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         ui->textLine1->setText("");
         ui->textLine2->setText("");
 
+        ui->textLine2->setEnabled(false);
+        ui->textLine2->hide();
+
         // Set default font and position to line 1
         this->setTextFont(ui->textLine1, mDefaultSub.text().first().Font(), this->size());
 
         this->setTextPosition(ui->textLine1, mDefaultSub.text().first(), this->size());
 
-        ui->textLine2->setEnabled(false);
-        ui->textLine2->hide();
+        mCurrentTextProp.text().first().setLine("");
 
         ui->textLine1->setFocus(Qt::OtherFocusReason);
         ui->textLine1->moveCursor(QTextCursor::End);
@@ -365,8 +416,6 @@ void MyTextEdit::updateTextPosition(TextLine textLine) {
 
     // Change the position
     this->setTextPosition(mpLastFocused, textLine, this->size());
-    // Send a signal to give the new position properties
-    emit subDatasChanged( subtitleData() );
 }
 
 // Set the position of the given "textEdit" zone
@@ -438,6 +487,9 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
 
     // Move the line to the new position
     textEdit->move(pos_x, pos_y);
+
+    // Save this position parameter to current
+    this->saveCurrentTextPos(textLine, textEdit);
 }
 
 // Retrieive the "textEdit" position properties,
@@ -487,16 +539,12 @@ void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize wid
 }
 
 // Update current or last focussed line font
-void MyTextEdit::updateTextFont(TextFont textFont) {
-
-    TextLine text_line;
+void MyTextEdit::updateTextFont(TextFont textFont, TextLine textLine) {
 
     // Retrieive the line position before. Because if font size change,
     // the position need to be recomputed
-    this->textPosition(mpLastFocused, text_line, this->size());
     this->setTextFont(mpLastFocused, textFont, this->size());
-    this->setTextPosition(mpLastFocused, text_line, this->size());
-    emit subDatasChanged( subtitleData() );
+    this->setTextPosition(mpLastFocused, textLine, this->size());
 }
 
 // Set the font of the given textEdit zone
@@ -557,6 +605,9 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     //textEdit->setFixedWidth( font_metrics.width(test_string_width) + ( textEdit->frameWidth() * 2 ) );
     textEdit->setFixedWidth(widgetSize.width() - 20);
 
+    // Save this font parameter to current
+    this->saveCurrentTextFont(textFont, textEdit);
+
 //    textEdit->setText(text);
 }
 
@@ -599,18 +650,19 @@ void MyTextEdit::resizeEvent(QResizeEvent *event) {
     TextFont text_font;
 
     // Retrieive the properties non relative to widget size
-    this->textPosition(ui->textLine1, text_line, mPreviousWidgetSize);
-    this->textFont(ui->textLine1, text_font, mPreviousWidgetSize);
+    text_line = mCurrentTextProp.text().first();
+    text_font = text_line.Font();
     // Recompute properties relative to new widget size
     this->setTextFont(ui->textLine1, text_font, this->size());
     this->setTextPosition(ui->textLine1, text_line, this->size());
 
-    this->textPosition(ui->textLine2, text_line, mPreviousWidgetSize);
-    this->textFont(ui->textLine2, text_font, mPreviousWidgetSize);
-    this->setTextFont(ui->textLine2, text_font, this->size());
-    this->setTextPosition(ui->textLine2, text_line, this->size());
+    if ( ui->textLine2->isEnabled() ) {
 
-    mPreviousWidgetSize = this->size();
+        text_line = mCurrentTextProp.text().last();
+        text_font = text_line.Font();
+        this->setTextFont(ui->textLine2, text_font, this->size());
+        this->setTextPosition(ui->textLine2, text_line, this->size());
+    }
 
     QWidget::resizeEvent(event);
 }
@@ -630,5 +682,16 @@ void MyTextEdit::newCursorPosition() {
             emit cursorPositionChanged();
         }
     }
+}
+
+qint16 MyTextEdit::lastFocused() {
+
+    if ( mpLastFocused == ui->textLine1 ) {
+        return 1;
+    }
+    else if ( mpLastFocused == ui->textLine2 ) {
+        return 2;
+    }
+    else return 0;
 }
 
