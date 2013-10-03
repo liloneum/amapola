@@ -31,15 +31,17 @@ public:
 signals:
     void positionChanged(qint64);
     void durationChanged(qint64);
+    void playerStateInfos(QString);
 
 public slots:
     QString openFile();
     void setPosition(qint64 videoPlayerPositionMs);
     qint64 playerPosition();
     bool videoAvailable();
+    bool changePlaybackRate(bool moreSpeed);
+    void on_playButton_clicked();
 
 private slots:
-    void on_playButton_clicked();
     void updatePlayerState(QMediaPlayer::State state);
     void on_timeSlider_sliderReleased();
     void updateSliderPosition(qint64 playerPositionMs);

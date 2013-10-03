@@ -98,9 +98,14 @@ MainWindow::MainWindow(QWidget *parent) :
     this->updateTextPosition();
     this->updateTextFont(false);
 
+    // Init display infos timer
+    mpDisplayInfoTimer = new QTimer(this);
+    mpDisplayInfoTimer->setInterval(2000);
+
     // Init the SIGNAL / SLOT connections
     connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(videoPositionChanged(qint64)));
+    connect(ui->videoPlayer, SIGNAL(playerStateInfos(QString)), this, SLOT(displayInfo(QString)));
 
     connect(ui->waveForm, SIGNAL(markerPositionChanged(qint64)), this, SLOT(waveformMarerkPosChanged(qint64)));
     connect(ui->waveForm, SIGNAL(ctrlLeftClickEvent(qint64)), this, SLOT(changeCurrentSubStartTime(qint64)));
@@ -113,6 +118,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentItemChanged(qint64)));
     connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
+
+    connect(this->mpDisplayInfoTimer, SIGNAL(timeout()), this, SLOT(eraseInfo()));
 }
 
 MainWindow::~MainWindow() {
@@ -234,6 +241,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         }
         else if ( key_event->key() == Qt::Key_PageUp ) {
 
+            // PageUp key : Select previous subtitle
             current_subtitle_index = ui->subTable->currentIndex();
 
             if ( current_subtitle_index > 0 ) {
@@ -243,6 +251,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         }
         else if ( key_event->key() == Qt::Key_PageDown ) {
 
+            // PageDown key : Select next subtitle
             current_subtitle_index = ui->subTable->currentIndex();
 
             if ( (current_subtitle_index + 1) < ui->subTable->subtitlesCount() ) {
@@ -253,6 +262,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_2 ) ) ||
             ( key_event->key() == Qt::Key_F12 ) ) {
 
+            // "[NUM]2" or "F12" key : move current position 1 second after
             current_position_ms = ui->waveForm->currentPositonMs();
             ui->waveForm->updatePostionMarker(current_position_ms + 1000);
             return true;
@@ -260,8 +270,78 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_1 ) ) ||
          ( key_event->key() == Qt::Key_F11 ) ) {
 
+            // "[NUM]1" or "F11" key : move current position 1 second before
             current_position_ms = ui->waveForm->currentPositonMs();
             ui->waveForm->updatePostionMarker(current_position_ms - 1000);
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_8 ) ) ||
+            ( key_event->key() == Qt::Key_F10 ) ) {
+
+            // "[NUM]8" or "F10" key : move current position 1 frame after
+            current_position_ms = ui->waveForm->currentPositonMs();
+            qint16 frame_duration_ms = (qint16)( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
+            ui->waveForm->updatePostionMarker(current_position_ms + frame_duration_ms);
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_7 ) ) ||
+         ( key_event->key() == Qt::Key_F9 ) ) {
+
+            // "[NUM]7" or "F9" key : move current position 1 frame before
+            current_position_ms = ui->waveForm->currentPositonMs();
+            qint16 frame_duration_ms = (qint16)( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
+            ui->waveForm->updatePostionMarker(current_position_ms - frame_duration_ms);
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Minus ) ) ||
+         ( key_event->key() == Qt::Key_F7 ) ) {
+
+            // "[NUM]-" or "F7" key : slow down video (min x1)
+
+            current_position_ms = ui->waveForm->currentPositonMs();
+            mMarkerPosChanged = true;
+
+            // Change video player plaback rate
+            if ( ui->videoPlayer->changePlaybackRate(false) == true ) {
+                // QMediaplayer is bugged, position jump when playback rate change
+                // Replace the position marker to force video position
+                ui->waveForm->updatePostionMarker(current_position_ms);
+            }
+            else {
+                mMarkerPosChanged = false;
+            }
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Plus ) ) ||
+         ( key_event->key() == Qt::Key_F8 ) ) {
+
+            // "[NUM]+" or "F8" key : speed up video (max x4)
+
+            current_position_ms = ui->waveForm->currentPositonMs();
+            mMarkerPosChanged = true;
+
+            if ( ui->videoPlayer->changePlaybackRate(true) == true ) {
+                // QMediaplayer is bugged, position jump when playback rate change
+                // Replace the position marker to force video position
+                ui->waveForm->updatePostionMarker(current_position_ms);
+            }
+            else {
+                mMarkerPosChanged = false;
+            }
+            return true;
+        }
+        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_4 ) ) ||
+         ( ( key_event->modifiers() == Qt::ControlModifier ) && ( key_event->key() == Qt::Key_P ) ) ) {
+
+            //"[NUM]4" or "Ctrl + P" key : switch play / pause video player
+
+            current_position_ms = ui->waveForm->currentPositonMs();
+            mMarkerPosChanged = true;
+            ui->videoPlayer->on_playButton_clicked();
+            // QMediaplayer is bugged, position jump when "play" after "pause"
+            // Replace the position marker to force video position
+            ui->waveForm->updatePostionMarker(current_position_ms);
+
             return true;
         }
     }
@@ -278,10 +358,12 @@ void MainWindow::currentItemChanged(qint64 positionMs) {
 // Update the subtitle text in the database
 void MainWindow::updateSubTable() {
 
+    qint64 current_position_ms = ui->waveForm->currentPositonMs();
+
     // There are no subtitle for the current time. Try to add new subtitle entry
-    if ( ui->subTable->isNewEntry() ) {
+    if ( ui->subTable->isNewEntry( current_position_ms ) ) {
         MySubtitles new_subtitle = ui->stEditDisplay->subtitleData();
-        if ( ui->subTable->insertNewSub(new_subtitle) == false ) {
+        if ( ui->subTable->insertNewSub(new_subtitle, current_position_ms) == false ) {
 
             QString error_msg = ui->subTable->errorMsg();
             QMessageBox::warning(this, "Insert subtitle", error_msg);
@@ -578,6 +660,8 @@ void MainWindow::updateStEditSize() {
     ui->stEditDisplay->setFixedSize(video_current_size.toSize());
     ui->stEditDisplay->move(video_x_pos, video_y_pos);
 
+    ui->playerInfoLabel->move(video_x_pos, video_y_pos);
+
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -701,7 +785,15 @@ void MainWindow::displayErrorMsg(QString errorMsg) {
     QMessageBox::warning(this, "Error", errorMsg);
 }
 
+void MainWindow::displayInfo(QString info) {
 
+    ui->playerInfoLabel->setText(info);
+    mpDisplayInfoTimer->start(2000);
+}
+
+void MainWindow::eraseInfo() {
+    ui->playerInfoLabel->setText("");
+}
 
 // ******************************** Tool Box ***************************************************************//
 

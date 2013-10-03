@@ -8,8 +8,6 @@
 
 // Convert second in milliseconds
 #define SEC_TO_MSEC 1000
-// Number of frame per second
-#define FRAME_PS_SEC 25
 
 // This widget manage a media player with a position slider, a clock and a play/pause button
 MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
@@ -26,11 +24,10 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     //ui->videoView->sizePolicy().setHeightForWidth(true);
 
     // Init mediaplayer, set mediaplayer output to video item
-    mpPlayer = new QMediaPlayer(this, QMediaPlayer::StreamPlayback);
+    mpPlayer = new QMediaPlayer(this);
     mpPlayer->setVideoOutput(mpVideoItem);
-    // Set the player position notify interval to 1 frame (1000ms/nbr of frame)
-    mPlayerPositionNotifyIntervalMs = SEC_TO_MSEC / FRAME_PS_SEC;
-    mpPlayer->setNotifyInterval(mPlayerPositionNotifyIntervalMs);
+
+    mPlayerPositionNotifyIntervalMs = 1000;
 
     // Init timescto 00:00:00.000
     mpDurationTimeHMS = new QTime(0, 0, 0, 0);
@@ -61,14 +58,20 @@ MyVideoPlayer::~MyVideoPlayer()
 // Swith the player state to "play/pause" when play/pause button clicked
 void MyVideoPlayer::on_playButton_clicked() {
 
+    QString player_state_infos;
+
     switch ( mpPlayer->state() ) {
     case QMediaPlayer::PlayingState:
         mpPlayer->pause();
+        player_state_infos = "Pause";
         break;
     default:
         mpPlayer->play();
+        player_state_infos = "Play";
         break;
     }
+
+    emit playerStateInfos(player_state_infos);
 }
 
 // Update the play/pause icon displayed in function of the player state
@@ -84,6 +87,35 @@ void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
     }
 }
 
+// Change video playback rate (x1.0 to x4.0)
+bool MyVideoPlayer::changePlaybackRate(bool moreSpeed) {
+
+    bool status = false;
+    QString player_state_infos = "";
+    qreal current_playback_rate = mpPlayer->playbackRate();
+
+    if ( moreSpeed == true ) {
+        if ( current_playback_rate <= 3.0 ) {
+            mpPlayer->setPlaybackRate(current_playback_rate + 1.0);
+            player_state_infos = "x " +QString::number(current_playback_rate + 1.0, 'f', 1);
+            status = true;
+        }
+    }
+    else {
+        if ( current_playback_rate >= 2.0 ) {
+            mpPlayer->setPlaybackRate(current_playback_rate - 1.0);
+            player_state_infos = "x " +QString::number(current_playback_rate - 1.0,'f', 1);
+            status = true;
+        }
+    }
+
+    if ( !player_state_infos.isEmpty() ) {
+        emit playerStateInfos(player_state_infos);
+    }
+
+    return status;
+}
+
 // Open a media file
 QString MyVideoPlayer::openFile() {
 
@@ -91,6 +123,11 @@ QString MyVideoPlayer::openFile() {
                                                      tr("Video Files (*.mp4 *.wmv *.avi)"));
 
     if ( !file_name.isEmpty() ) {
+
+        // Set the player position notify interval to 1 frame (1000ms/nbr of frame)
+        mPlayerPositionNotifyIntervalMs = qRound( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
+        mpPlayer->setNotifyInterval(mPlayerPositionNotifyIntervalMs);
+
         mpPlayer->setMedia(QUrl::fromLocalFile(file_name));
         //mpPlayer->play();
         ui->playButton->setEnabled(true);

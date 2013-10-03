@@ -21,15 +21,15 @@ signals:
     void currentSubChanged(qint32);
 
 public slots:
-    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs = -1, bool shiftNextSub = false);
+    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs, bool shiftNextSub = false);
     bool insertNewSubAfterCurrent(MySubtitles &newSubtitle);
     void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
     void loadSubtitles(QList<MySubtitles> subtitlesList);
     QList<MySubtitles> saveSubtitles();
-    bool isNewEntry();
-    void updateText(QList<TextLine> textLines, qint64 positionMs = -1);
-    void updateDatas(MySubtitles subtitle, qint64 positionMs = -1);
+    bool isNewEntry(qint64 positionMs);
+    void updateText(QList<TextLine> textLines);
+    void updateDatas(MySubtitles subtitle);
     bool setEndTime(qint64 positionMs, qint32 stIndex);
     bool setStartTime(qint64 positionMs, qint32 stIndex);
     void updateStDisplay(qint64 positionMs);

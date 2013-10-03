@@ -66,7 +66,6 @@ MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
     mPositionMsToStIndex.fill(-1);
 
     // Init the variables
-    mCurrentPositionMs = 0;
     mPreviousIndex = 0;
     mStCount = 0;
     mCurrentIndex = 0;
@@ -353,13 +352,9 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs,
     qint32 end_time_ms;
     QTime time_base(0, 0, 0, 0);
 
-    // Insert new sub at the current video position
-    if ( positionMs == -1 ) {
-        start_time_ms = mCurrentPositionMs;
-    } // If a time position is given, insert new sub at this given time
-    else {
-        start_time_ms = positionMs;
-    }
+
+    // Retrieve index for the given time
+    start_time_ms = positionMs;
 
     end_time_ms = start_time_ms + qApp->property("prop_SubMinDuration_ms").toInt();
 
@@ -400,8 +395,8 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs,
            this->addRows(100, this->rowCount());
         }
 
-        this->updateText(newSubtitle.text(), start_time_ms);
-        this->updateDatas(newSubtitle, start_time_ms);
+        this->updateText(newSubtitle.text());
+        this->updateDatas(newSubtitle);
 
         this->selectRow(mCurrentIndex);
     }
@@ -453,11 +448,11 @@ void MySubtitlesTable::deleteCurrentSub() {
     }
 }
 
-bool MySubtitlesTable::isNewEntry() {
+bool MySubtitlesTable::isNewEntry(qint64 positionMs) {
 
     qint32 row_index;
 
-    row_index = mPositionMsToStIndex[mCurrentPositionMs];
+    row_index = mPositionMsToStIndex[positionMs];
 
     // The subtitle exist
     if (row_index != -1) {
@@ -469,19 +464,14 @@ bool MySubtitlesTable::isNewEntry() {
 }
 
 // Update the text in the table
-void MySubtitlesTable::updateText(QList<TextLine> textLines, qint64 positionMs) {
+void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
     qint32 row_index;
     QString plain_text;
     TextLine text_line;
 
-    // Update the text for the index at the current video position
-    if ( positionMs == -1 ) {
-        row_index = mPositionMsToStIndex[mCurrentPositionMs];
-    } // If a time position is given, update the text for the index at this given time
-    else {
-        row_index = mPositionMsToStIndex[positionMs];
-    }
+    // Retrieve the index for this given time
+    row_index = mCurrentIndex;
 
     for ( qint32 i = 0; i < textLines.count(); i++ ) {
 
@@ -509,7 +499,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines, qint64 positionMs) 
 }
 
 // Update the font, position informations in the table with the given subtitle data
-void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint64 positionMs) {
+void MySubtitlesTable::updateDatas(MySubtitles subtitle) {
 
     qint32 index;
 
@@ -540,13 +530,9 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint64 positionMs) {
     QTableWidgetItem* font_script2_item;
     QTableWidgetItem* font_size2_item;
 
-    // Update the informations for the index at the current video position
-    if ( positionMs == -1 ) {
-        index = mPositionMsToStIndex[mCurrentPositionMs];
-    } // If a time position is given, update the informations for the index at this given time
-    else {
-        index = mPositionMsToStIndex[positionMs];
-    }
+
+    // Retrieve the current index
+    index = mCurrentIndex;
 
     if ( index != -1) {
 
@@ -926,9 +912,6 @@ void MySubtitlesTable::updateSelectedItem() {
 void MySubtitlesTable::updateStDisplay(qint64 positionMs) {
 
     MySubtitles subtitle;
-
-    // Save the current player position
-    mCurrentPositionMs = positionMs;
 
     // Position doesn't exist in the lookup table. Resize lookup table to positionMs + 10 minutes (600000 ms)
     if ( positionMs >= mPositionMsToStIndex.size() ) {

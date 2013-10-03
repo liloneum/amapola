@@ -17,6 +17,7 @@ public:
     static QString toTimeHMSms(QString time);
     static QString toTimeHMSticks(QString time);
     static qint64 timeStrHMStoMs(QString time);
+    static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
 };
 
 #endif // MYATTRIBUTESCONVERTER_H

@@ -8,6 +8,7 @@
 #include <QAudioDeviceInfo>
 #include <QTime>
 #include <mysubtitles.h>
+#include <myattributesconverter.h>
 #include <qwt_plot_curve.h>
 #include <qwt_scale_engine.h>
 #include <qwt_plot_marker.h>
@@ -484,13 +485,16 @@ qint64 MyWaveForm::posMsFromPosPx(int xPos) {
     // Convert mouse position in pixel to a position in millisecond
     position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
-    return position_ms;
+    // Scale the positon in function of the framerate
+    return MyAttributesConverter::roundToFrame(position_ms, qApp->property("prop_FrameRate_fps").toReal());
 }
 
 // Draw the marker in function of the player current position
 void MyWaveForm::updatePostionMarker(qint64 positionMs) {
 
     qint32 scale_size_ms;
+
+    positionMs = MyAttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
 
     if ( positionMs > mMediaDurationMs ) {
         return;

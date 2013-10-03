@@ -5,6 +5,8 @@
 #include <QRegExp>
 #include <QTime>
 
+#define SEC_TO_MSEC 1000
+
 // Class to define some converters statics methods
 MyAttributesConverter::MyAttributesConverter()
 {
@@ -148,4 +150,12 @@ qint64 MyAttributesConverter::timeStrHMStoMs(QString time) {
     else {
         return -1;
     }
+}
+
+// Round the given time to the nearest frame time
+qint64 MyAttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
+
+    qreal frame_duration_ms = (qreal)SEC_TO_MSEC / frameRate;
+
+    return  qRound( (qreal)qRound( (qreal)timeMs / frame_duration_ms )  * frame_duration_ms );
 }

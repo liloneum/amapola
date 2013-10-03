@@ -32,6 +32,8 @@ private slots:
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
     void displayErrorMsg(QString);
+    void displayInfo(QString info);
+    void eraseInfo();
     bool changeCurrentSubStartTime(qint64 positionMs);
     bool changeCurrentSubEndTime(qint64 positionMs);
     void shiftCurrentSubtitle(qint64 positionMs);
@@ -97,6 +99,8 @@ private:
     // Flag to avoid infinite inter call between video-player and waveform
     bool mVideoPositionChanged;
     bool mMarkerPosChanged;
+
+    QTimer* mpDisplayInfoTimer;
 };
 
 #endif // MAINWINDOW_H
