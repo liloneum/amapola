@@ -572,7 +572,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="MySettings" name="page2">
+      <widget class="MySettings" name="settings">
        <layout class="QGridLayout" name="gridLayout_3"/>
       </widget>
      </widget>
@@ -613,7 +613,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>1</number>
         </property>
         <property name="iconSize">
          <size>

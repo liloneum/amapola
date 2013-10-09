@@ -62,10 +62,11 @@ void MySettings::on_frameRateComboBox_currentIndexChanged(int index) {
     }
 
     qApp->setProperty("prop_FrameRate_fps", frame_rate);
+    emit frameRateChanged();
 }
 
-void MySettings::on_frameRateSpinBox_valueChanged(double value) {
+void MySettings::on_frameRateSpinBox_editingFinished() {
 
-    qApp->setProperty("prop_FrameRate_fps", value);
-
+    qApp->setProperty("prop_FrameRate_fps", ui->frameRateSpinBox->value());
+    emit frameRateChanged();
 }

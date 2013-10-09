@@ -38,7 +38,7 @@ public slots:
     void openFile(QString waveform_file_name, QString video_file_name);
     void updatePostionMarker(qint64 positionMs);
     void drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subtitleIndex);
-    void changeZoneColor(qint32 subtitleIndex);
+    void changeZoneColor(QList<qint32> selectedIndex, qint32 currentIndex);
     void removeSubtitleZone(qint32 subtitleIndex);
     void removeAllSubtitlesZones();
     void changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs);

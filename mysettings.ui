@@ -66,7 +66,7 @@
       <enum>QFrame::StyledPanel</enum>
      </property>
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="timingPage">
       <widget class="QLabel" name="label">
@@ -209,10 +209,13 @@
            <enum>QAbstractSpinBox::NoButtons</enum>
           </property>
           <property name="accelerated">
-           <bool>false</bool>
+           <bool>true</bool>
           </property>
           <property name="correctionMode">
            <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+          </property>
+          <property name="keyboardTracking">
+           <bool>true</bool>
           </property>
           <property name="suffix">
            <string>fps</string>
@@ -220,8 +223,14 @@
           <property name="decimals">
            <number>3</number>
           </property>
+          <property name="minimum">
+           <double>1.000000000000000</double>
+          </property>
           <property name="singleStep">
            <double>0.010000000000000</double>
+          </property>
+          <property name="value">
+           <double>25.000000000000000</double>
           </property>
          </widget>
         </item>

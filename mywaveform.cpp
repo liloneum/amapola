@@ -573,38 +573,51 @@ void MyWaveForm::drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subt
 // Change the color of a given zone and reset all others zones colors
 // to the "non-active zone" color
 // The subtitle index is the same as its zone item
-void MyWaveForm::changeZoneColor(qint32 subtitleIndex) {
+void MyWaveForm::changeZoneColor(QList<qint32> selectedIndex, qint32 currentIndex) {
 
-    if ( mpZoneItemList.size() > subtitleIndex ) {
+    QString color_non_active_str = "FF96CA2D";
+    QString color_active_str = "FFF07746";
+    qint32 i = 0;
 
-        // Set the "non-active zone" color
-        QString color_str = "FF96CA2D";
-        bool ok;
-        QColor color_zone(color_str.toUInt(&ok,16));
-        QColor color_border = color_zone;
-        color_border.setAlpha(50);
+    // Set the "non-active zone" color
+    bool ok;
+    QColor color_non_active_border(color_non_active_str.toUInt(&ok,16));
+    QColor color_non_active_zone = color_non_active_border;
+    color_non_active_zone.setAlpha(50);
 
-        QwtPlotZoneItem* zone_item;
+    // Set the "active zone" color to given zone index
+    QColor color_active_border(color_active_str.toUInt(&ok,16));
+    QColor color_active_zone = color_active_border;
+    QColor color_active_zone2 = color_active_border;
+    color_active_zone.setAlpha(20);
+    color_active_zone2.setAlpha(60);
 
-        // Reset all zones colors to the "non-active zone" color
-        QList<QwtPlotZoneItem*>::iterator it;
-        for ( it = mpZoneItemList.begin(); it != mpZoneItemList.end(); ++it ) {
-            zone_item = *it.operator->();
-            zone_item->setPen(QPen(color_zone));
-            zone_item->setBrush(QBrush(color_border));
+    QwtPlotZoneItem* zone_item;
+
+    // Reset all zones colors to the "non-active zone" color
+    QList<QwtPlotZoneItem*>::iterator it;
+    for ( it = mpZoneItemList.begin(); it != mpZoneItemList.end(); ++it ) {
+
+        zone_item = *it.operator->();
+
+        if ( selectedIndex.contains(i) ) {
+            if ( i == currentIndex ) {
+                zone_item->setBrush(QBrush(color_active_zone2));
+            }
+            else {
+                zone_item->setBrush(QBrush(color_active_zone));
+            }
+            zone_item->setPen(QPen(color_active_border));
+        }
+        else {
+            zone_item->setPen(QPen(color_non_active_border));
+            zone_item->setBrush(QBrush(color_non_active_zone));
         }
 
-        // Set the "active zone" color to given zone index
-        color_str = "FFF07746";
-        color_zone.setRgba(color_str.toUInt(&ok,16));
-        color_border = color_zone;
-        color_border.setAlpha(50);
-
-        mpZoneItemList.at(subtitleIndex)->setPen(QPen(color_zone));
-        mpZoneItemList.at(subtitleIndex)->setBrush(QBrush(color_border));
-
-        ui->waveFormPlot->replot();
+        i++;
     }
+
+    ui->waveFormPlot->replot();
 }
 
 // Redraw zone item corresponding to the given index with a new start time

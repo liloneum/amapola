@@ -25,7 +25,7 @@ public slots:
     bool insertNewSubAfterCurrent(MySubtitles &newSubtitle);
     void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
-    void loadSubtitles(QList<MySubtitles> subtitlesList);
+    void loadSubtitles(QList<MySubtitles> subtitlesList, bool keepSelection = true);
     QList<MySubtitles> saveSubtitles();
     bool isNewEntry(qint64 positionMs);
     void updateText(QList<TextLine> textLines);
@@ -34,6 +34,7 @@ public slots:
     bool setStartTime(qint64 positionMs, qint32 stIndex);
     void updateStDisplay(qint64 positionMs);
     qint32 currentIndex();
+    QList<qint32> selectedIndex();
     qint32 subtitlesCount();
     MySubtitles getSubInfos(qint32 stIndex);
     QString errorMsg();
@@ -43,7 +44,6 @@ private slots:
     void updateItem(QTableWidgetItem* item);
     QString updateStTime(QTableWidgetItem* time_item);
     void addRows(qint32 numberOfRow, qint32 fromRowNbr);
-
 
 private:
     // Lookup table to retrieive faster a subtitle number in function of time in millisecond
@@ -69,6 +69,9 @@ private:
 
     // Save the current item index.
     qint32 mCurrentIndex;
+
+    // All subtitle selected
+    QList<qint32> mSelectedIndex;
 
     // Error message
     QString mErrorMsg;

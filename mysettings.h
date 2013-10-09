@@ -15,6 +15,9 @@ public:
     explicit MySettings(QWidget *parent = 0);
     ~MySettings();
     
+signals:
+    void frameRateChanged();
+
 private slots:
     void on_displayTimeMinSpinBox_valueChanged(int value);
 
@@ -23,7 +26,7 @@ private slots:
 
     void on_frameRateComboBox_currentIndexChanged(int index);
 
-    void on_frameRateSpinBox_valueChanged(double value);
+    void on_frameRateSpinBox_editingFinished();
 
 private:
     Ui::MySettings *ui;

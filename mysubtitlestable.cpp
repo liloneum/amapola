@@ -145,8 +145,10 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
     }
 }
 
+
+
 // Update the font, position, text informations in the table with the given subtitles container
-void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
+void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keepSelection) {
 
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
@@ -182,6 +184,9 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
     QTableWidgetItem* font_size2_item;
 
     if ( this->isEnabled() == true ) {
+
+        // Save the selected row
+        QList<QTableWidgetSelectionRange>  selected_ranges = this->selectedRanges();
 
         // First init the table with a number of rows equal to the number of subtitles + 20
         initStTable(subtitlesList.size() + 20);
@@ -297,13 +302,42 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList) {
             // Increment the subtitles counter
             mStCount ++;
         }
-        mSubLoadding = false;
         this->setEnabled(true);
 
         mPreviousIndex = -1;
-        mCurrentIndex = 0;
-        this->selectRow(mCurrentIndex);
 
+        // Keep the same selection as before changment loading
+        if ( keepSelection == true ) {
+
+            // If the current index always exist, keep it. Else reset to 0
+            if ( mCurrentIndex < mStCount ) {
+                // Nothing to do
+            }
+            else {
+                mCurrentIndex = 0;
+            }
+
+            // Change the selection mode to "Multiselection" to avoid "Shift" or "Ctrl" key modifiers conflict
+            this->setSelectionMode(QAbstractItemView::MultiSelection);
+
+            // Reselect the row
+            if ( !selected_ranges.isEmpty() ) {
+                QList<QTableWidgetSelectionRange>::iterator it;
+                for ( it = selected_ranges.begin(); it != selected_ranges.end(); ++it ) {
+
+                    this->setRangeSelected(*it, true);
+                }
+            }
+
+            this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+        }
+        else {
+            // Reset selection to 0
+            mCurrentIndex = 0;
+            this->selectRow(mCurrentIndex);
+        }
+
+        mSubLoadding = false;
     }
 }
 
@@ -444,7 +478,13 @@ void MySubtitlesTable::deleteCurrentSub() {
         this->clearSelection();
 
         this->removeRow(mCurrentIndex);
-        this->selectRow(mCurrentIndex);
+
+        if ( mCurrentIndex < mStCount ) {
+            this->selectRow(mCurrentIndex);
+        }
+        else if ( mStCount > 0 ) {
+            this->selectRow(mStCount - 1);
+        }
     }
 }
 
@@ -872,6 +912,7 @@ QString MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
 // Send time information when the user select a new item in the table
 void MySubtitlesTable::updateSelectedItem() {
 
+    qint32 row_index;
     qint32 start_time_ms;
     QTime start_time_HMS;
     QTime time_base(0, 0, 0, 0);
@@ -879,16 +920,38 @@ void MySubtitlesTable::updateSelectedItem() {
     // Center scroll area at the selected item line
     QList<QTableWidgetItem*> selected_items = this->selectedItems();
 
+    mSelectedIndex.clear();
+
     if ( !selected_items.isEmpty() ) {
-        this->scrollToItem(selected_items.first(), QAbstractItemView::PositionAtCenter);
+
+        row_index = selected_items.first()->row();
+
+        // Save the selected row
+        QList<QTableWidgetItem*> ::iterator it;
+        for ( it = selected_items.begin(); it != selected_items.end(); it+=5 ) {
+
+            QTableWidgetItem* item = *it;
+            if ( item->row() < mStCount ) {
+                mSelectedIndex.append(item->row());
+
+                if ( item->row() == mCurrentIndex ) {
+                    row_index = item->row();
+                }
+            }
+            else {
+                break;
+            }
+        }
 
         // If the row was selected by user, send the new time information
         if ( mSelectedBySoft == false ) {
 
             mSelectedByUser = true;
 
+            this->scrollToItem( this->item(row_index, SUB_NUM_COL), QAbstractItemView::PositionAtCenter);
+
             // If the selected item start time is valid
-            QString start_time_str = selected_items.at(SUB_START_TIME_COL)->text();
+            QString start_time_str = this->item(row_index, SUB_START_TIME_COL)->text();
 
             start_time_HMS = QTime::fromString(start_time_str, "hh:mm:ss.zzz");
 
@@ -1019,6 +1082,10 @@ MySubtitles MySubtitlesTable::getSubInfos(qint32 stIndex) {
     }
     // Return a MySubtitles container
     return new_subtitle;
+}
+
+QList<qint32> MySubtitlesTable::selectedIndex() {
+    return mSelectedIndex;
 }
 
 qint32 MySubtitlesTable::currentIndex() {
