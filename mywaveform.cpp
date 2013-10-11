@@ -16,6 +16,8 @@
 #include <qwt_plot_textlabel.h>
 #include <qwt_plot_zoneitem.h>
 #include <qwt_plot_grid.h>
+#include <QTimeEdit>
+#include <QLabel>
 
 // Number of audio samples per second displayed.
 // If there are too much samples, the navigation may be not fluid
@@ -102,13 +104,42 @@ MyWaveForm::MyWaveForm(QWidget *parent) :
     ui->waveFormPlot->setAutoReplot(false);
 
     // Add an event filter on the waveform plot object
+    ui->waveFormPlot->canvas()->setMouseTracking(true);
     ui->waveFormPlot->installEventFilter(this);
+    ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->installEventFilter(this);
+
+    // Draw a sexy frmae
+    ui->waveFormPlot->canvas()->setStyleSheet("background: transparent");
+    ui->waveFormPlot->setFrameShape(QFrame::StyledPanel);
+    ui->waveFormPlot->setFrameShadow(QFrame::Sunken);
+    ui->waveFormPlot->setLineWidth(0);
+    ui->waveFormPlot->setMidLineWidth(0);
 
     // Create and init the position marker
     QPen pen(Qt::darkCyan, 1);
     mpPositionMarker = new QwtPlotMarker("PositionMarker");
     mpPositionMarker->setLineStyle(QwtPlotMarker::VLine);
     mpPositionMarker->setLinePen(pen);
+
+    // Create and init the real time position marker
+    QPen pen2(Qt::darkCyan, 1, Qt::DashDotLine);
+    mpRTMarker = new QwtPlotMarker("RTMarker");
+    mpRTMarker->setLineStyle(QwtPlotMarker::VLine);
+    mpRTMarker->setLinePen(pen2);
+
+    // Create and init the real time display widget
+    mpRtTime = new QTimeEdit(ui->waveFormPlot);
+    mpRtTime->setDisplayFormat("HH:mm:ss.zzz");
+    mpRtTime->setButtonSymbols(QAbstractSpinBox::NoButtons);
+    mpRtTime->setReadOnly(true);
+    mpRtTime->setFrame(false);
+    mpRtTime->setStyleSheet("background: transparent");
+    mpRtTime->hide();
+
+    mpRtFrames = new QLabel(ui->waveFormPlot);
+    mpRtFrames->setStyleSheet("background: transparent");
+    mpRtFrames->setFixedWidth(250);
+    mpRtFrames->hide();
 
     // Create and init the grid
     mpGrid = new QwtPlotGrid();
@@ -144,6 +175,7 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
     // Erase previous waveform
     mpWaveFormCurve->detach();
     mpPositionMarker->detach();
+    mpRTMarker->detach();
     mpLoadingTextItem->detach();
 
     // If a ".wf" file doesn't exist, decode and save audio data
@@ -226,8 +258,13 @@ void MyWaveForm::initWaveForm() {
         for (qint32 i = 0; i < mTimeVectorMs.size(); i++) {
             mTimeVectorMs[i] = time_accuracy_ms * i;
         }
+
+        mMinPlotTimeMs = 0;
+        mMaxPlotTimeMs = (qint32)MAX_TIME_SCALE_MS;
     }
     else {
+
+        qint32 highest_amplitude = 0;
 
         size_of_file = mpFile->size();
 
@@ -236,26 +273,36 @@ void MyWaveForm::initWaveForm() {
             qint16 buffer;
             *mpStream >> buffer;
             mAmplitudeVector[i] = (double)buffer;
-            mTimeVectorMs[i] = time_accuracy_ms * i;
+
+            if ( qAbs(buffer) > highest_amplitude ) {
+                highest_amplitude = qAbs(buffer);
+            }
+
+            mTimeVectorMs[i] = time_accuracy_ms * (qreal)i;
+            mMediaDurationMs = time_accuracy_ms * (qreal)i;
         }
 
         mpFile->close();
+
+        ui->waveFormPlot->setAxisScale(QwtPlot::yLeft, -(double)highest_amplitude, (double)highest_amplitude, 0);
+
+        emit waveFormFileReady(mpFile->fileName());
+
+        // Set scope of wave-form to the maximum defined, with origin at 0
+        mMinPlotTimeMs = 0;
+        if ( mMediaDurationMs < MAX_TIME_SCALE_MS ) {
+            mMaxPlotTimeMs = mMediaDurationMs;
+        }
+        else {
+            mMaxPlotTimeMs = (qint32)MAX_TIME_SCALE_MS;
+        }
     }
 
-    mMediaDurationMs = (qint32)mTimeVectorMs.last();
-
-    // Set scope of wave-form to the maximum defined, with origin at 0
-    mMinPlotTimeMs = 0;
-    mMaxPlotTimeMs = (qint32)MAX_TIME_SCALE_MS;
-    // If video duration is less than the maximum scope defined, set scope to view complete wave-form
-    if ( mMaxPlotTimeMs > mMediaDurationMs ) {
-        mMaxPlotTimeMs = mMediaDurationMs;
-    }
+    mLastTimeMs = (qint32)mTimeVectorMs.last();
 
     // Plot the wave-form and the marker
     mpWaveFormCurve->attach(ui->waveFormPlot);
     mpPositionMarker->attach(ui->waveFormPlot);
-//    mpZoneItem->attach(ui->waveFormPlot);
     mpGrid->attach(ui->waveFormPlot);
     mpLoadingTextItem->detach();
     plotWaveForm();
@@ -315,6 +362,7 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
                         if ( !timeScaleShift(numSteps.y()) ) {
                             return true;
                         }
+                        this->setRtMarkerPos(wheel_event->x());
                     }
                     // Replot wave form if the scope was modified
                     plotWaveForm();
@@ -352,6 +400,26 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
                 return true;
             }
         }
+        else if( event->type() == QEvent::MouseMove ) {
+
+            // Set real time marker position under mouse
+            QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
+            this->setRtMarkerPos(mouse_event->x());
+        }
+        else if ( event->type() == QEvent::Enter ) {
+            mpRTMarker->attach(ui->waveFormPlot);
+            mpRtTime->show();
+            mpRtFrames->show();
+        }
+        else if ( event->type() == QEvent::Leave ) {
+            mpRTMarker->detach();
+            ui->waveFormPlot->replot();
+            mpRtTime->hide();
+            mpRtFrames->hide();
+        }
+    }
+    else if ( watched == ui->waveFormPlot->axisWidget(QwtPlot::xBottom) ) {
+        ui->waveFormPlot->canvas()->setFixedHeight( ui->waveFormPlot->axisWidget(QwtPlot::xBottom)->y() + 2);
     }
     return QWidget::eventFilter(watched, event);
 }
@@ -406,8 +474,8 @@ bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
         mMinPlotTimeMs = 0;
     }
     mMaxPlotTimeMs = mMinPlotTimeMs + new_scale_size_ms;
-    if ( mMaxPlotTimeMs >  mMediaDurationMs ) {
-        mMaxPlotTimeMs = mMediaDurationMs;
+    if ( mMaxPlotTimeMs >  mLastTimeMs ) {
+        mMaxPlotTimeMs = mLastTimeMs;
     }
     return true;
 }
@@ -436,12 +504,12 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
         mMaxPlotTimeMs = mMinPlotTimeMs + scale_size_ms;
     } // Left shift
     else if ( (step < 0) &&
-              (mMaxPlotTimeMs != mMediaDurationMs ) ) {
+              (mMaxPlotTimeMs != mLastTimeMs ) ) {
 
         mMaxPlotTimeMs += time_shift_ms;
 
-        if( mMaxPlotTimeMs > mMediaDurationMs ) {
-            mMaxPlotTimeMs = mMediaDurationMs;
+        if( mMaxPlotTimeMs > mLastTimeMs ) {
+            mMaxPlotTimeMs = mLastTimeMs;
         }
 
         mMinPlotTimeMs = mMaxPlotTimeMs - scale_size_ms;
@@ -462,6 +530,24 @@ void MyWaveForm::setMarkerPosFromClick(int xPos) {
     ui->waveFormPlot->replot();
 
     emit markerPositionChanged(mCurrentPositonMs);
+}
+
+void MyWaveForm::setRtMarkerPos(int xPos) {
+
+    QTime time_base(0, 0, 0, 0);
+
+    qint64 position_ms = this->posMsFromPosPx(xPos);
+
+    mpRTMarker->setXValue((double)position_ms);
+    ui->waveFormPlot->replot();
+
+    mpRtTime->setTime( time_base.addMSecs(position_ms) );
+    mpRtTime->move(xPos, 10);
+
+    qint32 frame_nbr = MyAttributesConverter::timeMsToFrames( position_ms, qApp->property("prop_FrameRate_fps").toReal() );
+
+    mpRtFrames->setText(" Frame n° "+QString::number(frame_nbr));
+    mpRtFrames->move(xPos, 25);
 }
 
 // Retrieve the position in millisecond from the mouse horizontal position (X coordonates)
@@ -496,7 +582,7 @@ void MyWaveForm::updatePostionMarker(qint64 positionMs) {
 
     positionMs = MyAttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
 
-    if ( positionMs > mMediaDurationMs ) {
+    if ( positionMs > mLastTimeMs ) {
         return;
     }
 
@@ -510,8 +596,8 @@ void MyWaveForm::updatePostionMarker(qint64 positionMs) {
         mMaxPlotTimeMs = mMinPlotTimeMs + scale_size_ms;
 
         // Limit the time shift at end of media
-        if ( mMaxPlotTimeMs > mMediaDurationMs ) {
-            mMaxPlotTimeMs = mMediaDurationMs;
+        if ( mMaxPlotTimeMs > mLastTimeMs ) {
+            mMaxPlotTimeMs = mLastTimeMs;
             mMinPlotTimeMs = mMaxPlotTimeMs - scale_size_ms;
         }
         // Replot the wave-form
@@ -672,4 +758,9 @@ void MyWaveForm::removeAllSubtitlesZones() {
 
         ui->waveFormPlot->replot();
     }
+}
+
+QwtPlot* MyWaveForm::qwtPlot() {
+
+    return ui ->waveFormPlot;
 }

@@ -4,8 +4,6 @@
 #include <QWidget>
 #include <QMainWindow>
 #include <QMediaPlayer>
-#include <QGraphicsTextItem>
-#define FRAME_RATE 25
 
 namespace Ui {
 class MyVideoPlayer;
@@ -13,7 +11,6 @@ class MyVideoPlayer;
 
 class QMediaPlayer;
 class QGraphicsVideoItem;
-class QTime;
 class QGraphicsScene;
 
 // This widget manage a media player with a position slider, a clock and a play/pause button
@@ -40,19 +37,15 @@ public slots:
     bool videoAvailable();
     bool changePlaybackRate(bool moreSpeed);
     void on_playButton_clicked();
+    void loadWaveForm(QString waveFormFileName);
+    void updateTime(qint64 positionMs);
 
 private slots:
     void updatePlayerState(QMediaPlayer::State state);
-    void on_timeSlider_sliderReleased();
     void updateSliderPosition(qint64 playerPositionMs);
     void updateDuration();
-    void on_timeSlider_sliderPressed();
-    void on_timeSlider_sliderMoved(int sliderPosition);
     void resizeEvent(QResizeEvent* event);
-    bool eventFilter(QObject* watched, QEvent* event);
-    void updateTime();
-
-    void on_timeSlider_valueChanged(int value);
+    void sliderMoved(qint64 positionMs);
 
     
 private:
@@ -68,21 +61,6 @@ private:
     // Graphics item to draw video
     QGraphicsVideoItem* mpVideoItem;
 
-    // Time object which contain the current time with "hh:mm:ss.zzz" format
-    QTime* mpCurrentTimeHMS;
-
-    // Time object which contain the video duration time with "hh:mm:ss.zzz" format
-    QTime* mpDurationTimeHMS;
-
-    // Graphics scene to display time item
-    QGraphicsScene* mpTimeGraphicsScene;
-
-    // Graphics item to draw time
-    QGraphicsTextItem* mpTimeTextItem;
-
-    // Maximum range of position slider
-    qint32 mTimeSliderMaxRange;
-
     // Player position changed notify interval
     qint16 mPlayerPositionNotifyIntervalMs;
 
@@ -91,6 +69,15 @@ private:
 
     // Video duration time in millisecond
     qint64 mVideoDuration;
+
+    // Check if waveform data are ready
+    bool mWaveFormReady;
+
+    // Waveform data file name
+    QString mWaveFormFileName;
+
+    bool mMediaChanged;
+
 };
 
 #endif // MYVIDEOPLAYER_H

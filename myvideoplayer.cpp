@@ -4,7 +4,6 @@
 #include <QGraphicsVideoItem>
 #include <QFileDialog>
 #include <QTime>
-#include <QMouseEvent>
 
 // Convert second in milliseconds
 #define SEC_TO_MSEC 1000
@@ -21,33 +20,41 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     mpVideoItem = new QGraphicsVideoItem;
     ui->videoView->setScene(mpVideoScene);
     mpVideoScene->addItem(mpVideoItem);
-    //ui->videoView->sizePolicy().setHeightForWidth(true);
 
     // Init mediaplayer, set mediaplayer output to video item
     mpPlayer = new QMediaPlayer(this);
     mpPlayer->setVideoOutput(mpVideoItem);
 
+    // Init the media player position changed notifications interval
     mPlayerPositionNotifyIntervalMs = 1000;
 
-    // Init timescto 00:00:00.000
-    mpDurationTimeHMS = new QTime(0, 0, 0, 0);
-    mpCurrentTimeHMS = new QTime(0, 0, 0, 0);
-
-    // Init graphics scene to display the player clock
-    mpTimeGraphicsScene = new QGraphicsScene;
-    mpTimeTextItem = new QGraphicsTextItem;
-    ui->timeView->setStyleSheet("background: transparent");
+    // Player clock background transparent
+    ui->currentTimeHMS->setStyleSheet("background: transparent");
+    ui->durationTimeHMS->setStyleSheet("background: transparent");
 
     // Init SIGNAL / SLOT connections
     connect(mpPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(updateSliderPosition(qint64)));
     connect(mpPlayer, SIGNAL(durationChanged(qint64)), this, SLOT(updateDuration()));
     connect(mpPlayer, SIGNAL(stateChanged(QMediaPlayer::State)), this, SLOT(updatePlayerState(QMediaPlayer::State)));
 
+    connect(ui->timeSlider, SIGNAL(sliderPositionChanged(qint64)), this, SLOT(sliderMoved(qint64)));
+
+    // Init the Play / Pause button
     ui->playButton->setEnabled(false);
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
-    ui->timeSlider->installEventFilter(this);
+    // Init the video duration
+    mVideoDuration = 0;
+
+    // Flag to check if the slider was moved by user
     mTimeSliderPositionChangedByGui = false;
+
+    // Flag to check if waveform data are redy
+    mWaveFormReady = false;
+    mMediaChanged = false;
+    // Init a empty waveform slider
+    mWaveFormFileName = "";
+    ui->timeSlider->openFile("", mVideoDuration);
 }
 
 MyVideoPlayer::~MyVideoPlayer()
@@ -129,107 +136,77 @@ QString MyVideoPlayer::openFile() {
         mpPlayer->setNotifyInterval(mPlayerPositionNotifyIntervalMs);
 
         mpPlayer->setMedia(QUrl::fromLocalFile(file_name));
-        //mpPlayer->play();
+        mpPlayer->play();
+        mpPlayer->pause();
         ui->playButton->setEnabled(true);
     }
     return file_name;
 }
 
+// Load tha waveform in the slider
+void MyVideoPlayer::loadWaveForm(QString waveFormFileName) {
+
+    // The video is loaded. Load the waveform
+    if ( mMediaChanged == true ) {
+        ui->timeSlider->openFile(waveFormFileName, mVideoDuration);
+        mMediaChanged = false;
+    }
+    else {
+        // If video not loaded yet, save the file name for later
+        mWaveFormFileName = waveFormFileName;
+        mWaveFormReady = true;
+    }
+}
+
 // Update de duration of the current media
+// New duration signal mean that media is loaded
 void MyVideoPlayer::updateDuration() {
 
     mVideoDuration = mpPlayer->duration();
 
+    // Waveform data are ready, load it
+    if ( mWaveFormReady == true ) {
+        ui->timeSlider->openFile(mWaveFormFileName, mVideoDuration);
+        mWaveFormReady = false;
+        mWaveFormFileName = "";
+    } // Not ready yet, load an empty waveform
+    else {
+        ui->timeSlider->openFile("", mVideoDuration);
+        mMediaChanged = true;
+    }
+
     // Send the new duration to other module
     emit durationChanged(mVideoDuration);
 
-    // Compute the slider range in function of the video duration and the player position notification interval time
-    mTimeSliderMaxRange = (qint32)( mVideoDuration / (qint64)mPlayerPositionNotifyIntervalMs );
-    ui->timeSlider->setRange(0, mTimeSliderMaxRange);
-
-    MyVideoPlayer::updateTime();
+    this->updateTime(ui->timeSlider->currentPositonMs());
 }
 
 // Update the position of the slider in function of the player position in millisecond
 void MyVideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
 
-    qint32 slider_position;
-
     if ( playerPositionMs <= mVideoDuration ) {
+
         emit positionChanged(playerPositionMs);
 
         // If the player position was changed by software, move the slider
         if ( mTimeSliderPositionChangedByGui == false ) {
-            slider_position = (qint32)(playerPositionMs / mPlayerPositionNotifyIntervalMs);
-            ui->timeSlider->setSliderPosition(slider_position);
+            ui->timeSlider->updatePostionSlider(playerPositionMs);
         } // If the user moved the cursor, do nothing
         else {
             mTimeSliderPositionChangedByGui = false;
         }
 
-        MyVideoPlayer::updateTime();
+        this->updateTime(ui->timeSlider->currentPositonMs());
     }
-}
-
-void MyVideoPlayer::on_timeSlider_sliderPressed()
-{
-    mpPlayer->pause();
-}
-
-void MyVideoPlayer::on_timeSlider_sliderMoved(int sliderPosition)
-{
-//    qint64 player_position;
-
-//    if(mpPlayer->state() != QMediaPlayer::PlayingState) {
-//        player_position = sliderPosition * mPlayerPositionNotifyIntervalMs;
-//        mpPlayer->setPosition(player_position);
-//    }
-
-//    MyVideoPlayer::updateTime();
 }
 
 // Update and display the player clock
-void MyVideoPlayer::updateTime() {
+void MyVideoPlayer::updateTime(qint64 positionMs) {
 
-    QTime temp_time;
+    QTime time_base(0, 0, 0, 0);
 
-    // Update video current time
-    temp_time.setHMS(0, 0, 0, 0);
-    temp_time = temp_time.addMSecs(mpPlayer->position());
-    mpCurrentTimeHMS->setHMS(temp_time.hour(), temp_time.minute(), temp_time.second(), temp_time.msec());
-    // Update video duration time
-    temp_time.setHMS(0, 0, 0, 0);
-    temp_time = temp_time.addMSecs(mpPlayer->duration());
-    mpDurationTimeHMS->setHMS(temp_time.hour(), temp_time.minute(), temp_time.second(), temp_time.msec());
-    // Display
-    mpTimeTextItem->~QGraphicsTextItem();
-    mpTimeTextItem = mpTimeGraphicsScene->addText(mpCurrentTimeHMS->toString("hh:mm:ss.zzz") +" \\ " +mpDurationTimeHMS->toString("hh:mm:ss.zzz"));
-    ui->timeView->setScene(mpTimeGraphicsScene);
-}
-
-void MyVideoPlayer::on_timeSlider_sliderReleased() {
-
-    mpPlayer->play();
-}
-
-bool MyVideoPlayer::eventFilter(QObject* watched, QEvent* event) {
-
-    bool status = QWidget::eventFilter(watched, event);
-
-    // Move the slider at mouse released position
-    if ( watched == ui->timeSlider ) {
-        if ( event->type() == QEvent::MouseButtonRelease ) {
-            QMouseEvent* mouse_event = static_cast<QMouseEvent*>(event);
-            ui->timeSlider->setValue(QStyle::sliderValueFromPosition(ui->timeSlider->minimum(),
-                                                                     ui->timeSlider->maximum(),
-                                                                     mouse_event->x(),
-                                                                     ui->timeSlider->width()));
-        }
-        else if ( event->type() == QEvent::MouseButtonPress ) {
-            return true;
-        }
-    }
-    return status;
+    ui->currentTimeHMS->setTime( time_base.addMSecs(positionMs) );
+    ui->durationTimeHMS->setTime( time_base.addMSecs(mVideoDuration) );
 }
 
 void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
@@ -251,20 +228,16 @@ QSizeF MyVideoPlayer::videoItemNativeSize() {
     return mpVideoItem->nativeSize();
 }
 
-// Update the player position in function of slider position
-void MyVideoPlayer::on_timeSlider_valueChanged(int sliderPosition)
-{
-    qint64 player_position_ms;
+ // Update the player position in function of slider position
+void MyVideoPlayer::sliderMoved(qint64 positionMs) {
 
     // Slider was moved by user
     mTimeSliderPositionChangedByGui = true;
-    player_position_ms = sliderPosition * mPlayerPositionNotifyIntervalMs;
-    setPosition(player_position_ms);
+    this->setPosition(positionMs);
 }
 
 // Interface to set the player position
 void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
-
 
     if ( mpPlayer->isVideoAvailable() ) {
         mpPlayer->setPosition(videoPlayerPositionMs);

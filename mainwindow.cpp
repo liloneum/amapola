@@ -113,6 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->waveForm, SIGNAL(ctrlLeftClickEvent(qint64)), this, SLOT(changeSubStartTime(qint64)));
     connect(ui->waveForm, SIGNAL(ctrlRightClickEvent(qint64)), this, SLOT(changeSubEndTime(qint64)));
     connect(ui->waveForm, SIGNAL(shiftLeftClickEvent(qint64)), this, SLOT(shiftSubtitles(qint64)));
+    connect(ui->waveForm, SIGNAL(waveFormFileReady(QString)), ui->videoPlayer, SLOT(loadWaveForm(QString)));
 
     connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTableText()));
     connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), this, SLOT(updateSubTableDatas(MySubtitles)));
@@ -349,6 +350,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
     }
+
     return QMainWindow::eventFilter(watched, event);
 }
 
@@ -429,6 +431,7 @@ void MainWindow::updateVideoPosition(qint64 positionMs) {
         ui->videoPlayer->setPosition(positionMs);
     }
     else {
+        ui->videoPlayer->updateTime(positionMs);
         mMarkerPosChanged = false;
     }
 }

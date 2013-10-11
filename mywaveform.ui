@@ -10,13 +10,13 @@
     <height>148</height>
    </rect>
   </property>
+  <property name="mouseTracking">
+   <bool>true</bool>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <property name="topMargin">
-    <number>9</number>
-   </property>
    <item row="0" column="0">
     <widget class="QwtPlot" name="waveFormPlot">
      <property name="sizePolicy">
@@ -27,8 +27,8 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>760</width>
-       <height>130</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -36,6 +36,9 @@
        <width>16777215</width>
        <height>250</height>
       </size>
+     </property>
+     <property name="mouseTracking">
+      <bool>true</bool>
      </property>
      <property name="frameShape">
       <enum>QFrame::NoFrame</enum>

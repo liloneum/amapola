@@ -8,14 +8,16 @@ namespace Ui {
 class MyWaveForm;
 }
 
-class MyVideoPlayer;
 class QAudioDecoder;
 class QFile;
+class QwtPlot;
 class QwtPlotCurve;
 class QwtPlotMarker;
 class QwtPlotTextLabel;
 class QwtPlotZoneItem;
 class QwtPlotGrid;
+class QTimeEdit;
+class QLabel;
 
 // This widget manage an audio waveform displaying, with zoom and shift.
 // Display a position marker at the input time,
@@ -33,6 +35,7 @@ signals:
     void ctrlLeftClickEvent(qint64);
     void ctrlRightClickEvent(qint64);
     void shiftLeftClickEvent(qint64);
+    void waveFormFileReady(QString);
 
 public slots:
     void openFile(QString waveform_file_name, QString video_file_name);
@@ -45,6 +48,8 @@ public slots:
     void changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs);
     qint64 currentPositonMs();
     qint64 posMsFromPosPx(int xPos);
+    void setRtMarkerPos(int xPos);
+    QwtPlot* qwtPlot();
 
 private slots:
     void readBuffer();
@@ -88,11 +93,23 @@ private:
     // Marker object
     QwtPlotMarker* mpPositionMarker;
 
+    // Real time position Marker object
+    QwtPlotMarker* mpRTMarker;
+
+    // Display the time in function of mouse position
+    QTimeEdit* mpRtTime;
+
+    // Display the frame number in function of mouse position
+    QLabel* mpRtFrames;
+
     // Text label to display "loading..." message
     QwtPlotTextLabel* mpLoadingTextItem;
 
     // Current media duration in millisecond
     qint32 mMediaDurationMs;
+
+    // The last time of the time vector
+    qint64 mLastTimeMs;
 
     //
     QList<QwtPlotZoneItem*> mpZoneItemList;

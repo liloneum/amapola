@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     myattributesconverter.cpp \
     SubtitlesParsers/DcSubtitle/dcsubparser.cpp \
     mysubtitlefileparser.cpp \
-    mytextedit.cpp
+    mytextedit.cpp \
+    mywaveformslider.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -33,7 +34,8 @@ HEADERS  += mainwindow.h \
     myattributesconverter.h \
     SubtitlesParsers/DcSubtitle/dcsubparser.h \
     mysubtitlefileparser.h \
-    mytextedit.h
+    mytextedit.h \
+    mywaveformslider.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \

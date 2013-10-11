@@ -159,3 +159,10 @@ qint64 MyAttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
 
     return  qRound( (qreal)qRound( (qreal)timeMs / frame_duration_ms )  * frame_duration_ms );
 }
+
+qint32 MyAttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
+
+    qreal frame_duration_ms = (qreal)SEC_TO_MSEC / frameRate;
+
+    return qRound( (qreal)timeMs / frame_duration_ms );
+}
