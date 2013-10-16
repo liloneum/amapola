@@ -38,6 +38,7 @@ private slots:
     bool changeSubStartTime(qint64 positionMs, qint32 refIndex = -1, bool multiChange = true);
     bool changeSubEndTime(qint64 positionMs, qint32 refIndex = -1, bool multiChange = true);
     void shiftSubtitles(qint64 positionMs, qint32 index = -1);
+    void removeSubtitles();
     void updateFrameRate();
 
     void on_actionImport_Subtitles_triggered();

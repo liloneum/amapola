@@ -231,17 +231,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
         }
         else if ( key_event->key() == Qt::Key_Delete ) {
 
-            // Delete key : remove current subtitle
-            // Remove the current subtitle item from the waveform
-            current_subtitle_index = ui->subTable->currentIndex();
-            ui->waveForm->removeSubtitleZone(current_subtitle_index);
+            // Delete key : remove subtitles selected
+            this->removeSubtitles();
 
-            // Remove the current subtitle from the database
-            ui->subTable->deleteCurrentSub();
-
-            // Current subtitle changed, change the item color in the waveform
-            current_subtitle_index = ui->subTable->currentIndex();
-            ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), current_subtitle_index);
             return true;
         }
         else if ( key_event->key() == Qt::Key_PageUp ) {
@@ -800,7 +792,7 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
         // Check time validity
-        if ( ( current_sub_start_time_ms >= 0 ) &&  ( current_sub_end_time_ms >= 0 ) ) {
+        if ( ( current_sub_start_time_ms >= 0 ) && ( current_sub_end_time_ms >= 0 ) ) {
 
             qint32 current_sub_durationMs = current_sub_end_time_ms - current_sub_start_time_ms;
             positionMs = current_sub_start_time_ms + delta_ms;
@@ -851,6 +843,31 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
 }
 
+void MainWindow::removeSubtitles() {
+
+    QList<qint32> selected_indexes = ui->subTable->selectedIndex();
+
+    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+
+    qSort(selected_indexes.begin(), selected_indexes.end(), qGreater<qint32>());
+
+    QList<qint32>::iterator it;
+    for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+        qint32 index = *it;
+        sub_list.removeAt(index);
+    }
+
+    ui->subTable->loadSubtitles(sub_list, false);
+
+    // Save the database current state in history
+    this->saveToHistory("Remove subtitle");
+
+    // Remove all and draw subtitles zones in the waveform
+    ui->waveForm->removeAllSubtitlesZones();
+    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}
 
 // Frame rate change managment
 void MainWindow::updateFrameRate() {
