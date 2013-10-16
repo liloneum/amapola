@@ -44,6 +44,15 @@ MainWindow::MainWindow(QWidget *parent) :
     // Init the subtitles database
     ui->subTable->initStTable(0);
 
+    // Init history (undo/redo)
+    mSubListHistory.clear();
+    mHistoryReasons.clear();
+    mPropertyHistory.clear();
+    mHistoryCurrentIndex = -1;
+
+    // Save the database current state in history
+    this->saveToHistory("Init");
+
     //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
 
@@ -124,7 +133,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(this->mpDisplayInfoTimer, SIGNAL(timeout()), this, SLOT(eraseInfo()));
 
-    connect(ui->settings, SIGNAL(frameRateChanged()), this, SLOT(updateFrameRate()));
+    connect(ui->settings, SIGNAL(frameRateChanged(qreal)), this, SLOT(updateFrameRate(qreal)));
 }
 
 MainWindow::~MainWindow() {
@@ -341,6 +350,27 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             return true;
         }
+        else if ( ( key_event->key() == Qt::Key_Z ) && ( key_event->modifiers() & Qt::ControlModifier ) ) {
+
+            bool status;
+
+            if ( key_event->modifiers() & Qt::ShiftModifier ) {
+
+                status = this->redo();
+            }
+            else {
+                status = this->undo();
+            }
+
+            if ( status == true ) {
+
+                // Remove all and draw subtitles zones in the waveform
+                ui->waveForm->removeAllSubtitlesZones();
+                ui->waveForm->drawSubtitlesZone(ui->subTable->saveSubtitles(), ui->subTable->currentIndex());
+                ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+            }
+            return true;
+        }
     }
 
     return QMainWindow::eventFilter(watched, event);
@@ -376,6 +406,9 @@ void MainWindow::updateSubTableText() {
             updateTextEdit(empty_subtitle);
         }
         else {
+            // Save the database current state in history
+            this->saveToHistory("Insert new subtitle");
+
             // Draw subtitle zone in the waveform
             QList<MySubtitles> subtitle_list;
             subtitle_list.append(new_subtitle);
@@ -584,6 +617,9 @@ bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool mul
     // Load modified subtitles in the database
     ui->subTable->loadSubtitles(sub_list);
 
+    // Save the database current state in history
+    this->saveToHistory("Change subtitle start timecode");
+
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
     ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
@@ -730,6 +766,9 @@ bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multi
     // Load modified subtitles in the database
     ui->subTable->loadSubtitles(sub_list);
 
+    // Save the database current state in history
+    this->saveToHistory("Change subtitle end timecode");
+
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
     ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
@@ -837,6 +876,9 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
 
     ui->subTable->loadSubtitles(sub_list);
 
+    // Save the database current state in history
+    this->saveToHistory("Shift subtitle");
+
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
     ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
@@ -870,7 +912,7 @@ void MainWindow::removeSubtitles() {
 }
 
 // Frame rate change managment
-void MainWindow::updateFrameRate() {
+void MainWindow::updateFrameRate(qreal frameRate) {
 
     qint32 start_time_ms;
     qint32 end_time_ms;
@@ -884,15 +926,18 @@ void MainWindow::updateFrameRate() {
 
         subtitle = *it;
         start_time_ms = qAbs( QTime::fromString(subtitle.startTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        start_time_ms = MyAttributesConverter::roundToFrame(start_time_ms, qApp->property("prop_FrameRate_fps").toReal());
+        start_time_ms = MyAttributesConverter::roundToFrame(start_time_ms, frameRate);
         it->setStartTime( time_base.addMSecs(start_time_ms).toString("hh:mm:ss.zzz") );
 
         end_time_ms = qAbs( QTime::fromString(subtitle.endTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, qApp->property("prop_FrameRate_fps").toReal());
+        end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, frameRate);
         it->setEndTime( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
     }
 
     ui->subTable->loadSubtitles(sub_list);
+
+    // Save the database current state in history
+    this->saveToHistory("Change frame rate");
 
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
@@ -1025,6 +1070,9 @@ void MainWindow::on_actionImport_Subtitles_triggered()
 
         ui->subTable->loadSubtitles(subtitles_list, false);
 
+        // Save the database current state in history
+        this->saveToHistory("Import subtitles");
+
         // Remove all and draw subtitles zones in the waveform
         ui->waveForm->removeAllSubtitlesZones();
         qint32 current_subtitle_index = ui->subTable->currentIndex();
@@ -1072,6 +1120,73 @@ void MainWindow::on_actionExport_Subtitles_triggered() {
            QMessageBox::warning(this, "Export subtitles", error_msg);
        }
    }
+}
+
+// Save the current state in "history", to allow undo/redo
+void MainWindow::saveToHistory(QString changeReason) {
+
+    qint32 begin_index = mHistoryCurrentIndex + 1;
+    qint32 end_index = mSubListHistory.count();
+
+    // Remove all saved states from current index + 1 to the last
+    for ( qint32 i = begin_index; i < end_index; i++ ) {
+        mHistoryReasons.removeLast();
+        mSubListHistory.removeLast();
+        mPropertyHistory.removeLast();
+    }
+
+    // If the last action was "Shift subtitle", delete one more state ("Change subtile start/end")
+    // before to save the current state
+    if ( changeReason == "Shift subtitle") {
+        mHistoryReasons.removeLast();
+        mSubListHistory.removeLast();
+        mPropertyHistory.removeLast();
+        mHistoryCurrentIndex--;
+    }
+
+    // Register the current state
+    mHistoryReasons.append(changeReason);
+    mSubListHistory.append(ui->subTable->saveSubtitles());
+    mPropertyHistory.append(ui->settings->getCurrentProp());
+    mHistoryCurrentIndex++;
+}
+
+bool MainWindow::undo() {
+
+    // If previous state exist in history
+    if ( (mHistoryCurrentIndex - 1) >= 0 ) {
+
+        // If the action to undo is "Change frame rate" update the frame rate combo box
+        if ( mHistoryReasons.at(mHistoryCurrentIndex) == "Change frame rate") {
+
+            ui->settings->setFrameRate( mPropertyHistory[mHistoryCurrentIndex - 1].frameRate() );
+        }
+
+        // Reload the subtitles in database
+        ui->subTable->loadSubtitles(mSubListHistory.at(mHistoryCurrentIndex - 1));
+        mHistoryCurrentIndex--;
+        return true;
+    }
+    return false;
+}
+
+bool MainWindow::redo() {
+
+    // If next state exist in history
+    if ( (mHistoryCurrentIndex + 1) < mSubListHistory.count() ) {
+
+        // If the action to redo is "Change frame rate" update the frame rate combo box
+        if ( mHistoryReasons.at(mHistoryCurrentIndex + 1) == "Change frame rate") {
+
+            ui->settings->setFrameRate( mPropertyHistory[mHistoryCurrentIndex + 1].frameRate() );
+        }
+
+        // Reload the subtitles in database
+        ui->subTable->loadSubtitles(mSubListHistory.at(mHistoryCurrentIndex + 1));
+        mHistoryCurrentIndex++;
+        return true;
+    }
+    return false;
 }
 
 void MainWindow::on_settingsButton_clicked()
@@ -1192,6 +1307,9 @@ void MainWindow::updateTextPosition() {
 
         // Push the new datas in the table
         ui->subTable->updateDatas(current_subtitle_datas);
+
+        // Save the database current state in history
+        this->saveToHistory("Change subtitle position");
     }
 
     mTextPosChangedByUser = false;
@@ -1451,6 +1569,9 @@ void MainWindow::updateTextFont(bool customColorClicked) {
 
         // Push the new datas in the table
         ui->subTable->updateDatas(current_subtitle_datas);
+
+        // Save the database current state in history
+        this->saveToHistory("Change subtitle font");
     }
 
     mTextFontChangedByUser = false;
@@ -1795,6 +1916,9 @@ void MainWindow::on_syncApplyPushButton_clicked() {
 
     // Load the new subtitles list in the database
     ui->subTable->loadSubtitles(sub_list);
+
+    // Save the database current state in history
+    this->saveToHistory("Rescale");
 
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();

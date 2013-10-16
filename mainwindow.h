@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <myvideoplayer.h>
 #include "mysubtitles.h"
+#include "mysettings.h"
 
 namespace Ui {
 class MainWindow;
@@ -39,7 +40,10 @@ private slots:
     bool changeSubEndTime(qint64 positionMs, qint32 refIndex = -1, bool multiChange = true);
     void shiftSubtitles(qint64 positionMs, qint32 index = -1);
     void removeSubtitles();
-    void updateFrameRate();
+    void updateFrameRate(qreal frameRate);
+    void saveToHistory(QString changeReason);
+    bool undo();
+    bool redo();
 
     void on_actionImport_Subtitles_triggered();
 
@@ -114,6 +118,12 @@ private:
     // Flag to avoid infinite inter call between video-player and waveform
     bool mVideoPositionChanged;
     bool mMarkerPosChanged;
+
+    // History (undo/redo) varaiables
+    QList<QString> mHistoryReasons;
+    QList< QList<MySubtitles> > mSubListHistory;
+    QList<MyProperties> mPropertyHistory;
+    qint32 mHistoryCurrentIndex;
 
     QTimer* mpDisplayInfoTimer;
 };
