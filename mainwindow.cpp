@@ -1563,3 +1563,224 @@ void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
         updateTextFont(false);
     }
 }
+
+void MainWindow::on_firstNumSpinBox_customContextMenuRequested(const QPoint &pos) {
+
+    QPoint global_pos = ui->firstNumSpinBox->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Set from current");
+    // ...
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+    if ( selected_item ) {
+
+        if ( selected_item->text() == "Set from current" ) {
+
+            qint32 current_subtitle_index = ui->subTable->currentIndex();
+
+            if (current_subtitle_index >= 0 ) {
+                ui->firstNumSpinBox->setValue(current_subtitle_index);
+
+                MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+                ui->firstStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
+                ui->firstNewStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
+            }
+        }
+    }
+    else {
+        // nothing was chosen
+    }
+}
+
+void MainWindow::on_lastNumSpinBox_customContextMenuRequested(const QPoint &pos) {
+
+    QPoint global_pos = ui->lastNumSpinBox->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Set from current");
+    // ...
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+    if ( selected_item ) {
+
+        if ( selected_item->text() == "Set from current" ) {
+
+            qint32 current_subtitle_index = ui->subTable->currentIndex();
+
+            if (current_subtitle_index >= 0 ) {
+
+                ui->lastNumSpinBox->setValue(current_subtitle_index);
+
+                MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+                ui->lastStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
+                ui->lastNewStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
+            }
+        }
+    }
+    else {
+        // nothing was chosen
+    }
+}
+
+void MainWindow::on_firstNewStartTimeEdit_customContextMenuRequested(const QPoint &pos) {
+
+    QTime time_base(0, 0, 0, 0);
+
+    QPoint global_pos = ui->firstNewStartTimeEdit->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Set from current");
+    // ...
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+    if ( selected_item ) {
+
+        if ( selected_item->text() == "Set from current" ) {
+
+            ui->firstNewStartTimeEdit->setTime( time_base.addMSecs(ui->waveForm->currentPositonMs()) );
+        }
+    }
+    else {
+        // nothing was chosen
+    }
+}
+
+void MainWindow::on_lastNewStartTimeEdit_customContextMenuRequested(const QPoint &pos) {
+
+    QTime time_base(0, 0, 0, 0);
+
+    QPoint global_pos = ui->lastNewStartTimeEdit->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Set from current");
+    // ...
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+    if ( selected_item ) {
+
+        if ( selected_item->text() == "Set from current" ) {
+
+            ui->lastNewStartTimeEdit->setTime( time_base.addMSecs(ui->waveForm->currentPositonMs()) );
+        }
+    }
+    else {
+        // nothing was chosen
+    }
+}
+
+// Rescale the subtitles timecodes
+void MainWindow::on_syncApplyPushButton_clicked() {
+
+    QTime time_base(0, 0, 0, 0);
+    qint64 first_source_time_ms;
+    qint64 first_dest_time_ms;
+    qint64 last_source_time_ms;
+    qint64 last_dest_time_ms;
+    qint32 from_index, to_index;
+
+    MySubtitles current_subtitle;
+    qint64 current_sub_start_time_ms;
+    qint64 current_sub_end_time_ms;
+    qreal temp_time_ms;
+    qint64 new_start_time_ms;
+    qint64 new_end_time_ms;
+
+
+    // Retrieve the timecodes set by the users
+    first_source_time_ms = qAbs( ui->firstStartTimeEdit->time().msecsTo(time_base) );
+    first_dest_time_ms = qAbs( ui->firstNewStartTimeEdit->time().msecsTo(time_base) );
+    last_source_time_ms = qAbs( ui->lastStartTimeEdit->time().msecsTo(time_base) );
+    last_dest_time_ms = qAbs( ui->lastNewStartTimeEdit->time().msecsTo(time_base) );
+
+    // Compute the rescale factor
+    qreal rescale_factor = (qreal)( (last_dest_time_ms - last_source_time_ms) - (first_dest_time_ms - first_source_time_ms) ) / (qreal)(last_source_time_ms - first_source_time_ms);
+
+    // Get the current subtiles list from the database
+    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+
+    if ( ui->firstNumSpinBox->value() >= ui->lastNumSpinBox->value() ) {
+        // Error
+        QMessageBox::warning(this, "Rescale", "Rescale failed\nThe first point is superior to the last point");
+        return;
+    }
+
+    if ( ( first_source_time_ms == first_dest_time_ms ) && ( last_source_time_ms == last_dest_time_ms ) ) {
+        // Nothing to change
+        return;
+    }
+
+    // Apply on all or just selection
+    if ( ui->syncApplyAllCheckBox->isChecked() ) {
+        from_index = 0;
+        to_index = sub_list.count() - 1;
+    }
+    else {
+        from_index = ui->firstNumSpinBox->value();
+        to_index = ui->lastNumSpinBox->value();
+    }
+
+    // Loop on subtitles list
+    for ( qint32 i = from_index; i <= to_index; i++ ) {
+
+        // Compute new timecodes
+        current_subtitle = sub_list.at(i);
+        current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+        current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+
+        temp_time_ms = (qreal)current_sub_start_time_ms + ( (qreal)(current_sub_start_time_ms - first_source_time_ms) * rescale_factor ) + (qreal)(first_dest_time_ms - first_source_time_ms);
+        new_start_time_ms = MyAttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
+
+        temp_time_ms = (qreal)current_sub_end_time_ms + ( (qreal)(current_sub_end_time_ms - first_source_time_ms) * rescale_factor ) + (qreal)(first_dest_time_ms - first_source_time_ms);
+        new_end_time_ms = MyAttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
+
+        // If it's the first subtitle, check if it's new timecode is positive and not erase the previous subtitle
+        if ( i == from_index ) {
+
+            if ( from_index > 0 ) {
+
+                qint64 previous_end_time_ms = MyAttributesConverter::timeStrHMStoMs( sub_list[i -1].endTime() );
+
+                if ( new_start_time_ms <= previous_end_time_ms ) {
+                    // Error
+                    QMessageBox::warning(this, "Rescale", "Rescale failed\nThe first subtitle new timecode conflict with the previous subtitle");
+                    return;
+                }
+            }
+            else if ( i == 0 ) {
+
+                if ( new_start_time_ms < 0 ) {
+                    // Error
+                    QMessageBox::warning(this, "Rescale", "Rescale failed\nThe first subtitle new start time is negative");
+                    return;
+                }
+            }
+        } // If it's the last subtitle, check if it's new timecode not erase the next subtitle
+        else if ( i == to_index ) {
+
+            if ( ( i + 1 ) < sub_list.count() ) {
+
+                qint64 next_start_time_ms = MyAttributesConverter::timeStrHMStoMs( sub_list[i + 1].startTime() );
+
+                if ( new_end_time_ms >= next_start_time_ms ) {
+                    // Error
+                    QMessageBox::warning(this, "Rescale", "Rescale failed\nThe last subtitle timecode conflict with the next subtitle  ");
+                    return;
+                }
+            }
+        }
+
+        // Set modifications in the list
+        current_subtitle.setStartTime( time_base.addMSecs(new_start_time_ms).toString("hh:mm:ss.zzz") );
+        current_subtitle.setEndTime( time_base.addMSecs(new_end_time_ms).toString("hh:mm:ss.zzz") );
+        sub_list.replace(i, current_subtitle );
+    }
+
+    // Load the new subtitles list in the database
+    ui->subTable->loadSubtitles(sub_list);
+
+    // Remove all and draw subtitles zones in the waveform
+    ui->waveForm->removeAllSubtitlesZones();
+    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}

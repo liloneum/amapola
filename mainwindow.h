@@ -90,6 +90,16 @@ private slots:
 
     void on_fontColorOtherButton_clicked();
 
+    void on_firstNumSpinBox_customContextMenuRequested(const QPoint &pos);
+
+    void on_lastNumSpinBox_customContextMenuRequested(const QPoint &pos);
+
+    void on_syncApplyPushButton_clicked();
+
+    void on_firstNewStartTimeEdit_customContextMenuRequested(const QPoint &pos);
+
+    void on_lastNewStartTimeEdit_customContextMenuRequested(const QPoint &pos);
+
 private:
     Ui::MainWindow* ui;
 

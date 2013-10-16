@@ -577,7 +577,7 @@
       </widget>
      </widget>
     </item>
-    <item row="2" column="0" rowspan="2" colspan="2">
+    <item row="1" column="0" rowspan="2" colspan="2">
      <layout class="QHBoxLayout" name="toolBoxLayout">
       <property name="leftMargin">
        <number>6</number>
@@ -600,7 +600,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>60</height>
+          <height>100</height>
          </size>
         </property>
         <property name="styleSheet">
@@ -613,7 +613,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>2</number>
         </property>
         <property name="iconSize">
          <size>
@@ -626,45 +626,19 @@
         </property>
         <widget class="QWidget" name="positionTab">
          <attribute name="title">
-          <string>Pos</string>
+          <string>Position</string>
          </attribute>
          <widget class="QWidget" name="horizontalLayoutWidget_2">
           <property name="geometry">
            <rect>
-            <x>0</x>
+            <x>20</x>
             <y>0</y>
-            <width>631</width>
-            <height>41</height>
+            <width>431</width>
+            <height>81</height>
            </rect>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QLabel" name="lineLabel">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Position :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="vAlignLabel">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string>  V Align :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
+          <layout class="QGridLayout" name="gridLayout_5">
+           <item row="0" column="3">
             <widget class="QComboBox" name="vAlignBox">
              <property name="enabled">
               <bool>true</bool>
@@ -689,20 +663,27 @@
              </item>
             </widget>
            </item>
-           <item>
-            <widget class="QLabel" name="vPosLabel">
+           <item row="0" column="2">
+            <widget class="QLabel" name="vAlignLabel">
              <property name="enabled">
               <bool>true</bool>
              </property>
-             <property name="mouseTracking">
-              <bool>false</bool>
-             </property>
              <property name="text">
-              <string>  V Pos :</string>
+              <string>Alignment :</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="1" column="5">
+            <widget class="QLabel" name="hPosLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Position :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="6">
             <widget class="QDoubleSpinBox" name="vPosSpinBox">
              <property name="enabled">
               <bool>true</bool>
@@ -730,17 +711,7 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QLabel" name="hAlignLabel">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string>  H Align :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
+           <item row="1" column="3">
             <widget class="QComboBox" name="hAlignBox">
              <property name="enabled">
               <bool>true</bool>
@@ -765,17 +736,36 @@
              </item>
             </widget>
            </item>
-           <item>
-            <widget class="QLabel" name="hPosLabel">
+           <item row="1" column="0">
+            <widget class="QLabel" name="horizontalLabel">
              <property name="enabled">
               <bool>true</bool>
              </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
              <property name="text">
-              <string>  H Pos :</string>
+              <string>Horizontal :</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="0" column="4">
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="1" column="6">
             <widget class="QDoubleSpinBox" name="hPosSpinBox">
              <property name="enabled">
               <bool>true</bool>
@@ -799,6 +789,58 @@
               <double>0.100000000000000</double>
              </property>
             </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="verticalLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Vertical :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QLabel" name="hAlignLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="text">
+              <string>Alignment :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <widget class="QLabel" name="vPosLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="mouseTracking">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Position :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <spacer name="horizontalSpacer_5">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </widget>
@@ -1301,16 +1343,198 @@
           </layout>
          </widget>
         </widget>
-        <widget class="QWidget" name="timeTab">
+        <widget class="QWidget" name="syncTab">
          <attribute name="title">
-          <string>Time</string>
+          <string>Sync</string>
          </attribute>
+         <widget class="QWidget" name="layoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>0</y>
+            <width>878</width>
+            <height>81</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_4">
+           <item row="0" column="8">
+            <widget class="QPushButton" name="syncApplyPushButton">
+             <property name="text">
+              <string>Apply</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="3">
+            <widget class="QLabel" name="firstStartLabel">
+             <property name="text">
+              <string> Start time :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="6">
+            <widget class="QTimeEdit" name="firstNewStartTimeEdit">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="displayFormat">
+              <string>HH:mm:ss.zzz</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="5">
+            <widget class="QLabel" name="firstNewStartLabel">
+             <property name="text">
+              <string> New start time :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="9">
+            <widget class="QCheckBox" name="syncApplyAllCheckBox">
+             <property name="text">
+              <string>Apply all</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="firstPtLabel">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>First Point :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QLabel" name="firstNumLabel">
+             <property name="text">
+              <string>N°</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="7">
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="2">
+            <widget class="QSpinBox" name="firstNumSpinBox">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="4">
+            <widget class="QTimeEdit" name="firstStartTimeEdit">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="displayFormat">
+              <string>HH:mm:ss.zzz</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="lastPtLabel">
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Last Point :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QLabel" name="lastNumLabel">
+             <property name="text">
+              <string>N°</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="2">
+            <widget class="QSpinBox" name="lastNumSpinBox">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="3">
+            <widget class="QLabel" name="lastStartLabel">
+             <property name="text">
+              <string> Start time :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="4">
+            <widget class="QTimeEdit" name="lastStartTimeEdit">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="displayFormat">
+              <string>HH:mm:ss.zzz</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="5">
+            <widget class="QLabel" name="lastNewStartLabel">
+             <property name="text">
+              <string> New start time :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="6">
+            <widget class="QTimeEdit" name="lastNewStartTimeEdit">
+             <property name="contextMenuPolicy">
+              <enum>Qt::CustomContextMenu</enum>
+             </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+             <property name="keyboardTracking">
+              <bool>false</bool>
+             </property>
+             <property name="currentSection">
+              <enum>QDateTimeEdit::MSecSection</enum>
+             </property>
+             <property name="displayFormat">
+              <string>HH:mm:ss.zzz</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </widget>
       </item>
      </layout>
     </item>
-    <item row="4" column="0" colspan="2">
+    <item row="3" column="0" colspan="2">
      <widget class="MyWaveForm" name="waveForm" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
@@ -1330,24 +1554,8 @@
         <height>250</height>
        </size>
       </property>
-     </widget>
-    </item>
-    <item row="1" column="0">
-     <widget class="QLabel" name="messageLabel">
-      <property name="text">
-       <string/>
-      </property>
-      <property name="textFormat">
-       <enum>Qt::PlainText</enum>
-      </property>
-      <property name="scaledContents">
+      <property name="mouseTracking">
        <bool>true</bool>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignCenter</set>
-      </property>
-      <property name="textInteractionFlags">
-       <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
       </property>
      </widget>
     </item>
