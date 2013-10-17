@@ -229,6 +229,9 @@
             </disabled>
            </palette>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
           <property name="frameShape">
            <enum>QFrame::StyledPanel</enum>
           </property>
@@ -613,7 +616,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>2</number>
+         <number>1</number>
         </property>
         <property name="iconSize">
          <size>
@@ -633,7 +636,7 @@
            <rect>
             <x>20</x>
             <y>0</y>
-            <width>431</width>
+            <width>691</width>
             <height>81</height>
            </rect>
           </property>
@@ -736,6 +739,19 @@
              </item>
             </widget>
            </item>
+           <item row="0" column="4">
+            <spacer name="horizontalSpacer_4">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="horizontalLabel">
              <property name="enabled">
@@ -751,19 +767,6 @@
               <string>Horizontal :</string>
              </property>
             </widget>
-           </item>
-           <item row="0" column="4">
-            <spacer name="horizontalSpacer_4">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
            </item>
            <item row="1" column="6">
             <widget class="QDoubleSpinBox" name="hPosSpinBox">
@@ -790,22 +793,6 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="verticalLabel">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="font">
-              <font>
-               <weight>75</weight>
-               <bold>true</bold>
-              </font>
-             </property>
-             <property name="text">
-              <string>Vertical :</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="2">
             <widget class="QLabel" name="hAlignLabel">
              <property name="enabled">
@@ -829,6 +816,22 @@
              </property>
             </widget>
            </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="verticalLabel">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="font">
+              <font>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>Vertical :</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="1">
             <spacer name="horizontalSpacer_5">
              <property name="orientation">
@@ -842,6 +845,26 @@
              </property>
             </spacer>
            </item>
+           <item row="0" column="7">
+            <spacer name="horizontalSpacer_6">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>100</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="8">
+            <widget class="QPushButton" name="applyPosSelButton">
+             <property name="text">
+              <string>Apply to selection</string>
+             </property>
+            </widget>
+           </item>
           </layout>
          </widget>
         </widget>
@@ -854,12 +877,12 @@
            <rect>
             <x>1</x>
             <y>0</y>
-            <width>941</width>
-            <height>41</height>
+            <width>961</width>
+            <height>81</height>
            </rect>
           </property>
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
+          <layout class="QGridLayout" name="gridLayout_6">
+           <item row="0" column="0">
             <widget class="QLabel" name="fontLabel">
              <property name="enabled">
               <bool>true</bool>
@@ -881,26 +904,7 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QFontComboBox" name="fontIdComboBox">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>200</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="currentFont">
-              <font>
-               <family>Arial</family>
-               <pointsize>11</pointsize>
-              </font>
-             </property>
-            </widget>
-           </item>
-           <item>
+           <item row="0" column="2">
             <widget class="QSpinBox" name="fontSizeSpinBox">
              <property name="enabled">
               <bool>true</bool>
@@ -919,45 +923,26 @@
              </property>
             </widget>
            </item>
-           <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeType">
-              <enum>QSizePolicy::Fixed</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>20</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="fontColorLabel">
+           <item row="0" column="1">
+            <widget class="QFontComboBox" name="fontIdComboBox">
              <property name="enabled">
               <bool>true</bool>
              </property>
              <property name="maximumSize">
               <size>
-               <width>50</width>
+               <width>200</width>
                <height>16777215</height>
               </size>
              </property>
-             <property name="font">
+             <property name="currentFont">
               <font>
-               <weight>75</weight>
-               <bold>true</bold>
+               <family>Arial</family>
+               <pointsize>11</pointsize>
               </font>
-             </property>
-             <property name="text">
-              <string>Color :</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="0" column="5">
             <widget class="QGroupBox" name="groupBox">
              <property name="maximumSize">
               <size>
@@ -1008,6 +993,9 @@
                   <string>F5</string>
                  </property>
                  <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
                   <bool>true</bool>
                  </property>
                  <property name="autoExclusive">
@@ -1113,7 +1101,7 @@
                   <bool>true</bool>
                  </property>
                  <property name="checked">
-                  <bool>true</bool>
+                  <bool>false</bool>
                  </property>
                  <property name="autoExclusive">
                   <bool>true</bool>
@@ -1236,7 +1224,23 @@
              </widget>
             </widget>
            </item>
-           <item>
+           <item row="0" column="3">
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeType">
+              <enum>QSizePolicy::Fixed</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item row="0" column="6">
             <spacer name="horizontalSpacer_3">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -1252,8 +1256,8 @@
              </property>
             </spacer>
            </item>
-           <item>
-            <widget class="QLabel" name="fontStyleLabel">
+           <item row="0" column="4">
+            <widget class="QLabel" name="fontColorLabel">
              <property name="enabled">
               <bool>true</bool>
              </property>
@@ -1270,11 +1274,44 @@
               </font>
              </property>
              <property name="text">
-              <string>Style :</string>
+              <string>Color :</string>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="0" column="9">
+            <widget class="QPushButton" name="fontUnderlinedButton">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>27</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="font">
+              <font>
+               <underline>true</underline>
+              </font>
+             </property>
+             <property name="text">
+              <string>u</string>
+             </property>
+             <property name="checkable">
+              <bool>true</bool>
+             </property>
+             <property name="flat">
+              <bool>false</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="8">
             <widget class="QPushButton" name="fontItalicButton">
              <property name="enabled">
               <bool>true</bool>
@@ -1307,36 +1344,32 @@
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QPushButton" name="fontUnderlinedButton">
+           <item row="1" column="1">
+            <widget class="QPushButton" name="applyFontSelButton">
+             <property name="text">
+              <string>Apply to selection</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="7">
+            <widget class="QLabel" name="fontStyleLabel">
              <property name="enabled">
               <bool>true</bool>
              </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
              <property name="maximumSize">
               <size>
-               <width>27</width>
+               <width>50</width>
                <height>16777215</height>
               </size>
              </property>
              <property name="font">
               <font>
-               <underline>true</underline>
+               <weight>75</weight>
+               <bold>true</bold>
               </font>
              </property>
              <property name="text">
-              <string>u</string>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="flat">
-              <bool>false</bool>
+              <string>Style :</string>
              </property>
             </widget>
            </item>
@@ -1520,7 +1553,7 @@
               <bool>false</bool>
              </property>
              <property name="currentSection">
-              <enum>QDateTimeEdit::MSecSection</enum>
+              <enum>QDateTimeEdit::HourSection</enum>
              </property>
              <property name="displayFormat">
               <string>HH:mm:ss.zzz</string>

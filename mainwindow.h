@@ -105,6 +105,12 @@ private slots:
 
     void on_lastNewStartTimeEdit_customContextMenuRequested(const QPoint &pos);
 
+    void on_applyPosSelButton_clicked();
+
+    void on_applyFontSelButton_clicked();
+
+    void on_subTable_customContextMenuRequested(const QPoint &pos);
+
 private:
     Ui::MainWindow* ui;
 

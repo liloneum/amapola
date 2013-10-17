@@ -8,11 +8,13 @@
 #include "SubtitlesParsers/DcSubtitle/dcsubparser.h"
 #include <QFileDialog>
 #include <QColorDialog>
+#include <QFontDialog>
 #include <QString>
 #include <QKeyEvent>
 #include <QMessageBox>
 #include <QTimer>
 #include <QTime>
+#include <QAction>
 
 
 #define SEC_TO_MSEC 1000
@@ -1924,4 +1926,331 @@ void MainWindow::on_syncApplyPushButton_clicked() {
     ui->waveForm->removeAllSubtitlesZones();
     ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}
+
+// Apply the current text line position to all selected subtitles corresponding line
+void MainWindow::on_applyPosSelButton_clicked() {
+
+    MySubtitles current_sub;
+    QList<TextLine> text_lines;
+    qint32 index;
+    qint16 nbr_of_lines;
+
+    // Retrieve the number of the line wich change of position
+    qint16 line_focussed = ui->stEditDisplay->lastFocused();
+
+    // Retrieve the indexes of the selected subtitles
+    QList<qint32> selected_indexes = ui->subTable->selectedIndex();
+
+    // Retrieve the subtitles list from the databases
+    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+
+    // For each subtitle selected
+    QList<qint32>::iterator it;
+    for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+        index = *it;
+        current_sub = sub_list.at(index);
+        nbr_of_lines = current_sub.text().count();
+
+        // If the line changed exist for this subtitle
+        if ( nbr_of_lines >= line_focussed ) {
+
+            // Change the "position" parameters
+            text_lines = current_sub.text();
+
+            text_lines[line_focussed - 1].setTextHAlign( ui->hAlignBox->currentText() );
+            text_lines[line_focussed - 1].setTextHPosition( QString::number(ui->hPosSpinBox->value(), 'f', 1) );
+            text_lines[line_focussed - 1].setTextVAlign( ui->vAlignBox->currentText() );
+            text_lines[line_focussed - 1].setTextVPosition( QString::number(ui->vPosSpinBox->value(), 'f', 1) );
+
+            // Replace in the list
+            current_sub.setText(text_lines);
+            sub_list.replace(index, current_sub);
+        }
+    }
+
+    // Reload the modified subtitltes list in the database
+    ui->subTable->loadSubtitles(sub_list);
+
+    // Save the database current state in history
+    this->saveToHistory("Change selection position");
+
+    // Remove all and draw subtitles zones in the waveform
+    ui->waveForm->removeAllSubtitlesZones();
+    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}
+
+// Apply the current text line font to all selected subtitles corresponding line
+void MainWindow::on_applyFontSelButton_clicked() {
+
+    MySubtitles current_sub;
+    QList<TextLine> text_lines;
+    qint32 index;
+    qint16 nbr_of_lines;
+
+
+    // Retrieve the number of the line wich change of position
+    qint16 line_focussed = ui->stEditDisplay->lastFocused();
+
+    // Retrieve the indexes of the selected subtitles
+    QList<qint32> selected_indexes = ui->subTable->selectedIndex();
+
+    // Retrieve the subtitles list from the databases
+    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+
+    // For each subtitle selected
+    QList<qint32>::iterator it;
+    for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+        index = *it;
+        current_sub = sub_list.at(index);
+        nbr_of_lines = current_sub.text().count();
+
+        // If the line changed exist for this subtitle
+        if ( nbr_of_lines >= line_focussed ) {
+
+            // Change the "position" parameters
+            text_lines = current_sub.text();
+
+            text_lines[line_focussed - 1].setFont( this->getFontToolBox(false) );
+
+            // Replace in the list
+            current_sub.setText(text_lines);
+            sub_list.replace(index, current_sub);
+        }
+    }
+
+    // Reload the modified subtitltes list in the database
+    ui->subTable->loadSubtitles(sub_list);
+
+    // Save the database current state in history
+    this->saveToHistory("Change selection font");
+
+    // Remove all and draw subtitles zones in the waveform
+    ui->waveForm->removeAllSubtitlesZones();
+    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}
+
+// Manage the selected subtitles context menu
+void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->subTable->mapToGlobal(pos);
+    global_pos.ry() = global_pos.y() + ui->subTable->horizontalHeader()->height();
+
+    // Build the menu
+    QMenu custom_menu;
+    custom_menu.addAction("Delete");
+    custom_menu.addSeparator();
+    custom_menu.addAction("Italic");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Underline");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Color...");
+    custom_menu.addAction("Font...");
+    // ...
+
+    QList<TextLine> text_lines;
+    bool italic_found = false;
+    bool underlined_found = false;
+    bool need_reload = false;
+
+    // Retrieve the indexes of the selected subtitles
+    QList<qint32> selected_indexes = ui->subTable->selectedIndex();
+
+    // Retrieve the subtitles list from the databases
+    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+
+    // Check if there is at least one subtitle line with "Italic" or "Underlined" attribute
+    QList<qint32>::iterator it;
+    for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+        text_lines = sub_list[*it].text();
+
+        // If "Italic" or "Underlined" attribute is found, check the corresponding checkbox
+        for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+            if ( text_lines[i].Font().fontItalic() == "yes" ) {
+                custom_menu.actions().at(2)->setChecked(true);
+                italic_found = true;
+            }
+
+            if ( text_lines[i].Font().fontUnderlined() == "yes" ) {
+                custom_menu.actions().at(3)->setChecked(true);
+                underlined_found = true;
+            }
+        }
+
+        if ( ( italic_found ) && ( underlined_found) ) {
+            break;
+        }
+    }
+
+    // Execute the menu and retrieve the selected action
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+
+        // "Delete" : remove selected subtitles
+        if ( selected_item->text() == "Delete" ) {
+
+            this->removeSubtitles();
+            need_reload = false;
+        }
+        // "Italic"
+        else if ( selected_item->text() == "Italic" ) {
+
+            QString is_italic;
+            TextFont text_font;
+
+
+            // If at least one subtitle line has "Italic" attribute,
+            // unset "Italic" to all selected subtitles
+            // If not found, set "Italic" to all selected subtitles
+
+            if ( italic_found ) {
+                is_italic = "no";
+            }
+            else {
+                is_italic = "yes";
+            }
+
+            for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                text_lines = sub_list[*it].text();
+
+                for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+                    text_font = text_lines[i].Font();
+                    text_font.setFontItalic(is_italic);
+                    text_lines[i].setFont(text_font);
+                }
+
+                // Replace in the list
+                sub_list[*it].setText(text_lines);
+                sub_list.replace(*it, sub_list[*it]);
+            }
+
+            need_reload = true;
+        }
+        // "Underline"
+        else if ( selected_item->text() == "Underline" ) {
+
+            QString is_underlined;
+            TextFont text_font;
+
+
+            // If at least one subtitle line has "Underline" attribute,
+            // unset "Italic" to all selected subtitles
+            // If not found, set "Underline" to all selected subtitles
+
+            if ( underlined_found ) {
+                is_underlined = "no";
+            }
+            else {
+                is_underlined = "yes";
+            }
+
+            for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                text_lines = sub_list[*it].text();
+
+                for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+                    text_font = text_lines[i].Font();
+                    text_font.setFontItalic(is_underlined);
+                    text_lines[i].setFont(text_font);
+                }
+
+                // Replace in the list
+                sub_list[*it].setText(text_lines);
+                sub_list.replace(*it, sub_list[*it]);
+            }
+
+            need_reload = true;
+        }
+        // "Color"
+        else if ( selected_item->text() == "Color..." ) {
+
+            // Open a color chooser dialog
+            QColor font_color = QColorDialog::getColor(Qt::white, 0,"Select Color", QColorDialog::ShowAlphaChannel);
+
+            // If valid color, set to all selected subtitles
+            if ( font_color.isValid() ) {
+
+                QString font_color_str = QString::number( font_color.rgba(), 16 ).toUpper();
+                TextFont text_font;
+
+                for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                    text_lines = sub_list[*it].text();
+
+                    for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+                        text_font = text_lines[i].Font();
+                        text_font.setFontColor(font_color_str);
+                        text_lines[i].setFont(text_font);
+                    }
+
+                    // Replace in the list
+                    sub_list[*it].setText(text_lines);
+                    sub_list.replace(*it, sub_list[*it]);
+                }
+                need_reload = true;
+            }
+            else {
+                need_reload = false;
+            }
+        }
+        // "Font"
+        else if ( selected_item->text() == "Font..." ) {
+
+            bool ok;
+
+            // Open a font chooser dialog
+            QFont font = QFontDialog::getFont(&ok, QFont("Arial", 42), 0);
+
+            // If valid font, set font name and size to all selected subtitles
+            if ( ok ) {
+
+                TextFont text_font;
+
+                for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                    text_lines = sub_list[*it].text();
+
+                    for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+                        text_font = text_lines[i].Font();
+                        text_font.setFontId(font.family());
+                        text_font.setFontSize(QString::number(font.pointSize()));
+                        text_lines[i].setFont(text_font);
+                    }
+
+                    // Replace in the list
+                    sub_list[*it].setText(text_lines);
+                    sub_list.replace(*it, sub_list[*it]);
+                }
+                need_reload = true;
+            }
+            else {
+                need_reload = false;
+            }
+        }
+
+        // There are change to load in the database
+        if ( need_reload == true ) {
+            // Reload the modified subtitltes list in the database
+            ui->subTable->loadSubtitles(sub_list);
+
+            // Save the database current state in history
+            this->saveToHistory("Change selection " +selected_item->text());
+
+            // Remove all and draw subtitles zones in the waveform
+            ui->waveForm->removeAllSubtitlesZones();
+            ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+            ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+        }
+    }
+    else {
+        // nothing was chosen
+    }
 }
