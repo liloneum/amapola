@@ -234,36 +234,9 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
             if ( ( key_event->matches(QKeySequence::InsertParagraphSeparator) ) &&
                  ( ui->textLine1->document()->blockCount() == 1 ) ) {
 
-                // If line 2 doesn't exist, create it with the same properties than line 1
-                // Font and position, except for horizontal position
-                if ( !ui->textLine2->isEnabled() ) {
-
-                    TextLine text_line;
-                    TextFont text_font;
-
-                    text_line = mCurrentTextProp.text().first();
-                    text_font = text_line.Font();
-
-                    ui->textLine2->setEnabled(true);
-                    ui->textLine2->show();
-
-                    // Move line 2 to line 1 position
-                    this->setTextFont(ui->textLine2, text_font, this->size());
-                    this->setTextPosition(ui->textLine2, text_line, this->size());
-
-                    // Move line 1 on top of line with spacing defined by LINE_SPACING
-                    ui->textLine1->move( ui->textLine1->x(), ( ui->textLine1->y() - ui->textLine1->height() - LINE_SAPACING ) );
-
-                    // Save line 1 new position
-                    this->textPosition(ui->textLine1, text_line, this->size());
-                    this->saveCurrentTextPos(text_line, ui->textLine1);
-
-                    ui->textLine2->setFocus(Qt::OtherFocusReason);
-
-                    emit cursorPositionChanged();
-                    emit subDatasChanged( subtitleData() );
-                }
+                this->addLine(ui->textLine1);
                 return true;
+
             } // Key event is move to next line (down arrow)
             else if ( ( key_event->matches(QKeySequence::MoveToNextLine) ) &&
                       ( ui->textLine2->isEnabled() ) ) {
@@ -291,24 +264,14 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
             if ( ( key_event->matches(QKeySequence::InsertParagraphSeparator) ) &&
                  ( ui->textLine2->document()->blockCount() == 1 ) ) {
                 return true;
+
             } // If key event is backspace & the text is empty
             else if ( ( key_event->key() == (Qt::Key_Backspace) ) &&
                       ( ui->textLine2->toPlainText().isEmpty() ) ) {
 
-                // Delete line 2 and move line 1 to line 2 position
-                ui->textLine2->setEnabled(false);
-                ui->textLine2->hide();
-
-                TextLine text_line = mCurrentTextProp.text().last();
-                this->setTextPosition(ui->textLine1, text_line, this->size());
-
-                emit cursorPositionChanged();
-                emit subDatasChanged( subtitleData() );
-
-                ui->textLine1->setFocus(Qt::OtherFocusReason);
-                ui->textLine1->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
-
+                this->removeLine(ui->textLine2);
                 return true;
+
             }// Key event is move to previous line (up arrow)
             else if ( key_event->matches(QKeySequence::MoveToPreviousLine) ) {
 
@@ -342,8 +305,6 @@ void MyTextEdit::setText(MySubtitles subtitle) {
     if ( subtitle.isValid() ) {
 
         QList<TextLine> TextLines = subtitle.text();
-
-        mIsSettingLines = true;
 
         // There are two lines
         if ( TextLines.count() == 2 ) {
@@ -601,7 +562,12 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     //test_string_width.fill('W', MAX_CHAR_BY_LINE);
     QFontMetrics font_metrics( textEdit->font() );
 
-    textEdit->setFixedHeight( font_metrics.height() + ( textEdit->frameWidth() * 2 ) );
+    if ( font_metrics.leading() < 0 ) {
+        textEdit->setFixedHeight( font_metrics.height() + ( textEdit->frameWidth() * 2 ) );
+    }
+    else {
+        textEdit->setFixedHeight( font_metrics.lineSpacing() + ( textEdit->frameWidth() * 2 ) );
+    }
     //textEdit->setFixedWidth( font_metrics.width(test_string_width) + ( textEdit->frameWidth() * 2 ) );
     textEdit->setFixedWidth(widgetSize.width() - 20);
 
@@ -667,6 +633,127 @@ void MyTextEdit::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 }
 
+// Add a newline
+void MyTextEdit::addLine(QTextEdit *textEdit) {
+
+    if ( textEdit == ui->textLine1 ) {
+
+        // If line 2 doesn't exist, create it with the same properties than line 1
+        // Font and position, except for horizontal position
+        if ( !ui->textLine2->isEnabled() ) {
+
+            TextLine text_line;
+            TextFont text_font;
+
+            text_line = mCurrentTextProp.text().first();
+            text_font = text_line.Font();
+
+            ui->textLine2->setEnabled(true);
+            ui->textLine2->show();
+
+            // Move text from the cursor to the end to the new line
+            if ( !ui->textLine1->textCursor().atBlockEnd() ) {
+
+                mIsSettingLines = true;
+
+                if ( ui->textLine1->textCursor().selectedText().count() > 0 ) {
+                    ui->textLine1->cut();
+                }
+                else {
+                    ui->textLine1->moveCursor(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
+                    ui->textLine1->cut();
+                }
+
+                ui->textLine2->paste();
+
+                mIsSettingLines = false;
+            }
+
+            // Move line 2 to line 1 position
+            this->setTextFont(ui->textLine2, text_font, this->size());
+            this->setTextPosition(ui->textLine2, text_line, this->size());
+
+            // Move line 1 on top of line with spacing defined by LINE_SPACING
+            ui->textLine1->move( ui->textLine1->x(), ( ui->textLine1->y() - ui->textLine1->height() - LINE_SAPACING ) );
+
+            // Save line 1 new position
+            this->textPosition(ui->textLine1, text_line, this->size());
+            this->saveCurrentTextPos(text_line, ui->textLine1);
+
+            ui->textLine2->setFocus(Qt::OtherFocusReason);
+            ui->textLine2->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+
+            emit cursorPositionChanged();
+            emit subDatasChanged( subtitleData() );
+        }
+    }
+
+}
+
+
+// Remove a line
+void MyTextEdit::removeLine(QTextEdit *textEdit) {
+
+    if ( textEdit == ui->textLine2 ) {
+
+        // Delete line 2 and move line 1 to line 2 position
+        ui->textLine2->setEnabled(false);
+        ui->textLine2->hide();
+
+        TextLine text_line = mCurrentTextProp.text().last();
+        this->setTextPosition(ui->textLine1, text_line, this->size());
+
+        emit cursorPositionChanged();
+        emit subDatasChanged( subtitleData() );
+
+        ui->textLine1->setFocus(Qt::OtherFocusReason);
+        ui->textLine1->moveCursor(QTextCursor::End, QTextCursor::MoveAnchor);
+    }
+}
+
+
+// Manage the maximum number of characters in one line
+void MyTextEdit::wrapText(QTextEdit *textEdit) {
+
+    // If the number of characters of the current line exceed the maximum specified
+    if ( textEdit->toPlainText().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+
+        QTextCursor text_cursor;
+
+        mIsSettingLines = true;
+
+        // Line 1 and characters added
+        if ( ( textEdit == ui->textLine1 ) &&
+             ( textEdit->toPlainText().count() > mPreviousText1.count() ) ) {
+
+            // Select all characters superior to the maximum specified
+            text_cursor = textEdit->textCursor();
+            text_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, textEdit->toPlainText().count() - qApp->property("prop_MaxCharPerLine").toInt());
+            textEdit->setTextCursor(text_cursor);
+
+            // If line 2 doesn't exist, create it
+            if ( !ui->textLine2->isEnabled() ) {
+                this->addLine(textEdit);
+            }
+            // Else remove the characters that exceed the maximum
+            else {
+                textEdit->textCursor().removeSelectedText();
+            }
+        }
+        // Line 2 and characters added
+        else if ( ( textEdit == ui->textLine2 ) &&
+                  textEdit->toPlainText().count() > mPreviousText2.count() ) {
+
+            // If only one character was added, remove it
+            if ( textEdit->toPlainText().count() - mPreviousText2.count() == 1 ) {
+                textEdit->textCursor().deletePreviousChar();
+            }
+            // else keep all characters ( case of copy/paste)
+        }
+
+        mIsSettingLines = false;
+    }
+}
 
 void MyTextEdit::newCursorPosition() {
 
@@ -677,6 +764,7 @@ void MyTextEdit::newCursorPosition() {
         // If user has changed the text, send a signal
         if ( ( ui->textLine1->toPlainText() != mPreviousText1 ) || (ui->textLine2->toPlainText() != mPreviousText2) ) {
 
+            this->wrapText(mpLastFocused);
             mPreviousText1 = ui->textLine1->toPlainText();
             mPreviousText2 = ui->textLine2->toPlainText();
             emit cursorPositionChanged();

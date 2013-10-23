@@ -32,6 +32,7 @@ MySubtitles::MySubtitles()
     mStartTime = "";
     mEndTime = "";
     mText.clear();
+    mDurationAuto = true;
 }
 
 void MySubtitles::clear() {
@@ -39,6 +40,7 @@ void MySubtitles::clear() {
     mStartTime = "";
     mEndTime = "";
     mText.clear();
+    mDurationAuto = true;
 }
 
 // Mutators
@@ -65,6 +67,11 @@ void MySubtitles::setText(QList<TextLine> textLineList) {
     mText = textLineList;
 }
 
+void MySubtitles::setDurationAuto(bool value) {
+
+    mDurationAuto = value;
+}
+
 // Assessors
 QString MySubtitles::startTime() {
 
@@ -79,6 +86,11 @@ QString MySubtitles::endTime() {
 QList<TextLine> MySubtitles::text() {
 
     return mText;
+}
+
+bool MySubtitles::isDurationAuto() {
+
+    return mDurationAuto;
 }
 
 // A subtitle is valid if there are "time in", "time out", and text

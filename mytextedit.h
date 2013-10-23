@@ -47,6 +47,9 @@ private slots:
      void textFont(QTextEdit* textEdit, TextFont &textFont, QSize widgetSize);
      void saveCurrentTextPos(TextLine textLine, QTextEdit *textEdit);
      void saveCurrentTextFont(TextFont textFont,QTextEdit *textEdit );
+     void wrapText(QTextEdit *textEdit);
+     void addLine(QTextEdit *textEdit);
+     void removeLine(QTextEdit *textEdit);
     
 private:
     Ui::MyTextEdit *ui;

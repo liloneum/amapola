@@ -26,10 +26,10 @@ private slots:
     void updateSubTableText();
     void updateSubTableDatas(MySubtitles subtitleDatas);
     void videoPositionChanged(qint64 positionMs);
-    void currentItemChanged(qint64 positionMs);
+    void currentSelectionChanged(qint64 positionMs);
     void waveformMarerkPosChanged(qint64 positionMs);
     void updateVideoPosition(qint64 positionMs);
-    void updateTextEdit(MySubtitles subtitle);
+    void currentSubChanged(MySubtitles subtitle);
     bool eventFilter(QObject* watched, QEvent* event);
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
@@ -110,6 +110,8 @@ private slots:
     void on_applyFontSelButton_clicked();
 
     void on_subTable_customContextMenuRequested(const QPoint &pos);
+
+    void on_durationAutoCheckBox_clicked(bool checked);
 
 private:
     Ui::MainWindow* ui;

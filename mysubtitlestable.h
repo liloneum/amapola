@@ -19,6 +19,7 @@ signals:
     void itemSelectionChanged(qint64);
     void newTextToDisplay(MySubtitles);
     void currentSubChanged(qint32);
+    void endTimeCodeChanged(qint32, qint64);
 
 public slots:
     bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs, bool shiftNextSub = false);
@@ -30,14 +31,15 @@ public slots:
     bool isNewEntry(qint64 positionMs);
     void updateText(QList<TextLine> textLines);
     void updateDatas(MySubtitles subtitle);
-    bool setEndTime(qint64 positionMs, qint32 stIndex);
-    bool setStartTime(qint64 positionMs, qint32 stIndex);
+    bool setEndTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
+    bool setStartTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
     void updateStDisplay(qint64 positionMs);
     qint32 currentIndex();
     QList<qint32> selectedIndex();
     qint32 subtitlesCount();
     MySubtitles getSubInfos(qint32 stIndex);
     QString errorMsg();
+    void setDurationAuto(qint32 index, bool state);
 
 private slots:
     void updateSelectedItem();

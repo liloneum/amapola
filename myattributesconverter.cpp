@@ -66,6 +66,16 @@ QString MyAttributesConverter::isUnderlined(bool underlined) {
         return "no";
 }
 
+// Convert a boolean to string "yes" or "no"
+QString MyAttributesConverter::boolToString(bool boolean) {
+
+    if ( boolean == true ) {
+        return "yes";
+    }
+    else
+        return "no";
+}
+
 // Convert time given with "ticks" or "1/10 second" to time with millisecond,
 // with HH:MM:SS:zzz format.
 // One tick equal to 4 milliseconds

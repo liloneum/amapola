@@ -93,16 +93,18 @@ public:
     void setEndTime(QString endTime);
     void setText(TextLine textLine, TextFont Font);
     void setText(QList<TextLine> textLineList);
+    void setDurationAuto(bool value);
     QString startTime();
     QString endTime();
     QList<TextLine> text();
+    bool isDurationAuto();
     bool isValid();
 
 private:
     QString mStartTime;
     QString mEndTime;
-    //QString mText;
     QList<TextLine> mText;
+    bool mDurationAuto;
 };
 
 

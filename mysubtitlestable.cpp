@@ -4,55 +4,53 @@
 #include <QTextDocumentFragment>
 #include "mysettings.h"
 #include <QCoreApplication>
+#include "myattributesconverter.h"
 
 // Columns numbers define
 #define SUB_NUM_COL 0
 #define SUB_START_TIME_COL 1
 #define SUB_END_TIME_COL 2
 #define SUB_DURATION_COL 3
-#define SUB_TEXT_COL 4
+#define SUB_CHARNUM_COL 4
+#define SUB_CHAR_PER_SEC_COL 5
+#define SUB_TEXT_COL 6
 
-#define SUB_NBR_OF_LINES_COL 5
+#define SUB_NBR_OF_LINES_COL 7
 
-#define SUB_LINE1_COL 6
-#define SUB_VPOSITION1_COL 7
-#define SUB_VALIGN1_COL 8
-#define SUB_HPOSITION1_COL 9
-#define SUB_HALIGN1_COL 10
-#define SUB_DIRECTION1_COL 11
-#define SUB_FONT_ID1_COL 12
-#define SUB_FONT_COLOR1_COL 13
-#define SUB_FONT_EFFECT1_COL 14
-#define SUB_FONT_EFFECTCOLOR1_COL 15
-#define SUB_FONT_ITALIC1_COL 16
-#define SUB_FONT_UNDERLINED1_COL 17
-#define SUB_FONT_SCRIPT1_COL 18
-#define SUB_FONT_SIZE1_COL 19
+#define SUB_LINE1_COL 8
+#define SUB_VPOSITION1_COL 9
+#define SUB_VALIGN1_COL 10
+#define SUB_HPOSITION1_COL 11
+#define SUB_HALIGN1_COL 12
+#define SUB_DIRECTION1_COL 13
+#define SUB_FONT_ID1_COL 14
+#define SUB_FONT_COLOR1_COL 15
+#define SUB_FONT_EFFECT1_COL 16
+#define SUB_FONT_EFFECTCOLOR1_COL 17
+#define SUB_FONT_ITALIC1_COL 18
+#define SUB_FONT_UNDERLINED1_COL 19
+#define SUB_FONT_SCRIPT1_COL 20
+#define SUB_FONT_SIZE1_COL 21
 
-#define SUB_LINE2_COL 20
-#define SUB_VPOSITION2_COL 21
-#define SUB_VALIGN2_COL 22
-#define SUB_HPOSITION2_COL 23
-#define SUB_HALIGN2_COL 24
-#define SUB_DIRECTION2_COL 25
-#define SUB_FONT_ID2_COL 26
-#define SUB_FONT_COLOR2_COL 27
-#define SUB_FONT_EFFECT2_COL 28
-#define SUB_FONT_EFFECTCOLOR2_COL 29
-#define SUB_FONT_ITALIC2_COL 30
-#define SUB_FONT_UNDERLINED2_COL 31
-#define SUB_FONT_SCRIPT2_COL 32
-#define SUB_FONT_SIZE2_COL 33
+#define SUB_LINE2_COL 22
+#define SUB_VPOSITION2_COL 23
+#define SUB_VALIGN2_COL 24
+#define SUB_HPOSITION2_COL 25
+#define SUB_HALIGN2_COL 26
+#define SUB_DIRECTION2_COL 27
+#define SUB_FONT_ID2_COL 28
+#define SUB_FONT_COLOR2_COL 29
+#define SUB_FONT_EFFECT2_COL 30
+#define SUB_FONT_EFFECTCOLOR2_COL 31
+#define SUB_FONT_ITALIC2_COL 32
+#define SUB_FONT_UNDERLINED2_COL 33
+#define SUB_FONT_SCRIPT2_COL 34
+#define SUB_FONT_SIZE2_COL 35
+#define SUB_DURATION_AUTO_COL 36
 
-// Subtitle default duration in millisecond
-#define SUB_DEFAULT_DURATION_MS 1000
 
 // Convert second in milliseconds
 #define SEC_TO_MSEC 1000
-// Number of frame per seconde
-#define FRAME_PER_SEC 25
-// Minimum interval between two subtitles (in frame)
-#define SUB_MIN_INTERVAL_FRAME 5
 
 // This widget manage a subtitles table.
 // It's a database to stock text, timecode, position, font.
@@ -118,9 +116,36 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
 
             QTableWidgetItem* new_item = new QTableWidgetItem;
 
+            if ( j == 0 ) {
+
+                if ( i == SUB_NUM_COL ) {
+                    new_item->setText("XXX");
+                    this->setItem(j, i, new_item);
+                    this->resizeColumnToContents(i);
+                }
+                else if ( ( i == SUB_START_TIME_COL ) ||
+                        ( i == SUB_END_TIME_COL ) ||
+                        ( i == SUB_DURATION_COL ) ) {
+
+                    new_item->setText("HH:MM:SS:zzz");
+                    this->setItem(j, i, new_item);
+                    this->resizeColumnToContents(i);
+                }
+                else if ( ( i == SUB_CHARNUM_COL ) ||
+                    ( i == SUB_CHAR_PER_SEC_COL ) ) {
+                    this->resizeColumnToContents(i);
+                }
+            }
+
             // The start time items are init with "New Entry" string to able sorting
-            if ( i == SUB_START_TIME_COL ) {
-                new_item->setText("New Entry");
+            if ( ( i == SUB_NUM_COL ) ||
+                 ( i == SUB_CHARNUM_COL ) ||
+                 ( i == SUB_CHAR_PER_SEC_COL ) ) {
+                new_item->setText("");
+                new_item->setTextAlignment(Qt::AlignCenter);
+            }
+            else if ( i == SUB_START_TIME_COL ) {
+                new_item->setText("o");
                 new_item->setTextAlignment(Qt::AlignCenter);
             }
             else if ( i == SUB_TEXT_COL ){
@@ -135,6 +160,7 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
                 new_item->setText("");
                 new_item->setTextAlignment(Qt::AlignCenter);
             }
+
             this->setItem(j, i, new_item);
 
             // Hide columns useless for the user
@@ -150,6 +176,7 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
 // Update the font, position, text informations in the table with the given subtitles container
 void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keepSelection) {
 
+    QTime time_base(0, 0, 0, 0);
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
     QTableWidgetItem* text_item;
@@ -182,6 +209,7 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
     QTableWidgetItem* font_underlined2_item;
     QTableWidgetItem* font_script2_item;
     QTableWidgetItem* font_size2_item;
+    QTableWidgetItem* duration_auto_item;
 
     if ( this->isEnabled() == true ) {
 
@@ -212,18 +240,40 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 continue;
             }
 
+            duration_auto_item = this->item(mStCount, SUB_DURATION_AUTO_COL);
+            duration_auto_item->setText( MyAttributesConverter::boolToString( subtitlesList[i].isDurationAuto() ) );
+
             text_item = this->item(mStCount, SUB_TEXT_COL);
 
             QString text = "";
+            QString char_number_str = "";
+            QString char_per_sec_str = "";
+            qreal char_per_sec = 0.0;
+            bool max_cher_exceeded= false;
+
             QList<TextLine> text_list = subtitlesList[i].text();
+
             for ( qint32 j = 0; j < text_list.size(); j++ ) {
 
                 // If it's the second line, add a "line return" caractere
                 if ( !text.isEmpty() ) {
                     text += "\n";
+                    char_number_str += "\n";
                 }
+
                 TextLine text_line = text_list.at(j);
+
+                // Calculate characters number per second
+                char_per_sec += ( (qreal)text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)MyAttributesConverter::timeStrHMStoMs( this->item(mStCount, SUB_DURATION_COL)->text() );
+                // Count characters number for the line
+                char_number_str += QString::number( text_line.Line().count() );
+
                 text += text_line.Line();
+
+                // Check if characters number per line is superior to specified
+                if ( text_line.Line().count()> qApp->property("prop_MaxCharPerLine").toInt() ) {
+                    max_cher_exceeded = true;
+                }
 
                 // Line 1
                 if ( j == 0 ) {
@@ -297,6 +347,26 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 }
             }
 
+            // Convert characters per second in string
+            char_per_sec_str += QString::number(char_per_sec, 'f', 1);
+
+            // Dispaly in red if characters number is superior to specified
+            if ( char_per_sec > qApp->property("prop_MaxCharPerSec").toReal() ) {
+                this->item(mStCount, SUB_CHAR_PER_SEC_COL)->setForeground(QBrush(Qt::red));
+            }
+            else {
+                this->item(mStCount, SUB_CHAR_PER_SEC_COL)->setForeground(QBrush(Qt::black));
+            }
+
+            if ( max_cher_exceeded ) {
+                this->item(mStCount, SUB_CHARNUM_COL)->setForeground(QBrush(Qt::red));
+            }
+            else {
+                this->item(mStCount, SUB_CHARNUM_COL)->setForeground(QBrush(Qt::black));
+            }
+
+            this->item(mStCount, SUB_CHARNUM_COL)->setText(char_number_str);
+            this->item(mStCount, SUB_CHAR_PER_SEC_COL)->setText(char_per_sec_str);
             text_item->setText(text);
 
             // Increment the subtitles counter
@@ -309,12 +379,19 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
         // Keep the same selection as before changment loading
         if ( keepSelection == true ) {
 
-            // If the current index always exist, keep it. Else reset to 0
+            // If the current index always exist, keep it. Else set to last subtitle
             if ( mCurrentIndex < mStCount ) {
                 // Nothing to do
             }
             else {
-                mCurrentIndex = 0;
+
+                mCurrentIndex = mStCount - 1;
+                this->selectRow(mCurrentIndex);
+
+                mSubLoadding = false;
+
+                return;
+
             }
 
             // Change the selection mode to "Multiselection" to avoid "Shift" or "Ctrl" key modifiers conflict
@@ -401,6 +478,8 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs,
             temp_vector.fill(-1);
             mPositionMsToStIndex += temp_vector;
         }
+
+        this->item(mStCount, SUB_DURATION_AUTO_COL)->setText( MyAttributesConverter::boolToString( newSubtitle.isDurationAuto() ) );
 
         // Retrieive the first empty item, set the start/end time and text
         start_time_HMS = time_base.addMSecs(start_time_ms);
@@ -507,34 +586,119 @@ bool MySubtitlesTable::isNewEntry(qint64 positionMs) {
 void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
     qint32 row_index;
-    QString plain_text;
+    QString plain_text = "";
+    QString char_number_line_str = "";
+    QString char_per_sec_str = "";
     TextLine text_line;
+    qint16 char_number_total = 0;
+    qreal char_per_sec = 0.0;
+    qint32 sub_duration_ms;
+    bool max_cher_exceeded = false;
 
     // Retrieve the index for this given time
     row_index = mCurrentIndex;
 
+    sub_duration_ms = MyAttributesConverter::timeStrHMStoMs( this->item(row_index, SUB_DURATION_COL)->text() );
+
     for ( qint32 i = 0; i < textLines.count(); i++ ) {
+
+        // If it's the second line, add a "line return" caractere
+        if ( !plain_text.isEmpty() ) {
+            plain_text += "\n";
+            char_number_line_str += "\n";
+        }
 
         text_line = textLines.at(i);
 
+        char_number_total += text_line.Line().count();
+        // Calculate characters number per second
+        char_per_sec += ( ( (qreal)text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)sub_duration_ms );
+        // Count characters number for the line
+        char_number_line_str += QString::number( text_line.Line().count() );
+
+        plain_text += text_line.Line();
+
+        if ( text_line.Line().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+            max_cher_exceeded = true;
+        }
+
+        // line 1
         if ( i == 0 ) {
 
             this->item(row_index, SUB_NBR_OF_LINES_COL)->setText("1");
             this->item(row_index, SUB_LINE1_COL)->setText(text_line.Line());
-            plain_text = text_line.Line();
 
             if ( textLines.count() == 1 ) {
                 this->item(row_index, SUB_LINE2_COL)->setText("");
             }
-        }
+        } // Line 2
         else if ( i == 1 ) {
 
             this->item(row_index, SUB_NBR_OF_LINES_COL)->setText("2");
             this->item(row_index, SUB_LINE2_COL)->setText(text_line.Line());
-            plain_text += "\n";
-            plain_text += text_line.Line();
         }
     }
+
+    // Change subtitle duration in function of the number of characters
+    // and the maximum number of char / sec specified
+    qint32 new_sub_duration_ms = qRound( ( (qreal)char_number_total / qApp->property("prop_MaxCharPerSec").toReal() ) * (qreal)SEC_TO_MSEC );
+
+    if ( this->item(row_index, SUB_DURATION_AUTO_COL)->text().contains("yes") ) {
+
+        // Case of auto duration recovery
+        // Set new duration equal to the minimum duration specified
+        if ( ( new_sub_duration_ms < qApp->property("prop_SubMinDuration_ms").toInt() ) &&
+             ( new_sub_duration_ms < sub_duration_ms ) ) {
+
+            new_sub_duration_ms = qApp->property("prop_SubMinDuration_ms").toInt();
+        }
+
+        // Change duration only if the new duration is superior to the minimum duration specified
+        if ( new_sub_duration_ms >= qApp->property("prop_SubMinDuration_ms").toInt() ) {
+
+            qint32 new_end_time_ms = MyAttributesConverter::timeStrHMStoMs( this->item(row_index, SUB_START_TIME_COL)->text() ) + new_sub_duration_ms;
+
+            // Scale the positon in function of the framerate
+            new_end_time_ms = MyAttributesConverter::roundToFrame(new_end_time_ms, qApp->property("prop_FrameRate_fps").toReal());
+
+            if ( ( mPositionMsToStIndex[new_end_time_ms] == -1 ) || ( mPositionMsToStIndex[new_end_time_ms] == row_index ) ) {
+
+                // Compute the minimum interval between two subtitles
+                qint32 interval_ms = ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal();
+
+                if ( this->setEndTime(new_end_time_ms, row_index, true, interval_ms ) ) {
+
+                    // Calculate characters number per second
+                    char_per_sec = ( ( (qreal)char_number_total * (qreal)SEC_TO_MSEC ) / (qreal)new_sub_duration_ms );
+
+                    // Char / sec ok -> write in black
+                    this->item(row_index, SUB_CHAR_PER_SEC_COL)->setForeground(QBrush(Qt::black));
+                }
+            }
+        }
+    }
+
+    // Dispaly in red if characters number is superior to specified
+    if ( char_per_sec > qApp->property("prop_MaxCharPerSec").toReal() ) {
+        this->item(row_index, SUB_CHAR_PER_SEC_COL)->setForeground(QBrush(Qt::red));
+    }
+    else {
+        this->item(row_index, SUB_CHAR_PER_SEC_COL)->setForeground(QBrush(Qt::black));
+    }
+
+    // At lest one line has more characters than allowed
+    if ( max_cher_exceeded ) {
+        this->item(row_index, SUB_CHARNUM_COL)->setForeground(QBrush(Qt::red));
+    }
+    else {
+        this->item(row_index, SUB_CHARNUM_COL)->setForeground(QBrush(Qt::black));
+    }
+
+    // Convert characters per second in string
+    char_per_sec_str += QString::number(char_per_sec, 'f', 1);
+
+    this->item(row_index, SUB_CHARNUM_COL)->setText(char_number_line_str);
+    this->item(row_index, SUB_CHAR_PER_SEC_COL)->setText(char_per_sec_str);
     this->item(row_index, SUB_TEXT_COL)->setText(plain_text);
 }
 
@@ -569,7 +733,6 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle) {
     QTableWidgetItem* font_underlined2_item;
     QTableWidgetItem* font_script2_item;
     QTableWidgetItem* font_size2_item;
-
 
     // Retrieve the current index
     index = mCurrentIndex;
@@ -664,51 +827,104 @@ void MySubtitlesTable::updateItem(QTableWidgetItem *item) {
     }
 }
 
-// Set "end time" to current item
-bool MySubtitlesTable::setEndTime(qint64 positionMs, qint32 stIndex) {
+// Set "end time" to provided index
+// force : if new end time > next sub start time, force new endtime = next sub start time - intervalMs
+// intervalMs : interval min between two subtitle
+bool MySubtitlesTable::setEndTime(qint64 positionMs, qint32 stIndex, bool force, qint32 intervalMs) {
 
-    QTime start_time_HMS;
-    QTime end_time_HMS;
+    qint64 start_time_ms;
+    qint64 end_time_ms;
+    qint64 next_start_time_ms;
     QTime time_base(0, 0, 0, 0);
     QTableWidgetItem* end_time_item;
 
-    start_time_HMS = QTime::fromString(this->item(stIndex, SUB_START_TIME_COL)->text(), "hh:mm:ss.zzz");
-    end_time_HMS = time_base.addMSecs(positionMs);
+    start_time_ms = MyAttributesConverter::timeStrHMStoMs( this->item(stIndex, SUB_START_TIME_COL)->text() );
+    end_time_ms = positionMs;
 
     // Check if a new end time entry is > to the current item start time
-    if ( end_time_HMS > start_time_HMS ) {
+    if ( end_time_ms > start_time_ms ) {
+
+        // If next sub exist
+        if ( (stIndex + 1) < mStCount ) {
+
+            next_start_time_ms = MyAttributesConverter::timeStrHMStoMs( this->item(stIndex + 1, SUB_START_TIME_COL)->text() );
+
+            // Check if next sub start time is superior to the new end time
+             if ( ( next_start_time_ms - intervalMs ) <= end_time_ms ) {
+
+                 if ( force == true ) {
+                     end_time_ms = next_start_time_ms - intervalMs;
+                 }
+                 else {
+                    mErrorMsg = "Subtitle " +QString::number(stIndex) +" end time > subtitle " +QString::number(stIndex + 1) +" start time";
+                    return false;
+                 }
+            }
+        }
+
         end_time_item = this->item(stIndex, SUB_END_TIME_COL);
-        end_time_item->setText(end_time_HMS.toString("hh:mm:ss.zzz"));
+        end_time_item->setText( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
+
         // Try to update the current item end time
         QString status_msg = this->updateStTime(end_time_item);
         if ( status_msg != "" ) {
             mErrorMsg = status_msg;
             return false;
         }
+        else {
+            emit endTimeCodeChanged(stIndex, end_time_ms);
+        }
     }
     else {
-        mErrorMsg = "end time < start time";
+        mErrorMsg = "Subtitle " +QString::number(stIndex) +" end time < subtitle " +QString::number(stIndex) +" start time";
+        return false;
         return false;
     }
 
     return true;
 }
 
-// Set "start time" to current item
-bool MySubtitlesTable::setStartTime(qint64 positionMs, qint32 stIndex) {
+// Set "start time" to provided index
+// force : if new start time < previous sub end time, force new start time = previous sub end time + intervalMs
+// intervalMs : interval min between two subtitle
+bool MySubtitlesTable::setStartTime(qint64 positionMs, qint32 stIndex, bool force, qint32 intervalMs) {
 
     QTime start_time_HMS;
     QTime end_time_HMS;
+    QTime previous_end_time_HMS;
     QTime time_base(0, 0, 0, 0);
     QTableWidgetItem* start_time_item;
 
 
     start_time_HMS = time_base.addMSecs(positionMs);
     end_time_HMS = QTime::fromString(this->item(stIndex, SUB_END_TIME_COL)->text(), "hh:mm:ss.zzz");
+
     // Check if a new start time entry is < to the current item end time
     if ( end_time_HMS > start_time_HMS ) {
+
+        // Check if previous sub exist
+        if ( (stIndex - 1) > 0 ) {
+
+            previous_end_time_HMS = QTime::fromString(this->item(stIndex - 1, SUB_END_TIME_COL)->text(), "hh:mm:ss.zzz");
+
+            // Check if previous sub end time is inferior to the new start time
+            if ( previous_end_time_HMS.addMSecs(intervalMs) >= start_time_HMS ) {
+
+                if ( force == true ) {
+
+                    start_time_HMS = previous_end_time_HMS.addMSecs(intervalMs);
+
+                }
+                else {
+                    mErrorMsg = "Subtitle " +QString::number(stIndex) +" start time < subtitle " +QString::number(stIndex - 1) +" end time";
+                    return false;
+                }
+            }
+        }
+
         start_time_item = this->item(stIndex, SUB_START_TIME_COL);
         start_time_item->setText(start_time_HMS.toString("hh:mm:ss.zzz"));
+
         // Try to update the current item start time
         QString status_msg = this->updateStTime(start_time_item);
         if ( status_msg != "" ) {
@@ -717,7 +933,7 @@ bool MySubtitlesTable::setStartTime(qint64 positionMs, qint32 stIndex) {
         }
     }
     else {
-        mErrorMsg = "end time < start time";
+        mErrorMsg = "Subtitle " +QString::number(stIndex) +" start time > subtitle " +QString::number(stIndex) +" end time";
         return false;
     }
 
@@ -928,7 +1144,7 @@ void MySubtitlesTable::updateSelectedItem() {
 
         // Save the selected row
         QList<QTableWidgetItem*> ::iterator it;
-        for ( it = selected_items.begin(); it != selected_items.end(); it+=5 ) {
+        for ( it = selected_items.begin(); it != selected_items.end(); it+=7 ) {
 
             QTableWidgetItem* item = *it;
             if ( item->row() < mStCount ) {
@@ -1025,6 +1241,8 @@ MySubtitles MySubtitlesTable::getSubInfos(qint32 stIndex) {
             new_subtitle.setEndTime( this->item(stIndex, SUB_END_TIME_COL)->text() );
         }
 
+        new_subtitle.setDurationAuto( this->item(stIndex, SUB_DURATION_AUTO_COL)->text().contains("yes") );
+
         // Check the number of lines
         qint8 nbr_of_lines = this->item(stIndex, SUB_NBR_OF_LINES_COL)->text().toInt();
 
@@ -1082,6 +1300,14 @@ MySubtitles MySubtitlesTable::getSubInfos(qint32 stIndex) {
     }
     // Return a MySubtitles container
     return new_subtitle;
+}
+
+void MySubtitlesTable::setDurationAuto(qint32 index, bool state) {
+
+    if ( ( index >= 0 ) && (index < mStCount) ) {
+
+        this->item(index, SUB_DURATION_AUTO_COL)->setText( MyAttributesConverter::boolToString( state ) );
+    }
 }
 
 QList<qint32> MySubtitlesTable::selectedIndex() {

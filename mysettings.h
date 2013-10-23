@@ -33,6 +33,8 @@ private slots:
     void on_intervalMinSpinBox_valueChanged(int value);
     void on_frameRateComboBox_currentIndexChanged(int index);
     void on_frameRateSpinBox_editingFinished();
+    void on_maxCharPerLineSpinBox_valueChanged(int value);
+    void on_maxCharPerSecDoubleSpinBox_valueChanged(double value);
 
 public slots:
     void setFrameRate(qreal frameRate);

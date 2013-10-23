@@ -12,6 +12,7 @@ public:
     static Qt::Alignment hAlignFromString(QString hAlignAttribute);
     static QString isItalic(bool italic);
     static QString isUnderlined(bool underlined);
+    static QString boolToString(bool boolean);
     static qint16 fontHeightToSize(QString fontName, QString fontHeight);
     static qint16 fontSizeToHeight(QString fontName, QString fontSize);
     static QString toTimeHMSms(QString time);

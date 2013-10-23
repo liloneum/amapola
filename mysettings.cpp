@@ -14,6 +14,8 @@ MySettings::MySettings(QWidget *parent) :
     qApp->setProperty("prop_SubMinInterval_frame", ui->intervalMinSpinBox->value());
     qApp->setProperty("prop_SubMinDuration_ms", ui->displayTimeMinSpinBox->value());
     qApp->setProperty("prop_FrameRate_fps", ui->frameRateComboBox->currentText().toDouble());
+    qApp->setProperty("prop_MaxCharPerLine", ui->maxCharPerLineSpinBox->value());
+    qApp->setProperty("prop_MaxCharPerSec", ui->maxCharPerSecDoubleSpinBox->value());
 
     mCurrentProperties.setFrameRate(ui->frameRateComboBox->currentText().toDouble());
 
@@ -33,6 +35,16 @@ void MySettings::on_displayTimeMinSpinBox_valueChanged(int value) {
 void MySettings::on_intervalMinSpinBox_valueChanged(int value) {
 
     qApp->setProperty("prop_SubMinInterval_frame", value);
+}
+
+void MySettings::on_maxCharPerLineSpinBox_valueChanged(int value) {
+
+    qApp->setProperty("prop_MaxCharPerLine", value);
+}
+
+void MySettings::on_maxCharPerSecDoubleSpinBox_valueChanged(double value) {
+
+    qApp->setProperty("prop_MaxCharPerSec", value);
 }
 
 

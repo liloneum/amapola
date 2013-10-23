@@ -27,11 +27,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Init UI
     ui->setupUi(this);
 
-    // Hide columns to user
-    for ( qint32 i = 5; i < ui->subTable->columnCount(); i++ ) {
-        ui->subTable->setColumnHidden(i, true);
-    }
-
     // Install an event filter on all the MainWindow
     //this->installEventFilter(this);
     qApp->installEventFilter(this);
@@ -130,8 +125,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), this, SLOT(updateSubTableDatas(MySubtitles)));
     connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged()), this, SLOT(updateToolBox()));
 
-    connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentItemChanged(qint64)));
-    connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(updateTextEdit(MySubtitles)));
+    connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentSelectionChanged(qint64)));
+    connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(currentSubChanged(MySubtitles)));
+    connect(ui->subTable, SIGNAL(endTimeCodeChanged(qint32,qint64)), ui->waveForm, SLOT(changeZoneEndTime(qint32,qint64)));
 
     connect(this->mpDisplayInfoTimer, SIGNAL(timeout()), this, SLOT(eraseInfo()));
 
@@ -184,7 +180,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             // F3 set current subtitle end time + ( add new subtitle entry or move the next subtitle start time)
 
             // Change the current subtitle "end time", continue if ok
-            if ( this->changeSubEndTime(end_time_ms, false) == true ) {
+            if ( this->changeSubEndTime(end_time_ms, current_subtitle_index, false) == true ) {
 
                 qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
 
@@ -205,6 +201,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
                 else {
 
                     new_subtitle = ui->stEditDisplay->getDefaultSub();
+                    new_subtitle.setDurationAuto(true);
 
                     // Inserte new subtitle start_time at X frames of the current subtitle
                     // where X is the minimum interval in frame between two subtitle (defined in "settings" by the user)
@@ -227,6 +224,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             // F4 add new subtitle entry after current subtitle
             new_subtitle = ui->stEditDisplay->getDefaultSub();
+            new_subtitle.setDurationAuto(true);
 
             if ( ui->subTable->insertNewSubAfterCurrent( new_subtitle ) == false ) {
                 QString error_msg = ui->subTable->errorMsg();
@@ -379,7 +377,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 }
 
 // Current item selection changed in the database.
-void MainWindow::currentItemChanged(qint64 positionMs) {
+void MainWindow::currentSelectionChanged(qint64 positionMs) {
 
     // Update the waveform marker position
     ui->waveForm->updatePostionMarker(positionMs);
@@ -400,12 +398,14 @@ void MainWindow::updateSubTableText() {
 
         new_subtitle.setText(new_line, this->getFontToolBox(false));
 
+        new_subtitle.setDurationAuto(true);
+
         if ( ui->subTable->insertNewSub(new_subtitle, current_position_ms) == false ) {
 
             QString error_msg = ui->subTable->errorMsg();
             QMessageBox::warning(this, "Insert subtitle", error_msg);
             MySubtitles empty_subtitle;
-            updateTextEdit(empty_subtitle);
+            ui->stEditDisplay->setText(empty_subtitle);
         }
         else {
             // Save the database current state in history
@@ -481,16 +481,27 @@ void MainWindow::waveformMarerkPosChanged(qint64 positionMs) {
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
 }
 
-// Interface to update the text of the text edit area
-void MainWindow::updateTextEdit(MySubtitles subtitle) {
+// Interface to manage current sub changing
+void MainWindow::currentSubChanged(MySubtitles subtitle) {
 
+    // Display current subtitle text
     ui->stEditDisplay->setText(subtitle);
+
+    // Change auto duration checkbox state
+    if ( subtitle.isValid() ) {
+        ui->durationAutoCheckBox->setEnabled(true);
+        ui->durationAutoCheckBox->setChecked( subtitle.isDurationAuto() );
+    }
+    else {
+        ui->durationAutoCheckBox->setEnabled(false);
+    }
 }
 
 // Change the current subtitle "start time"
 bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool multiChange) {
 
     qint32 current_subtitle_index;
+    qint32 ref_subtitle_index;
     QList<qint32> selected_indexes;
     qint32 delta_ms;
     QTime time_base(0, 0, 0, 0);
@@ -501,14 +512,14 @@ bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool mul
 
     // Use the reference subtitle index passed in argument else used the current index as reference
     if ( refIndex == -1 ) {
-        current_subtitle_index = ui->subTable->currentIndex();
+        ref_subtitle_index = ui->subTable->currentIndex();
     }
     else {
-        current_subtitle_index = refIndex;
+        ref_subtitle_index = refIndex;
     }
 
     // Get the current subtitle start time and compute the time shift
-    MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+    MySubtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
     qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
 
     delta_ms = positionMs - current_sub_start_time_ms;
@@ -519,7 +530,7 @@ bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool mul
         qSort(selected_indexes.begin(), selected_indexes.end());
     }
     else {
-        selected_indexes.append(current_subtitle_index);
+        selected_indexes.append(ref_subtitle_index);
     }
 
 
@@ -536,6 +547,11 @@ bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool mul
 
             current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
             current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+
+            // Deactivate the duration auto for the reference subtitle
+            if ( current_subtitle_index == ref_subtitle_index ) {
+                current_subtitle.setDurationAuto(false);
+            }
 
             // Compute the new position relative to this subtitle start time
             positionMs = current_sub_start_time_ms + delta_ms;
@@ -646,6 +662,7 @@ bool MainWindow::changeSubStartTime(qint64 positionMs, qint32 refIndex, bool mul
 bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multiChange) {
 
     qint32 current_subtitle_index;
+    qint32 ref_subtitle_index;
     QList<qint32> selected_indexes;
     qint32 delta_ms;
     QTime time_base(0, 0, 0, 0);
@@ -656,14 +673,14 @@ bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multi
 
     // Use the reference subtitle index passed in argument else used the current index as reference
     if ( refIndex == -1 ) {
-        current_subtitle_index = ui->subTable->currentIndex();
+        ref_subtitle_index = ui->subTable->currentIndex();
     }
     else {
-        current_subtitle_index = refIndex;
+        ref_subtitle_index = refIndex;
     }
 
     // Get the current subtitle start time and compute the time shift
-    MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+    MySubtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
     qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
     delta_ms = positionMs - current_sub_end_time_ms;
@@ -674,7 +691,7 @@ bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multi
         qSort(selected_indexes.begin(), selected_indexes.end(), qGreater<qint32>());
     }
     else {
-        selected_indexes.append(current_subtitle_index);
+        selected_indexes.append(ref_subtitle_index);
     }
 
 
@@ -688,6 +705,11 @@ bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multi
 
         current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
         current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+
+        // Deactivate the duration auto for the reference subtitle
+        if ( current_subtitle_index == ref_subtitle_index ) {
+            current_subtitle.setDurationAuto(false);
+        }
 
         // Compute the new position relative to this subtitle start time
         positionMs = current_sub_end_time_ms + delta_ms;
@@ -795,17 +817,18 @@ bool MainWindow::changeSubEndTime(qint64 positionMs, qint32 refIndex, bool multi
 void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
 
     qint32 current_subtitle_index;
+    qint32 ref_subtitle_index;
     qint32 delta_ms;
     QTime time_base(0, 0, 0, 0);
 
     if ( index == -1 ) {
-        current_subtitle_index = ui->subTable->currentIndex();
+        ref_subtitle_index = ui->subTable->currentIndex();
     }
     else {
-        current_subtitle_index = index;
+        ref_subtitle_index = index;
     }
 
-    MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+    MySubtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
     qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
     qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
@@ -902,7 +925,7 @@ void MainWindow::removeSubtitles() {
         sub_list.removeAt(index);
     }
 
-    ui->subTable->loadSubtitles(sub_list, false);
+    ui->subTable->loadSubtitles(sub_list, true);
 
     // Save the database current state in history
     this->saveToHistory("Remove subtitle");
@@ -1023,6 +1046,9 @@ void MainWindow::updateStEditSize() {
 void MainWindow::resizeEvent(QResizeEvent* event) {
 
     updateStEditSize();
+    if ( ui->subTable->columnWidth(6) < 400 ) {
+        ui->subTable->setColumnWidth(6, 400);
+    }
     QMainWindow::resizeEvent(event);
 }
 
@@ -2032,6 +2058,13 @@ void MainWindow::on_applyFontSelButton_clicked() {
     ui->waveForm->removeAllSubtitlesZones();
     ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+}
+
+// Auto duration settings changed
+void MainWindow::on_durationAutoCheckBox_clicked(bool checked) {
+
+    // Set this settings to the current subtitle in the datbase
+    ui->subTable->setDurationAuto(ui->subTable->currentIndex(), checked);
 }
 
 // Manage the selected subtitles context menu

@@ -238,6 +238,12 @@
           <property name="frameShadow">
            <enum>QFrame::Sunken</enum>
           </property>
+          <property name="verticalScrollBarPolicy">
+           <enum>Qt::ScrollBarAsNeeded</enum>
+          </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAsNeeded</enum>
+          </property>
           <property name="editTriggers">
            <set>QAbstractItemView::NoEditTriggers</set>
           </property>
@@ -257,7 +263,7 @@
            <number>100</number>
           </property>
           <property name="columnCount">
-           <number>34</number>
+           <number>37</number>
           </property>
           <attribute name="horizontalHeaderVisible">
            <bool>true</bool>
@@ -420,6 +426,22 @@
           </column>
           <column>
            <property name="text">
+            <string>Char</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string>Char/s</string>
+           </property>
+           <property name="textAlignment">
+            <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+           </property>
+          </column>
+          <column>
+           <property name="text">
             <string>Text</string>
            </property>
            <property name="textAlignment">
@@ -571,6 +593,11 @@
             <string>FontSize2</string>
            </property>
           </column>
+          <column>
+           <property name="text">
+            <string>durationAuto</string>
+           </property>
+          </column>
          </widget>
         </item>
        </layout>
@@ -616,7 +643,7 @@
          <enum>QTabWidget::Triangular</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <property name="iconSize">
          <size>
@@ -627,6 +654,33 @@
         <property name="elideMode">
          <enum>Qt::ElideNone</enum>
         </property>
+        <widget class="QWidget" name="timeCodeTab">
+         <attribute name="title">
+          <string>TimeCode</string>
+         </attribute>
+         <widget class="QWidget" name="gridLayoutWidget">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>0</y>
+            <width>201</width>
+            <height>41</height>
+           </rect>
+          </property>
+          <layout class="QGridLayout" name="gridLayout_7">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="durationAutoCheckBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="text">
+              <string>Duration auto</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
         <widget class="QWidget" name="positionTab">
          <attribute name="title">
           <string>Position</string>

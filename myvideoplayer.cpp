@@ -18,6 +18,7 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     // Init video scene, add video item, set scene to videoview
     mpVideoScene = new QGraphicsScene(this);
     mpVideoItem = new QGraphicsVideoItem;
+    ui->videoView->setStyleSheet("background: black");
     ui->videoView->setScene(mpVideoScene);
     mpVideoScene->addItem(mpVideoItem);
 
