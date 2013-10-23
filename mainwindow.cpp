@@ -267,7 +267,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             }
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_2 ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_2 ) ) ||
             ( key_event->key() == Qt::Key_F12 ) ) {
 
             // "[NUM]2" or "F12" key : move current position 1 second after
@@ -275,7 +275,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             ui->waveForm->updatePostionMarker(current_position_ms + 1000);
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_1 ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_1 ) ) ||
          ( key_event->key() == Qt::Key_F11 ) ) {
 
             // "[NUM]1" or "F11" key : move current position 1 second before
@@ -283,7 +283,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             ui->waveForm->updatePostionMarker(current_position_ms - 1000);
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_8 ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_8 ) ) ||
             ( key_event->key() == Qt::Key_F10 ) ) {
 
             // "[NUM]8" or "F10" key : move current position 1 frame after
@@ -292,7 +292,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             ui->waveForm->updatePostionMarker(current_position_ms + frame_duration_ms);
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_7 ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_7 ) ) ||
          ( key_event->key() == Qt::Key_F9 ) ) {
 
             // "[NUM]7" or "F9" key : move current position 1 frame before
@@ -301,7 +301,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             ui->waveForm->updatePostionMarker(current_position_ms - frame_duration_ms);
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Minus ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Minus ) ) ||
          ( key_event->key() == Qt::Key_F7 ) ) {
 
             // "[NUM]-" or "F7" key : slow down video (min x1)
@@ -320,7 +320,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             }
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Plus ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Plus ) ) ||
          ( key_event->key() == Qt::Key_F8 ) ) {
 
             // "[NUM]+" or "F8" key : speed up video (max x4)
@@ -338,7 +338,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             }
             return true;
         }
-        else if ( ( ( key_event->key() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_4 ) ) ||
+        else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_4 ) ) ||
          ( ( key_event->modifiers() == Qt::ControlModifier ) && ( key_event->key() == Qt::Key_P ) ) ) {
 
             //"[NUM]4" or "Ctrl + P" key : switch play / pause video player
