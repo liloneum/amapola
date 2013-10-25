@@ -72,6 +72,7 @@ MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
     mSubLoadding = false;
     mSelectedBySoft = false;
     mSelectedByUser = false;
+    mInsertingSub = false;
 
     // Init error message
     mErrorMsg = "";
@@ -90,6 +91,11 @@ void MySubtitlesTable::initStTable (qint32 numberOfRow) {
     mStCount = 0;
 
     this->setRowCount(0);
+
+    // Resize columns to contents
+    for ( int col = 0; col < 6; col++ ) {
+        this->resizeColumnToContents(col);
+    }
 
     if ( numberOfRow == 0 ) {
         numberOfRow = 100;
@@ -115,27 +121,6 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
         for ( qint32 j = fromRowNbr; j < (fromRowNbr + numberOfRow); j++) {
 
             QTableWidgetItem* new_item = new QTableWidgetItem;
-
-            if ( j == 0 ) {
-
-                if ( i == SUB_NUM_COL ) {
-                    new_item->setText("XXX");
-                    this->setItem(j, i, new_item);
-                    this->resizeColumnToContents(i);
-                }
-                else if ( ( i == SUB_START_TIME_COL ) ||
-                        ( i == SUB_END_TIME_COL ) ||
-                        ( i == SUB_DURATION_COL ) ) {
-
-                    new_item->setText("HH:MM:SS:zzz");
-                    this->setItem(j, i, new_item);
-                    this->resizeColumnToContents(i);
-                }
-                else if ( ( i == SUB_CHARNUM_COL ) ||
-                    ( i == SUB_CHAR_PER_SEC_COL ) ) {
-                    this->resizeColumnToContents(i);
-                }
-            }
 
             // The start time items are init with "New Entry" string to able sorting
             if ( ( i == SUB_NUM_COL ) ||
@@ -372,6 +357,7 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
             // Increment the subtitles counter
             mStCount ++;
         }
+
         this->setEnabled(true);
 
         mPreviousIndex = -1;
@@ -453,7 +439,7 @@ bool MySubtitlesTable::insertNewSubAfterCurrent(MySubtitles &newSubtitle) {
 }
 
 // Insert a subtitle in the table
-bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs, bool shiftNextSub) {
+bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs) {
 
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
@@ -463,11 +449,13 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs,
     qint32 end_time_ms;
     QTime time_base(0, 0, 0, 0);
 
-
     // Retrieve index for the given time
     start_time_ms = positionMs;
 
     end_time_ms = start_time_ms + qApp->property("prop_SubMinDuration_ms").toInt();
+
+    // Scale the end time function of the frame rate
+    end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, qApp->property("prop_FrameRate_fps").toReal());
 
     if ( ( mPositionMsToStIndex[start_time_ms] == -1 ) && ( mPositionMsToStIndex[end_time_ms] == -1 ) ) {
 
@@ -508,21 +496,20 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs,
            this->addRows(100, this->rowCount());
         }
 
+        mInsertingSub = true;
         this->updateText(newSubtitle.text());
         this->updateDatas(newSubtitle);
+        mInsertingSub = false;
 
         this->selectRow(mCurrentIndex);
-    }
-    else if ( shiftNextSub == true ) {
-
     }
     else {
         mErrorMsg = "Not enought space to insert subtile";
         return false;
     }
 
-    newSubtitle.setStartTime(start_time_HMS.toString("hh:mm:ss.zzz"));
-    newSubtitle.setEndTime(end_time_HMS.toString("hh:mm:ss.zzz"));
+    newSubtitle.setStartTime(this->item(mCurrentIndex, SUB_START_TIME_COL)->text());
+    newSubtitle.setEndTime(this->item(mCurrentIndex, SUB_END_TIME_COL)->text());
 
     return true;
 }
@@ -871,7 +858,7 @@ bool MySubtitlesTable::setEndTime(qint64 positionMs, qint32 stIndex, bool force,
             mErrorMsg = status_msg;
             return false;
         }
-        else {
+        else if ( !mInsertingSub ) {
             emit endTimeCodeChanged(stIndex, end_time_ms);
         }
     }

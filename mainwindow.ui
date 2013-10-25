@@ -394,7 +394,7 @@
           <row/>
           <column>
            <property name="text">
-            <string>#</string>
+            <string>   #   </string>
            </property>
            <property name="textAlignment">
             <set>AlignHCenter|AlignVCenter|AlignCenter</set>
@@ -402,7 +402,7 @@
           </column>
           <column>
            <property name="text">
-            <string>Start time</string>
+            <string>    Start time    </string>
            </property>
            <property name="textAlignment">
             <set>AlignHCenter|AlignVCenter|AlignCenter</set>
@@ -410,7 +410,7 @@
           </column>
           <column>
            <property name="text">
-            <string>End time</string>
+            <string>    End time    </string>
            </property>
            <property name="textAlignment">
             <set>AlignHCenter|AlignVCenter|AlignCenter</set>
@@ -418,7 +418,7 @@
           </column>
           <column>
            <property name="text">
-            <string>Duration</string>
+            <string>     Duration     </string>
            </property>
            <property name="textAlignment">
             <set>AlignHCenter|AlignVCenter|AlignCenter</set>

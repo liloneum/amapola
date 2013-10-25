@@ -22,7 +22,7 @@ signals:
     void endTimeCodeChanged(qint32, qint64);
 
 public slots:
-    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs, bool shiftNextSub = false);
+    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs);
     bool insertNewSubAfterCurrent(MySubtitles &newSubtitle);
     void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
@@ -68,6 +68,9 @@ private:
 
     // An item was selected by user
     bool mSelectedByUser;
+
+    // New subtitle is inserting
+    bool mInsertingSub;
 
     // Save the current item index.
     qint32 mCurrentIndex;

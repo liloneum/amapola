@@ -23,6 +23,8 @@ public:
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
+    void onCtrlLeftClickEvent(qint64 positionMs);
+    void onCtrlRightClickEvent(qint64 positionMs);
     void updateSubTableText();
     void updateSubTableDatas(MySubtitles subtitleDatas);
     void videoPositionChanged(qint64 positionMs);
@@ -36,8 +38,8 @@ private slots:
     void displayErrorMsg(QString);
     void displayInfo(QString info);
     void eraseInfo();
-    bool changeSubStartTime(qint64 positionMs, qint32 refIndex = -1, bool multiChange = true);
-    bool changeSubEndTime(qint64 positionMs, qint32 refIndex = -1, bool multiChange = true);
+    bool changeSubStartTime(qint64 &positionMs, qint32 refIndex = -1, QList<MySubtitles> subList = QList<MySubtitles>(), bool multiChange = true, bool applyChange = true, bool movePrevious = true);
+    bool changeSubEndTime(qint64 &positionMs, qint32 refIndex = -1, QList<MySubtitles> subList = QList<MySubtitles>(), bool multiChange = true, bool applyChange = true, bool moveNext = true);
     void shiftSubtitles(qint64 positionMs, qint32 index = -1);
     void removeSubtitles();
     void updateFrameRate(qreal frameRate);
