@@ -67,6 +67,18 @@ void MySubtitles::setText(QList<TextLine> textLineList) {
     mText = textLineList;
 }
 
+void MySubtitles::insertText(TextLine textLine, TextFont font, qint16 index) {
+
+    textLine.setFont(font);
+
+    mText.insert(index, textLine);
+}
+
+void MySubtitles::removeTextAt(qint16 index) {
+
+    mText.removeAt(index);
+}
+
 void MySubtitles::setDurationAuto(bool value) {
 
     mDurationAuto = value;
@@ -83,7 +95,7 @@ QString MySubtitles::endTime() {
     return mEndTime;
 }
 
-QList<TextLine> MySubtitles::text() {
+QList<TextLine>& MySubtitles::text() {
 
     return mText;
 }
@@ -187,10 +199,11 @@ QString TextLine::Line() {
     return mLine;
 }
 
-TextFont TextLine::Font() {
+TextFont& TextLine::Font() {
 
     return mFont;
 }
+
 
 
 

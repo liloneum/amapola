@@ -6,9 +6,6 @@
 #include <QTextEdit>
 #include "mysubtitles.h"
 
-namespace Ui {
-class MyTextEdit;
-}
 
 // This widget class manage the edit zone.
 // Manage 2 lines of editable text, with position and font attributes
@@ -50,9 +47,9 @@ private slots:
      void wrapText(QTextEdit *textEdit);
      void addLine(QTextEdit *textEdit);
      void removeLine(QTextEdit *textEdit);
+     QTextEdit* createNewTextEdit();
     
 private:
-    Ui::MyTextEdit *ui;
 
     // Test flag : text is updating from the database
     bool mIsSettingLines;
@@ -65,8 +62,9 @@ private:
     // Last text zone focused
     QTextEdit* mpLastFocused;
     // Copy of the last text wrote from the database
-    QString mPreviousText1;
-    QString mPreviousText2;
+    QList<QString> mPreviousTextList;
+
+    QList<QTextEdit*> mTextLinesList;
 };
 
 #endif // MYTEXTEDIT_H

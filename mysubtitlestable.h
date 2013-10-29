@@ -30,7 +30,7 @@ public slots:
     QList<MySubtitles> saveSubtitles();
     bool isNewEntry(qint64 positionMs);
     void updateText(QList<TextLine> textLines);
-    void updateDatas(MySubtitles subtitle);
+    void updateDatas(MySubtitles subtitle, qint32 index = -1);
     bool setEndTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
     bool setStartTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
     void updateStDisplay(qint64 positionMs);
@@ -51,11 +51,17 @@ private:
     // Lookup table to retrieive faster a subtitle number in function of time in millisecond
     QVector<qint32> mPositionMsToStIndex;
 
-    // Position time of the video in millisecond
-    qint64 mCurrentPositionMs;
+    // The current subtitles list
+    QList<MySubtitles> mSubtitlesList;
 
     // Previous subtitle displayed index.
     qint32 mPreviousIndex;
+
+    // Save the current item index.
+    qint32 mCurrentIndex;
+
+    // All subtitle selected
+    QList<qint32> mSelectedIndex;
 
     // Total number of subtitles
     qint32 mStCount;
@@ -71,12 +77,6 @@ private:
 
     // New subtitle is inserting
     bool mInsertingSub;
-
-    // Save the current item index.
-    qint32 mCurrentIndex;
-
-    // All subtitle selected
-    QList<qint32> mSelectedIndex;
 
     // Error message
     QString mErrorMsg;

@@ -65,7 +65,7 @@ public:
     void setTextDirection(QString textDirection);
 
     QString Line();
-    TextFont Font();
+    TextFont& Font();
     QString textVPosition();
     QString textHPosition();
     QString textVAlign();
@@ -93,10 +93,12 @@ public:
     void setEndTime(QString endTime);
     void setText(TextLine textLine, TextFont Font);
     void setText(QList<TextLine> textLineList);
+    void insertText(TextLine textLine, TextFont font, qint16 index);
+    void removeTextAt(qint16 index);
     void setDurationAuto(bool value);
     QString startTime();
     QString endTime();
-    QList<TextLine> text();
+    QList<TextLine>& text();
     bool isDurationAuto();
     bool isValid();
 

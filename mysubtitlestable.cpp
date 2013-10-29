@@ -6,6 +6,23 @@
 #include <QCoreApplication>
 #include "myattributesconverter.h"
 
+// Temp : Default font
+#define FONT_ID_DEFAULT_VALUE "Arial"
+#define FONT_COLOR_DEFAULT_VALUE "FF0000FF"
+#define FONT_EFFECT_DEFAULT_VALUE "none"
+#define FONT_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_ITALIC_DEFAULT_VALUE "no"
+#define FONT_SCRIPT_DEFAULT_VALUE "normal"
+#define FONT_SIZE_DEFAULT_VALUE "42"
+#define FONT_UNDERLINED_DEFAULT_VALUE "no"
+
+// Temp : Default position
+#define TEXT1_DIRECTION_DEFAULT_VALUE "horizontal"
+#define TEXT1_HALIGN_DEFAULT_VALUE "center"
+#define TEXT1_HPOSITION_DEFAULT_VALUE "0"
+#define TEXT1_VALIGN_DEFAULT_VALUE "bottom"
+#define TEXT1_VPOSITION_DEFAULT_VALUE "8"
+
 // Columns numbers define
 #define SUB_NUM_COL 0
 #define SUB_START_TIME_COL 1
@@ -14,39 +31,6 @@
 #define SUB_CHARNUM_COL 4
 #define SUB_CHAR_PER_SEC_COL 5
 #define SUB_TEXT_COL 6
-
-#define SUB_NBR_OF_LINES_COL 7
-
-#define SUB_LINE1_COL 8
-#define SUB_VPOSITION1_COL 9
-#define SUB_VALIGN1_COL 10
-#define SUB_HPOSITION1_COL 11
-#define SUB_HALIGN1_COL 12
-#define SUB_DIRECTION1_COL 13
-#define SUB_FONT_ID1_COL 14
-#define SUB_FONT_COLOR1_COL 15
-#define SUB_FONT_EFFECT1_COL 16
-#define SUB_FONT_EFFECTCOLOR1_COL 17
-#define SUB_FONT_ITALIC1_COL 18
-#define SUB_FONT_UNDERLINED1_COL 19
-#define SUB_FONT_SCRIPT1_COL 20
-#define SUB_FONT_SIZE1_COL 21
-
-#define SUB_LINE2_COL 22
-#define SUB_VPOSITION2_COL 23
-#define SUB_VALIGN2_COL 24
-#define SUB_HPOSITION2_COL 25
-#define SUB_HALIGN2_COL 26
-#define SUB_DIRECTION2_COL 27
-#define SUB_FONT_ID2_COL 28
-#define SUB_FONT_COLOR2_COL 29
-#define SUB_FONT_EFFECT2_COL 30
-#define SUB_FONT_EFFECTCOLOR2_COL 31
-#define SUB_FONT_ITALIC2_COL 32
-#define SUB_FONT_UNDERLINED2_COL 33
-#define SUB_FONT_SCRIPT2_COL 34
-#define SUB_FONT_SIZE2_COL 35
-#define SUB_DURATION_AUTO_COL 36
 
 
 // Convert second in milliseconds
@@ -63,8 +47,11 @@ MySubtitlesTable::MySubtitlesTable(QWidget *parent) :
     mPositionMsToStIndex.resize(3600000);
     mPositionMsToStIndex.fill(-1);
 
+    // Init the subtitles list
+    mSubtitlesList.clear();
+
     // Init the variables
-    mPreviousIndex = 0;
+    mPreviousIndex = -1;
     mStCount = 0;
     mCurrentIndex = 0;
 
@@ -137,21 +124,12 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
                 new_item->setText("");
                 new_item->setTextAlignment(Qt::AlignLeft);
             }
-            else if ( i == SUB_NBR_OF_LINES_COL ) {
-                new_item->setText("0");
-                new_item->setTextAlignment(Qt::AlignCenter);
-            }
             else {
                 new_item->setText("");
                 new_item->setTextAlignment(Qt::AlignCenter);
             }
 
             this->setItem(j, i, new_item);
-
-            // Hide columns useless for the user
-            if ( i >= SUB_NBR_OF_LINES_COL ) {
-                this->setColumnHidden(i, true);
-            }
         }
     }
 }
@@ -161,40 +139,9 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
 // Update the font, position, text informations in the table with the given subtitles container
 void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keepSelection) {
 
-    QTime time_base(0, 0, 0, 0);
     QTableWidgetItem* start_time_item;
     QTableWidgetItem* end_time_item;
     QTableWidgetItem* text_item;
-
-    QTableWidgetItem* line1_item;
-    QTableWidgetItem* vposition1_item;
-    QTableWidgetItem* valign1_item;
-    QTableWidgetItem* hposition1_item;
-    QTableWidgetItem* halign1_item;
-    QTableWidgetItem* direction1_item;
-    QTableWidgetItem* font_id1_item;
-    QTableWidgetItem* font_color1_item;
-    QTableWidgetItem* font_effect1_item;
-    QTableWidgetItem* font_effectcolor1_item;
-    QTableWidgetItem* font_italic1_item;
-    QTableWidgetItem* font_underlined1_item;
-    QTableWidgetItem* font_script1_item;
-    QTableWidgetItem* font_size1_item;
-    QTableWidgetItem* line2_item;
-    QTableWidgetItem* vposition2_item;
-    QTableWidgetItem* valign2_item;
-    QTableWidgetItem* hposition2_item;
-    QTableWidgetItem* halign2_item;
-    QTableWidgetItem* direction2_item;
-    QTableWidgetItem* font_id2_item;
-    QTableWidgetItem* font_color2_item;
-    QTableWidgetItem* font_effect2_item;
-    QTableWidgetItem* font_effectcolor2_item;
-    QTableWidgetItem* font_italic2_item;
-    QTableWidgetItem* font_underlined2_item;
-    QTableWidgetItem* font_script2_item;
-    QTableWidgetItem* font_size2_item;
-    QTableWidgetItem* duration_auto_item;
 
     if ( this->isEnabled() == true ) {
 
@@ -206,6 +153,8 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
 
         // Indicate that subtitles are loading to avoid all other operations
         mSubLoadding = true;
+
+        mSubtitlesList.clear();
 
         for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
@@ -225,8 +174,8 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 continue;
             }
 
-            duration_auto_item = this->item(mStCount, SUB_DURATION_AUTO_COL);
-            duration_auto_item->setText( MyAttributesConverter::boolToString( subtitlesList[i].isDurationAuto() ) );
+            // If subtitle is valid, load it in the database
+            mSubtitlesList.append( subtitlesList[i] ) ;
 
             text_item = this->item(mStCount, SUB_TEXT_COL);
 
@@ -236,7 +185,7 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
             qreal char_per_sec = 0.0;
             bool max_cher_exceeded= false;
 
-            QList<TextLine> text_list = subtitlesList[i].text();
+            QList<TextLine> text_list = mSubtitlesList[i].text();
 
             for ( qint32 j = 0; j < text_list.size(); j++ ) {
 
@@ -259,78 +208,10 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 if ( text_line.Line().count()> qApp->property("prop_MaxCharPerLine").toInt() ) {
                     max_cher_exceeded = true;
                 }
-
-                // Line 1
-                if ( j == 0 ) {
-                    this->item(mStCount, SUB_NBR_OF_LINES_COL)->setText("1");
-                    line1_item  = this->item(mStCount, SUB_LINE1_COL);
-                    line1_item->setText( text_line.Line() );
-
-                    vposition1_item  = this->item(mStCount, SUB_VPOSITION1_COL);
-                    if ( text_line.textVPosition().isEmpty() ) {
-                        //TO DO
-                    }
-                    else {
-                        vposition1_item->setText( text_line.textVPosition() );
-                    }
-
-                    valign1_item  = this->item(mStCount, SUB_VALIGN1_COL);
-                    valign1_item->setText( text_line.textVAlign() );
-                    hposition1_item  = this->item(mStCount, SUB_HPOSITION1_COL);
-                    hposition1_item->setText( text_line.textHPosition() );
-                    halign1_item  = this->item(mStCount, SUB_HALIGN1_COL);
-                    halign1_item->setText( text_line.textHAlign() );
-                    direction1_item  = this->item(mStCount, SUB_DIRECTION1_COL);
-                    direction1_item->setText( text_line.textDirection() );
-                    font_id1_item  = this->item(mStCount, SUB_FONT_ID1_COL);
-                    font_id1_item->setText( text_line.Font().fontId() );
-                    font_color1_item  = this->item(mStCount, SUB_FONT_COLOR1_COL);
-                    font_color1_item->setText( text_line.Font().fontColor() );
-                    font_effect1_item  = this->item(mStCount, SUB_FONT_EFFECT1_COL);
-                    font_effect1_item->setText( text_line.Font().fontEffect() );
-                    font_effectcolor1_item  = this->item(mStCount, SUB_FONT_EFFECTCOLOR1_COL);
-                    font_effectcolor1_item->setText( text_line.Font().fontEffectColor() );
-                    font_italic1_item  = this->item(mStCount, SUB_FONT_ITALIC1_COL);
-                    font_italic1_item->setText( text_line.Font().fontItalic() );
-                    font_underlined1_item  = this->item(mStCount, SUB_FONT_UNDERLINED1_COL);
-                    font_underlined1_item->setText( text_line.Font().fontUnderlined() );
-                    font_script1_item  = this->item(mStCount, SUB_FONT_SCRIPT1_COL);
-                    font_script1_item->setText( text_line.Font().fontScript() );
-                    font_size1_item  = this->item(mStCount, SUB_FONT_SIZE1_COL);
-                    font_size1_item->setText( text_line.Font().fontSize() );
-                } // Line 2
-                else if ( j == 1 ) {
-                    this->item(mStCount, SUB_NBR_OF_LINES_COL)->setText("2");
-                    line2_item  = this->item(mStCount, SUB_LINE2_COL);
-                    line2_item->setText( text_line.Line() );
-                    vposition2_item  = this->item(mStCount, SUB_VPOSITION2_COL);
-                    vposition2_item->setText( text_line.textVPosition() );
-                    valign2_item  = this->item(mStCount, SUB_VALIGN2_COL);
-                    valign2_item->setText( text_line.textVAlign() );
-                    hposition2_item  = this->item(mStCount, SUB_HPOSITION2_COL);
-                    hposition2_item->setText( text_line.textHPosition() );
-                    halign2_item  = this->item(mStCount, SUB_HALIGN2_COL);
-                    halign2_item->setText( text_line.textHAlign() );
-                    direction2_item  = this->item(mStCount, SUB_DIRECTION2_COL);
-                    direction2_item->setText( text_line.textDirection() );
-                    font_id2_item  = this->item(mStCount, SUB_FONT_ID2_COL);
-                    font_id2_item->setText( text_line.Font().fontId() );
-                    font_color2_item  = this->item(mStCount, SUB_FONT_COLOR2_COL);
-                    font_color2_item->setText( text_line.Font().fontColor() );
-                    font_effect2_item  = this->item(mStCount, SUB_FONT_EFFECT2_COL);
-                    font_effect2_item->setText( text_line.Font().fontEffect() );
-                    font_effectcolor2_item  = this->item(mStCount, SUB_FONT_EFFECTCOLOR2_COL);
-                    font_effectcolor2_item->setText( text_line.Font().fontEffectColor() );
-                    font_italic2_item  = this->item(mStCount, SUB_FONT_ITALIC2_COL);
-                    font_italic2_item->setText( text_line.Font().fontItalic() );
-                    font_underlined2_item  = this->item(mStCount, SUB_FONT_UNDERLINED2_COL);
-                    font_underlined2_item->setText( text_line.Font().fontUnderlined() );
-                    font_script2_item  = this->item(mStCount, SUB_FONT_SCRIPT2_COL);
-                    font_script2_item->setText( text_line.Font().fontScript() );
-                    font_size2_item  = this->item(mStCount, SUB_FONT_SIZE2_COL);
-                    font_size2_item->setText( text_line.Font().fontSize() );
-                }
             }
+
+            // Update font and position parameters
+            this->updateDatas(subtitlesList[i], i);
 
             // Convert characters per second in string
             char_per_sec_str += QString::number(char_per_sec, 'f', 1);
@@ -357,6 +238,8 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
             // Increment the subtitles counter
             mStCount ++;
         }
+
+        this->resizeRowsToContents();
 
         this->setEnabled(true);
 
@@ -407,13 +290,7 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
 // Get a container with all subtitles information from the table
 QList<MySubtitles> MySubtitlesTable::saveSubtitles() {
 
-    QList<MySubtitles> subtitles_list;
-
-    for ( qint32 i = 0; i < mStCount; i++) {
-
-        subtitles_list.append(this->getSubInfos(i));
-    }
-    return subtitles_list;
+    return mSubtitlesList;
 }
 
 // Compute the new sub "start time" at time corresponding to X frames from the current sub "end time"
@@ -467,8 +344,6 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs)
             mPositionMsToStIndex += temp_vector;
         }
 
-        this->item(mStCount, SUB_DURATION_AUTO_COL)->setText( MyAttributesConverter::boolToString( newSubtitle.isDurationAuto() ) );
-
         // Retrieive the first empty item, set the start/end time and text
         start_time_HMS = time_base.addMSecs(start_time_ms);
         start_time_item = this->item(mStCount, SUB_START_TIME_COL);
@@ -496,12 +371,14 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs)
            this->addRows(100, this->rowCount());
         }
 
+        // Insert the new subtitle in the subtitles list
+        mSubtitlesList.insert(mCurrentIndex, newSubtitle);
+
         mInsertingSub = true;
         this->updateText(newSubtitle.text());
         this->updateDatas(newSubtitle);
         mInsertingSub = false;
 
-        this->selectRow(mCurrentIndex);
     }
     else {
         mErrorMsg = "Not enought space to insert subtile";
@@ -510,6 +387,10 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs)
 
     newSubtitle.setStartTime(this->item(mCurrentIndex, SUB_START_TIME_COL)->text());
     newSubtitle.setEndTime(this->item(mCurrentIndex, SUB_END_TIME_COL)->text());
+    mSubtitlesList[mCurrentIndex].setStartTime(this->item(mCurrentIndex, SUB_START_TIME_COL)->text());
+    mSubtitlesList[mCurrentIndex].setEndTime(this->item(mCurrentIndex, SUB_END_TIME_COL)->text());
+
+    this->selectRow(mCurrentIndex);
 
     return true;
 }
@@ -522,6 +403,10 @@ void MySubtitlesTable::deleteCurrentSub() {
     start_time_ms = mPositionMsToStIndex.indexOf(mCurrentIndex);
 
     if ( start_time_ms >= 0 ) {
+
+        // Remove from subtitles list
+        mSubtitlesList.removeAt(mCurrentIndex);
+
         // Remove the index in the lookup table
         for ( qint32 i = start_time_ms; i < mPositionMsToStIndex.size(); i++ ) {
 
@@ -576,7 +461,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
     QString plain_text = "";
     QString char_number_line_str = "";
     QString char_per_sec_str = "";
-    TextLine text_line;
+    TextLine new_text_line;
     qint16 char_number_total = 0;
     qreal char_per_sec = 0.0;
     qint32 sub_duration_ms;
@@ -587,42 +472,35 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
     sub_duration_ms = MyAttributesConverter::timeStrHMStoMs( this->item(row_index, SUB_DURATION_COL)->text() );
 
+    // If a line was added or removed, replace all current subtitle lines in the subtitles list
+    if ( mSubtitlesList[mCurrentIndex].text().count() != textLines.count() ) {
+        mSubtitlesList[mCurrentIndex].text().clear();
+        mSubtitlesList[mCurrentIndex].setText(textLines);
+    }
+
     for ( qint32 i = 0; i < textLines.count(); i++ ) {
 
         // If it's the second line, add a "line return" caractere
-        if ( !plain_text.isEmpty() ) {
+        if ( i > 0 ) {
             plain_text += "\n";
             char_number_line_str += "\n";
         }
 
-        text_line = textLines.at(i);
+        new_text_line = textLines.at(i);
 
-        char_number_total += text_line.Line().count();
+        // Set the line in the subtitles list
+        mSubtitlesList[mCurrentIndex].text()[i].setLine(new_text_line.Line());
+
+        char_number_total += new_text_line.Line().count();
         // Calculate characters number per second
-        char_per_sec += ( ( (qreal)text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)sub_duration_ms );
+        char_per_sec += ( ( (qreal)new_text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)sub_duration_ms );
         // Count characters number for the line
-        char_number_line_str += QString::number( text_line.Line().count() );
+        char_number_line_str += QString::number( new_text_line.Line().count() );
 
-        plain_text += text_line.Line();
+        plain_text += new_text_line.Line();
 
-        if ( text_line.Line().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+        if ( new_text_line.Line().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
             max_cher_exceeded = true;
-        }
-
-        // line 1
-        if ( i == 0 ) {
-
-            this->item(row_index, SUB_NBR_OF_LINES_COL)->setText("1");
-            this->item(row_index, SUB_LINE1_COL)->setText(text_line.Line());
-
-            if ( textLines.count() == 1 ) {
-                this->item(row_index, SUB_LINE2_COL)->setText("");
-            }
-        } // Line 2
-        else if ( i == 1 ) {
-
-            this->item(row_index, SUB_NBR_OF_LINES_COL)->setText("2");
-            this->item(row_index, SUB_LINE2_COL)->setText(text_line.Line());
         }
     }
 
@@ -630,7 +508,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
     // and the maximum number of char / sec specified
     qint32 new_sub_duration_ms = qRound( ( (qreal)char_number_total / qApp->property("prop_MaxCharPerSec").toReal() ) * (qreal)SEC_TO_MSEC );
 
-    if ( this->item(row_index, SUB_DURATION_AUTO_COL)->text().contains("yes") ) {
+    if ( mSubtitlesList[mCurrentIndex].isDurationAuto() ) {
 
         // Case of auto duration recovery
         // Set new duration equal to the minimum duration specified
@@ -687,113 +565,142 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
     this->item(row_index, SUB_CHARNUM_COL)->setText(char_number_line_str);
     this->item(row_index, SUB_CHAR_PER_SEC_COL)->setText(char_per_sec_str);
     this->item(row_index, SUB_TEXT_COL)->setText(plain_text);
+
+    this->resizeRowToContents(row_index);
 }
 
 // Update the font, position informations in the table with the given subtitle data
-void MySubtitlesTable::updateDatas(MySubtitles subtitle) {
-
-    qint32 index;
-
-    QTableWidgetItem* vposition1_item;
-    QTableWidgetItem* valign1_item;
-    QTableWidgetItem* hposition1_item;
-    QTableWidgetItem* halign1_item;
-    QTableWidgetItem* direction1_item;
-    QTableWidgetItem* font_id1_item;
-    QTableWidgetItem* font_color1_item;
-    QTableWidgetItem* font_effect1_item;
-    QTableWidgetItem* font_effectcolor1_item;
-    QTableWidgetItem* font_italic1_item;
-    QTableWidgetItem* font_underlined1_item;
-    QTableWidgetItem* font_script1_item;
-    QTableWidgetItem* font_size1_item;
-    QTableWidgetItem* vposition2_item;
-    QTableWidgetItem* valign2_item;
-    QTableWidgetItem* hposition2_item;
-    QTableWidgetItem* halign2_item;
-    QTableWidgetItem* direction2_item;
-    QTableWidgetItem* font_id2_item;
-    QTableWidgetItem* font_color2_item;
-    QTableWidgetItem* font_effect2_item;
-    QTableWidgetItem* font_effectcolor2_item;
-    QTableWidgetItem* font_italic2_item;
-    QTableWidgetItem* font_underlined2_item;
-    QTableWidgetItem* font_script2_item;
-    QTableWidgetItem* font_size2_item;
+void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint32 index) {
 
     // Retrieve the current index
-    index = mCurrentIndex;
+    if ( index < 0 ) {
+        index = mCurrentIndex;
+    }
 
     if ( index != -1) {
 
+        TextLine text_line;
+        TextFont text_font;
+        TextLine new_text_line;
+
         for ( qint32 i = 0; i < subtitle.text().size(); i++) {
 
-            TextLine text_line = subtitle.text().at(i);
+            text_line = mSubtitlesList[index].text()[i];
+            text_font = text_line.Font();
 
-            // Update line 1 informations
-            if ( i == 0 ) {
+            new_text_line = subtitle.text().at(i);
 
-                // Reset the line 2 informations
-                for ( qint32 j = SUB_VPOSITION2_COL; j <= SUB_FONT_SIZE2_COL; j++ ) {
-                    this->item(index, j)->setText("");
-                }
+            // Check if line parameters is set. If not, set a default parameter
+            if ( new_text_line.textVPosition().isEmpty() ) {
 
-                vposition1_item  = this->item(index, SUB_VPOSITION1_COL);
-                vposition1_item->setText( text_line.textVPosition() );
-                valign1_item  = this->item(index, SUB_VALIGN1_COL);
-                valign1_item->setText( text_line.textVAlign() );
-                hposition1_item  = this->item(index, SUB_HPOSITION1_COL);
-                hposition1_item->setText( text_line.textHPosition() );
-                halign1_item  = this->item(index, SUB_HALIGN1_COL);
-                halign1_item->setText( text_line.textHAlign() );
-                direction1_item  = this->item(index, SUB_DIRECTION1_COL);
-                direction1_item->setText( text_line.textDirection() );
-                font_id1_item  = this->item(index, SUB_FONT_ID1_COL);
-                font_id1_item->setText( text_line.Font().fontId() );
-                font_color1_item  = this->item(index, SUB_FONT_COLOR1_COL);
-                font_color1_item->setText( text_line.Font().fontColor() );
-                font_effect1_item  = this->item(index, SUB_FONT_EFFECT1_COL);
-                font_effect1_item->setText( text_line.Font().fontEffect() );
-                font_effectcolor1_item  = this->item(index, SUB_FONT_EFFECTCOLOR1_COL);
-                font_effectcolor1_item->setText( text_line.Font().fontEffectColor() );
-                font_italic1_item  = this->item(index, SUB_FONT_ITALIC1_COL);
-                font_italic1_item->setText( text_line.Font().fontItalic() );
-                font_underlined1_item  = this->item(index, SUB_FONT_UNDERLINED1_COL);
-                font_underlined1_item->setText( text_line.Font().fontUnderlined() );
-                font_script1_item  = this->item(index, SUB_FONT_SCRIPT1_COL);
-                font_script1_item->setText( text_line.Font().fontScript() );
-                font_size1_item  = this->item(index, SUB_FONT_SIZE1_COL);
-                font_size1_item->setText( text_line.Font().fontSize() );
+                QString v_position_str = TEXT1_VPOSITION_DEFAULT_VALUE;
+                qreal v_position = (qreal)v_position_str.toFloat();
+                v_position = v_position * (qreal)( subtitle.text().count() - i);
+
+                text_line.setTextVPosition(QString::number(v_position, 'f', 1));
             }
-            // Update line 2 informations
-            else if ( i == 1 ) {
-                vposition2_item  = this->item(index, SUB_VPOSITION2_COL);
-                vposition2_item->setText( text_line.textVPosition() );
-                valign2_item  = this->item(index, SUB_VALIGN2_COL);
-                valign2_item->setText( text_line.textVAlign() );
-                hposition2_item  = this->item(index, SUB_HPOSITION2_COL);
-                hposition2_item->setText( text_line.textHPosition() );
-                halign2_item  = this->item(index, SUB_HALIGN2_COL);
-                halign2_item->setText( text_line.textHAlign() );
-                direction2_item  = this->item(index, SUB_DIRECTION2_COL);
-                direction2_item->setText( text_line.textDirection() );
-                font_id2_item  = this->item(index, SUB_FONT_ID2_COL);
-                font_id2_item->setText( text_line.Font().fontId() );
-                font_color2_item  = this->item(index, SUB_FONT_COLOR2_COL);
-                font_color2_item->setText( text_line.Font().fontColor() );
-                font_effect2_item  = this->item(index, SUB_FONT_EFFECT2_COL);
-                font_effect2_item->setText( text_line.Font().fontEffect() );
-                font_effectcolor2_item  = this->item(index, SUB_FONT_EFFECTCOLOR2_COL);
-                font_effectcolor2_item->setText( text_line.Font().fontEffectColor() );
-                font_italic2_item  = this->item(index, SUB_FONT_ITALIC2_COL);
-                font_italic2_item->setText( text_line.Font().fontItalic() );
-                font_underlined2_item  = this->item(index, SUB_FONT_UNDERLINED2_COL);
-                font_underlined2_item->setText( text_line.Font().fontUnderlined() );
-                font_script2_item  = this->item(index, SUB_FONT_SCRIPT2_COL);
-                font_script2_item->setText( text_line.Font().fontScript() );
-                font_size2_item  = this->item(index, SUB_FONT_SIZE2_COL);
-                font_size2_item->setText( text_line.Font().fontSize() );
+            else {
+                text_line.setTextVPosition(new_text_line.textVPosition());
             }
+
+            if ( new_text_line.textVAlign().isEmpty() ) {
+
+                text_line.setTextVAlign(TEXT1_VALIGN_DEFAULT_VALUE);
+            }
+            else {
+                text_line.setTextVAlign(new_text_line.textVAlign());
+            }
+
+            if ( new_text_line.textHPosition().isEmpty() ) {
+
+                text_line.setTextHPosition(TEXT1_HPOSITION_DEFAULT_VALUE);
+            }
+            else {
+                text_line.setTextHPosition(new_text_line.textHPosition());
+            }
+
+            if ( new_text_line.textHAlign().isEmpty() ) {
+
+                text_line.setTextHAlign(TEXT1_HALIGN_DEFAULT_VALUE);
+            }
+            else {
+                text_line.setTextHAlign(new_text_line.textHAlign());
+            }
+
+            if ( new_text_line.textDirection().isEmpty() ) {
+
+                text_line.setTextDirection(TEXT1_DIRECTION_DEFAULT_VALUE);
+            }
+            else {
+                text_line.setTextDirection(new_text_line.textDirection());
+            }
+
+            if ( new_text_line.Font().fontId().isEmpty() ) {
+
+                text_font.setFontId(FONT_ID_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontId(new_text_line.Font().fontId());
+            }
+
+            if ( new_text_line.Font().fontColor().isEmpty() ) {
+
+                text_font.setFontColor(FONT_COLOR_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontColor(new_text_line.Font().fontColor());
+            }
+
+            if ( new_text_line.Font().fontEffect().isEmpty() ) {
+
+                text_font.setFontEffect(FONT_EFFECT_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontEffect(new_text_line.Font().fontEffect());
+            }
+
+            if ( new_text_line.Font().fontEffectColor().isEmpty() ) {
+
+                text_font.setFontEffectColor(FONT_EFFECT_COLOR_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontEffectColor(new_text_line.Font().fontEffectColor());
+            }
+
+            if ( new_text_line.Font().fontItalic().isEmpty() ) {
+
+                text_font.setFontItalic(FONT_ITALIC_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontItalic(new_text_line.Font().fontItalic());
+            }
+
+            if ( new_text_line.Font().fontScript().isEmpty() ) {
+
+                text_font.setFontScript(FONT_SCRIPT_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontScript(new_text_line.Font().fontScript());
+            }
+
+            if ( new_text_line.Font().fontSize().isEmpty() ) {
+
+                text_font.setFontSize(FONT_SIZE_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontSize(new_text_line.Font().fontSize());
+            }
+
+            if ( new_text_line.Font().fontUnderlined().isEmpty() ) {
+
+                text_font.setFontUnderlined(FONT_UNDERLINED_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontUnderlined(new_text_line.Font().fontUnderlined());
+            }
+
+            text_line.setFont(text_font);
+            mSubtitlesList[index].text()[i] = text_line;
         }
     }
 }
@@ -865,8 +772,9 @@ bool MySubtitlesTable::setEndTime(qint64 positionMs, qint32 stIndex, bool force,
     else {
         mErrorMsg = "Subtitle " +QString::number(stIndex) +" end time < subtitle " +QString::number(stIndex) +" start time";
         return false;
-        return false;
     }
+
+    mSubtitlesList[stIndex].setEndTime( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
 
     return true;
 }
@@ -923,6 +831,8 @@ bool MySubtitlesTable::setStartTime(qint64 positionMs, qint32 stIndex, bool forc
         mErrorMsg = "Subtitle " +QString::number(stIndex) +" start time > subtitle " +QString::number(stIndex) +" end time";
         return false;
     }
+
+    mSubtitlesList[stIndex].setStartTime( start_time_HMS.toString("hh:mm:ss.zzz") );
 
     return true;
 }
@@ -1218,73 +1128,9 @@ MySubtitles MySubtitlesTable::getSubInfos(qint32 stIndex) {
     MySubtitles new_subtitle;
 
     if ( stIndex >= 0 ) {
-
-        // Get start time and end time
-        if ( !this->item(stIndex, SUB_START_TIME_COL)->text().isEmpty() ) {
-            new_subtitle.setStartTime( this->item(stIndex, SUB_START_TIME_COL)->text() );
-        }
-
-        if ( !this->item(stIndex, SUB_END_TIME_COL)->text().isEmpty() ) {
-            new_subtitle.setEndTime( this->item(stIndex, SUB_END_TIME_COL)->text() );
-        }
-
-        new_subtitle.setDurationAuto( this->item(stIndex, SUB_DURATION_AUTO_COL)->text().contains("yes") );
-
-        // Check the number of lines
-        qint8 nbr_of_lines = this->item(stIndex, SUB_NBR_OF_LINES_COL)->text().toInt();
-
-        if ( nbr_of_lines >= 1 ) {
-
-            // Retrieive line 1 font, position and text information
-            TextLine sub_line1;
-            TextFont sub_font1;
-
-            sub_font1.setFontId( this->item(stIndex, SUB_FONT_ID1_COL)->text() );
-            sub_font1.setFontColor( this->item(stIndex, SUB_FONT_COLOR1_COL)->text() );
-            sub_font1.setFontEffect( this->item(stIndex, SUB_FONT_EFFECT1_COL)->text() );
-            sub_font1.setFontEffectColor( this->item(stIndex, SUB_FONT_EFFECTCOLOR1_COL)->text() );
-            sub_font1.setFontItalic( this->item(stIndex, SUB_FONT_ITALIC1_COL)->text() );
-            sub_font1.setFontUnderlined( this->item(stIndex, SUB_FONT_UNDERLINED1_COL)->text() );
-            sub_font1.setFontScript( this->item(stIndex, SUB_FONT_SCRIPT1_COL)->text() );
-            sub_font1.setFontSize( this->item(stIndex, SUB_FONT_SIZE1_COL)->text() );
-
-            sub_line1.setLine( this->item(stIndex, SUB_LINE1_COL)->text() );
-
-            sub_line1.setTextDirection( this->item(stIndex, SUB_DIRECTION1_COL)->text() );
-            sub_line1.setTextHAlign( this->item(stIndex, SUB_HALIGN1_COL)->text() );
-            sub_line1.setTextHPosition( this->item(stIndex, SUB_HPOSITION1_COL)->text() );
-            sub_line1.setTextVAlign( this->item(stIndex, SUB_VALIGN1_COL)->text() );
-            sub_line1.setTextVPosition( this->item(stIndex, SUB_VPOSITION1_COL)->text() );
-
-            new_subtitle.setText(sub_line1, sub_font1);
-        }
-
-        if ( nbr_of_lines >= 2 ) {
-
-            // Retrieive line 2 font, position and text information
-            TextLine sub_line2;
-            TextFont sub_font2;
-
-            sub_font2.setFontId( this->item(stIndex, SUB_FONT_ID2_COL)->text() );
-            sub_font2.setFontColor( this->item(stIndex, SUB_FONT_COLOR2_COL)->text() );
-            sub_font2.setFontEffect( this->item(stIndex, SUB_FONT_EFFECT2_COL)->text() );
-            sub_font2.setFontEffectColor( this->item(stIndex, SUB_FONT_EFFECTCOLOR2_COL)->text() );
-            sub_font2.setFontItalic( this->item(stIndex, SUB_FONT_ITALIC2_COL)->text() );
-            sub_font2.setFontUnderlined( this->item(stIndex, SUB_FONT_UNDERLINED2_COL)->text() );
-            sub_font2.setFontScript( this->item(stIndex, SUB_FONT_SCRIPT2_COL)->text() );
-            sub_font2.setFontSize( this->item(stIndex, SUB_FONT_SIZE2_COL)->text() );
-
-            sub_line2.setLine( this->item(stIndex, SUB_LINE2_COL)->text() );
-
-            sub_line2.setTextDirection( this->item(stIndex, SUB_DIRECTION2_COL)->text() );
-            sub_line2.setTextHAlign( this->item(stIndex, SUB_HALIGN2_COL)->text() );
-            sub_line2.setTextHPosition( this->item(stIndex, SUB_HPOSITION2_COL)->text() );
-            sub_line2.setTextVAlign( this->item(stIndex, SUB_VALIGN2_COL)->text() );
-            sub_line2.setTextVPosition( this->item(stIndex, SUB_VPOSITION2_COL)->text() );
-
-            new_subtitle.setText(sub_line2, sub_font2);
-        }
+        return mSubtitlesList[stIndex];
     }
+
     // Return a MySubtitles container
     return new_subtitle;
 }
@@ -1293,7 +1139,7 @@ void MySubtitlesTable::setDurationAuto(qint32 index, bool state) {
 
     if ( ( index >= 0 ) && (index < mStCount) ) {
 
-        this->item(index, SUB_DURATION_AUTO_COL)->setText( MyAttributesConverter::boolToString( state ) );
+       mSubtitlesList[index].setDurationAuto(state);
     }
 }
 

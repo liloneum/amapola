@@ -1282,6 +1282,9 @@ bool MainWindow::undo() {
         // Reload the subtitles in database
         ui->subTable->loadSubtitles(mSubListHistory.at(mHistoryCurrentIndex - 1));
         mHistoryCurrentIndex--;
+
+        ui->stEditDisplay->setText(ui->subTable->getSubInfos(ui->subTable->currentIndex()));
+
         return true;
     }
     return false;
@@ -1351,10 +1354,10 @@ void MainWindow::updateToolBox() {
     // Retrieve the current text edit zones paramaters
     current_subtitle_datas = ui->stEditDisplay->subtitleData();
 
-    if ( line_nbr <= current_subtitle_datas.text().count() ) {
+    if ( line_nbr < current_subtitle_datas.text().count() ) {
 
         // Retrieve font and position of the current line
-        text_line = current_subtitle_datas.text().at(line_nbr -1);
+        text_line = current_subtitle_datas.text().at(line_nbr);
         text_font = text_line.Font();
 
         // Update the tool boxes with this parameters
@@ -1402,24 +1405,19 @@ void MainWindow::updateTextPosition() {
         MySubtitles current_subtitle_datas;
         current_subtitle_datas = ui->subTable->getSubInfos( ui->subTable->currentIndex() );
 
-        // Check the line number (1 or 2)
+        // Check the line number
         qint16 line_nbr = ui->stEditDisplay->lastFocused();
 
-        if ( line_nbr > 0 ) {
+        if ( line_nbr >= 0 ) {
 
-            // Retrieve the current text properties lines list
-            QList<TextLine> current_text_lines = current_subtitle_datas.text();
-            // Retrieve the line to change
-            TextLine current_line = current_text_lines.at(line_nbr - 1);
-            // Retrieve its font
-            TextFont current_text_font = current_line.Font();
+            // Retrieve the current subtitle line "line_nbr" font
+            TextFont current_text_font = current_subtitle_datas.text()[line_nbr].Font();
 
             // Push the font properties in the new line
             new_text_line.setFont(current_text_font);
-            // Replace the line in the list
-            current_text_lines.replace(line_nbr - 1, new_text_line);
-            // Push the changed list in the subtitle container
-            current_subtitle_datas.setText(current_text_lines);
+
+            // Replace the line in the subtitle container
+            current_subtitle_datas.text()[line_nbr] = new_text_line;
         }
 
         // Push the new datas in the table
@@ -1669,19 +1667,10 @@ void MainWindow::updateTextFont(bool customColorClicked) {
         // Check the line number (1 or 2)
         qint16 line_nbr = ui->stEditDisplay->lastFocused();
 
-        if ( line_nbr > 0 ) {
+        if ( line_nbr >= 0 ) {
 
-            // Retrieve the current text properties lines list
-            QList<TextLine> current_text_lines = current_subtitle_datas.text();
-            // Retrieve the line to change
-            TextLine current_line = current_text_lines.at(line_nbr - 1);
-
-            // Push the text font properties in the current line
-            current_line.setFont(new_font);
-            // Replace the line in the list
-            current_text_lines.replace(line_nbr - 1, current_line);
-            // Push the changed list in the subtitle container
-            current_subtitle_datas.setText(current_text_lines);
+            // Replace the font for "line_nbr" in current subtitle
+            current_subtitle_datas.text()[line_nbr].setFont(new_font);
         }
 
         // Push the new datas in the table
@@ -2047,63 +2036,61 @@ void MainWindow::on_syncApplyPushButton_clicked() {
 void MainWindow::on_applyPosSelButton_clicked() {
 
     MySubtitles current_sub;
-    QList<TextLine> text_lines;
     qint32 index;
     qint16 nbr_of_lines;
+    TextFont current_text_font;
+    bool data_changed = false;
 
-    // Retrieve the number of the line wich change of position
+            // Retrieve the number of the line wich change of position
     qint16 line_focussed = ui->stEditDisplay->lastFocused();
 
     // Retrieve the indexes of the selected subtitles
     QList<qint32> selected_indexes = ui->subTable->selectedIndex();
 
-    // Retrieve the subtitles list from the databases
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+    // Retrieve position parameters from tool boxes
+    TextLine new_text_line = this->getPosToolBox();
 
     // For each subtitle selected
     QList<qint32>::iterator it;
     for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
         index = *it;
-        current_sub = sub_list.at(index);
+
+        current_sub = ui->subTable->getSubInfos(index);
         nbr_of_lines = current_sub.text().count();
 
         // If the line changed exist for this subtitle
-        if ( nbr_of_lines >= line_focussed ) {
+        if ( nbr_of_lines > line_focussed ) {
 
-            // Change the "position" parameters
-            text_lines = current_sub.text();
+            // Retrieve the current subtitle line "line_nbr" font
+            current_text_font = current_sub.text()[line_focussed].Font();
 
-            text_lines[line_focussed - 1].setTextHAlign( ui->hAlignBox->currentText() );
-            text_lines[line_focussed - 1].setTextHPosition( QString::number(ui->hPosSpinBox->value(), 'f', 1) );
-            text_lines[line_focussed - 1].setTextVAlign( ui->vAlignBox->currentText() );
-            text_lines[line_focussed - 1].setTextVPosition( QString::number(ui->vPosSpinBox->value(), 'f', 1) );
+            // Push the font properties in the new line
+            new_text_line.setFont(current_text_font);
 
-            // Replace in the list
-            current_sub.setText(text_lines);
-            sub_list.replace(index, current_sub);
+            // Replace the line in the subtitle container
+            current_sub.text()[line_focussed] = new_text_line;
+
+            // Push the new datas in the table
+            ui->subTable->updateDatas(current_sub, index);
+
+            data_changed = true;
         }
     }
 
-    // Reload the modified subtitltes list in the database
-    ui->subTable->loadSubtitles(sub_list);
-
-    // Save the database current state in history
-    this->saveToHistory("Change selection position");
-
-    // Remove all and draw subtitles zones in the waveform
-    ui->waveForm->removeAllSubtitlesZones();
-    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
-    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+    if ( data_changed ) {
+        // Save the database current state in history
+        this->saveToHistory("Change selection position");
+    }
 }
 
 // Apply the current text line font to all selected subtitles corresponding line
 void MainWindow::on_applyFontSelButton_clicked() {
 
     MySubtitles current_sub;
-    QList<TextLine> text_lines;
     qint32 index;
     qint16 nbr_of_lines;
+    bool data_changed = false;
 
 
     // Retrieve the number of the line wich change of position
@@ -2120,33 +2107,27 @@ void MainWindow::on_applyFontSelButton_clicked() {
     for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
         index = *it;
-        current_sub = sub_list.at(index);
+
+        current_sub = ui->subTable->getSubInfos(index);
         nbr_of_lines = current_sub.text().count();
 
         // If the line changed exist for this subtitle
-        if ( nbr_of_lines >= line_focussed ) {
+        if ( nbr_of_lines > line_focussed ) {
 
-            // Change the "position" parameters
-            text_lines = current_sub.text();
+            // Replace the font for "line_nbr" in current subtitle
+            current_sub.text()[line_focussed].setFont( this->getFontToolBox(false) );
 
-            text_lines[line_focussed - 1].setFont( this->getFontToolBox(false) );
+            // Push the new datas in the table
+            ui->subTable->updateDatas(current_sub, index);
 
-            // Replace in the list
-            current_sub.setText(text_lines);
-            sub_list.replace(index, current_sub);
+            data_changed = true;
         }
     }
 
-    // Reload the modified subtitltes list in the database
-    ui->subTable->loadSubtitles(sub_list);
-
-    // Save the database current state in history
-    this->saveToHistory("Change selection font");
-
-    // Remove all and draw subtitles zones in the waveform
-    ui->waveForm->removeAllSubtitlesZones();
-    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
-    ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+    if ( data_changed ) {
+        // Save the database current state in history
+        this->saveToHistory("Change selection font");
+    }
 }
 
 // Auto duration settings changed
@@ -2175,22 +2156,21 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
     custom_menu.addAction("Font...");
     // ...
 
+    MySubtitles current_sub;
     QList<TextLine> text_lines;
     bool italic_found = false;
     bool underlined_found = false;
-    bool need_reload = false;
+    bool data_changed = false;
 
     // Retrieve the indexes of the selected subtitles
     QList<qint32> selected_indexes = ui->subTable->selectedIndex();
-
-    // Retrieve the subtitles list from the databases
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
 
     // Check if there is at least one subtitle line with "Italic" or "Underlined" attribute
     QList<qint32>::iterator it;
     for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
-        text_lines = sub_list[*it].text();
+        current_sub = ui->subTable->getSubInfos(*it);
+        text_lines = current_sub.text();
 
         // If "Italic" or "Underlined" attribute is found, check the corresponding checkbox
         for ( qint16 i = 0; i < text_lines.count(); i++ ) {
@@ -2219,14 +2199,12 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
         if ( selected_item->text() == "Delete" ) {
 
             this->removeSubtitles();
-            need_reload = false;
+            data_changed = false;
         }
         // "Italic"
         else if ( selected_item->text() == "Italic" ) {
 
             QString is_italic;
-            TextFont text_font;
-
 
             // If at least one subtitle line has "Italic" attribute,
             // unset "Italic" to all selected subtitles
@@ -2241,27 +2219,23 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
             for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
-                text_lines = sub_list[*it].text();
+                current_sub = ui->subTable->getSubInfos(*it);
 
-                for ( qint16 i = 0; i < text_lines.count(); i++ ) {
-                    text_font = text_lines[i].Font();
-                    text_font.setFontItalic(is_italic);
-                    text_lines[i].setFont(text_font);
+                for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+
+                    current_sub.text()[i].Font().setFontItalic(is_italic);
                 }
 
-                // Replace in the list
-                sub_list[*it].setText(text_lines);
-                sub_list.replace(*it, sub_list[*it]);
+                // Push the new datas in the table
+                ui->subTable->updateDatas(current_sub, *it);
             }
 
-            need_reload = true;
+            data_changed = true;
         }
         // "Underline"
         else if ( selected_item->text() == "Underline" ) {
 
             QString is_underlined;
-            TextFont text_font;
-
 
             // If at least one subtitle line has "Underline" attribute,
             // unset "Italic" to all selected subtitles
@@ -2276,20 +2250,17 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
             for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
-                text_lines = sub_list[*it].text();
+                current_sub = ui->subTable->getSubInfos(*it);
 
-                for ( qint16 i = 0; i < text_lines.count(); i++ ) {
-                    text_font = text_lines[i].Font();
-                    text_font.setFontItalic(is_underlined);
-                    text_lines[i].setFont(text_font);
+                for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+                    current_sub.text()[i].Font().setFontUnderlined(is_underlined);
                 }
 
-                // Replace in the list
-                sub_list[*it].setText(text_lines);
-                sub_list.replace(*it, sub_list[*it]);
+                // Push the new datas in the database
+                ui->subTable->updateDatas(current_sub, *it);
             }
 
-            need_reload = true;
+            data_changed = true;
         }
         // "Color"
         else if ( selected_item->text() == "Color..." ) {
@@ -2301,26 +2272,23 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             if ( font_color.isValid() ) {
 
                 QString font_color_str = QString::number( font_color.rgba(), 16 ).toUpper();
-                TextFont text_font;
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
-                    text_lines = sub_list[*it].text();
+                    current_sub = ui->subTable->getSubInfos(*it);
 
-                    for ( qint16 i = 0; i < text_lines.count(); i++ ) {
-                        text_font = text_lines[i].Font();
-                        text_font.setFontColor(font_color_str);
-                        text_lines[i].setFont(text_font);
+                    for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+                        current_sub.text()[i].Font().setFontColor(font_color_str);
                     }
 
-                    // Replace in the list
-                    sub_list[*it].setText(text_lines);
-                    sub_list.replace(*it, sub_list[*it]);
+                    // Push the new datas in the database
+                    ui->subTable->updateDatas(current_sub, *it);
                 }
-                need_reload = true;
+
+                data_changed = true;
             }
             else {
-                need_reload = false;
+                data_changed = false;
             }
         }
         // "Font"
@@ -2334,42 +2302,32 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             // If valid font, set font name and size to all selected subtitles
             if ( ok ) {
 
-                TextFont text_font;
-
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
-                    text_lines = sub_list[*it].text();
+                    current_sub = ui->subTable->getSubInfos(*it);
 
-                    for ( qint16 i = 0; i < text_lines.count(); i++ ) {
-                        text_font = text_lines[i].Font();
-                        text_font.setFontId(font.family());
-                        text_font.setFontSize(QString::number(font.pointSize()));
-                        text_lines[i].setFont(text_font);
+                    for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+                        current_sub.text()[i].Font().setFontId(font.family());
+                        current_sub.text()[i].Font().setFontSize(QString::number(font.pointSize()));
                     }
 
-                    // Replace in the list
-                    sub_list[*it].setText(text_lines);
-                    sub_list.replace(*it, sub_list[*it]);
+                    // Push the new datas in the database
+                    ui->subTable->updateDatas(current_sub, *it);
                 }
-                need_reload = true;
+                data_changed = true;
             }
             else {
-                need_reload = false;
+                data_changed = false;
             }
         }
 
         // There are change to load in the database
-        if ( need_reload == true ) {
-            // Reload the modified subtitltes list in the database
-            ui->subTable->loadSubtitles(sub_list);
+        if ( data_changed == true ) {
+
+            ui->stEditDisplay->setText(ui->subTable->getSubInfos(ui->subTable->currentIndex()));
 
             // Save the database current state in history
             this->saveToHistory("Change selection " +selected_item->text());
-
-            // Remove all and draw subtitles zones in the waveform
-            ui->waveForm->removeAllSubtitlesZones();
-            ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
-            ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
         }
     }
     else {
