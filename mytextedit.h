@@ -5,7 +5,7 @@
 #include <QString>
 #include <QTextEdit>
 #include "mysubtitles.h"
-
+#include <QGraphicsDropShadowEffect>
 
 // This widget class manage the edit zone.
 // Manage 2 lines of editable text, with position and font attributes
@@ -31,7 +31,7 @@ public slots :
     void updateTextPosition(TextLine textLine);
     void updateTextFont(TextFont textFont, TextLine textLine);
     MySubtitles getDefaultSub();
-    void defaultSub();
+    void updateDefaultSub();
     qint16 lastFocused();
 
 private slots:

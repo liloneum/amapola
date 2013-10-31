@@ -115,6 +115,14 @@ private slots:
 
     void on_durationAutoCheckBox_clicked(bool checked);
 
+    void on_fontBorderCheckBox_toggled(bool checked);
+
+    void on_fontShadowCheckBox_toggled(bool checked);
+
+    void on_fontBorderColor_clicked();
+
+    void on_fontShadowColor_clicked();
+
 private:
     Ui::MainWindow* ui;
 
@@ -128,6 +136,9 @@ private:
     // Flag to avoid infinite inter call between video-player and waveform
     bool mVideoPositionChanged;
     bool mMarkerPosChanged;
+
+    QColor mTextBorderColor;
+    QColor mTextShadowColor;
 
     // History (undo/redo) varaiables
     QList<QString> mHistoryReasons;

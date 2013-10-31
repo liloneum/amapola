@@ -2,6 +2,8 @@
 #define MYATTRIBUTESCONVERTER_H
 
 #include <Qt>
+#include <QColor>
+#include <QPushButton>
 
 // Class to define some converters statics methods
 class MyAttributesConverter
@@ -20,6 +22,9 @@ public:
     static qint64 timeStrHMStoMs(QString time);
     static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
     static qint32 timeMsToFrames(qint64 timeMs, qreal frameRate);
+    static QString colorToString(QColor colorRgba);
+    static QColor stringToColor(QString color_str);
+    static void setColorToButton(QPushButton* button, QColor color);
 };
 
 #endif // MYATTRIBUTESCONVERTER_H

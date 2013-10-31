@@ -219,11 +219,17 @@ TextFont::TextFont() {
     // attribute Color
     mColor = "";
 
-    // attribute Effect
-    mEffect = "";
+    // attribute Shadow Effect
+    mShadowEffect = "";
 
-    // attribute EffectColor
-    mEffectColor = "";
+    // attribute Shadow EffectColor
+    mShadowEffectColor = "";
+
+    // attribute Border Effect
+    mBorderEffect = "";
+
+    // attribute Border EffectColor
+    mBorderEffectColor = "";
 
     // attribute Size
     mSize = "";
@@ -248,12 +254,20 @@ void TextFont::setFontColor(QString fontColor) {
     mColor = fontColor;
 }
 
-void TextFont::setFontEffect(QString fontEffect) {
-    mEffect = fontEffect;
+void TextFont::setFontShadowEffect(QString fontEffect) {
+    mShadowEffect = fontEffect;
 }
 
-void TextFont::setFontEffectColor(QString fontEffectColor) {
-    mEffectColor = fontEffectColor;
+void TextFont::setFontShadowEffectColor(QString fontEffectColor) {
+    mShadowEffectColor = fontEffectColor;
+}
+
+void TextFont::setFontBorderEffect(QString fontEffect) {
+    mBorderEffect = fontEffect;
+}
+
+void TextFont::setFontBorderEffectColor(QString fontEffectColor) {
+    mBorderEffectColor = fontEffectColor;
 }
 
 void TextFont::setFontSize(QString fontSize) {
@@ -282,12 +296,20 @@ QString TextFont::fontColor() {
     return mColor;
 }
 
-QString TextFont::fontEffect() {
-    return mEffect;
+QString TextFont::fontShadowEffect() {
+    return mShadowEffect;
 }
 
-QString TextFont::fontEffectColor() {
-    return mEffectColor;
+QString TextFont::fontShadowEffectColor() {
+    return mShadowEffectColor;
+}
+
+QString TextFont::fontBorderEffect() {
+    return mBorderEffect;
+}
+
+QString TextFont::fontBorderEffectColor() {
+    return mBorderEffectColor;
 }
 
 QString TextFont::fontSize() {
@@ -322,13 +344,23 @@ bool TextFont::findDiff(TextFont & font) {
     }
     else is_different = true;
 
-    if ( this->fontEffect() == font.fontEffect() ) {
-        font.setFontEffect("");
+    if ( this->fontShadowEffect() == font.fontShadowEffect() ) {
+        font.setFontShadowEffect("");
     }
     else is_different = true;
 
-    if ( this->fontEffectColor() == font.fontEffectColor() ) {
-        font.setFontEffectColor("");
+    if ( this->fontShadowEffectColor() == font.fontShadowEffectColor() ) {
+        font.setFontShadowEffectColor("");
+    }
+    else is_different = true;
+
+    if ( this->fontBorderEffect() == font.fontBorderEffect() ) {
+        font.setFontBorderEffect("");
+    }
+    else is_different = true;
+
+    if ( this->fontBorderEffectColor() == font.fontBorderEffectColor() ) {
+        font.setFontBorderEffectColor("");
     }
     else is_different = true;
 

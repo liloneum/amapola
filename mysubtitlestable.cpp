@@ -9,8 +9,10 @@
 // Temp : Default font
 #define FONT_ID_DEFAULT_VALUE "Arial"
 #define FONT_COLOR_DEFAULT_VALUE "FF0000FF"
-#define FONT_EFFECT_DEFAULT_VALUE "none"
-#define FONT_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_SHADOW_EFFECT_DEFAULT_VALUE "yes"
+#define FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_BORDER_EFFECT_DEFAULT_VALUE "yes"
+#define FONT_BORDER_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_ITALIC_DEFAULT_VALUE "no"
 #define FONT_SCRIPT_DEFAULT_VALUE "normal"
 #define FONT_SIZE_DEFAULT_VALUE "42"
@@ -651,20 +653,36 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint32 index) {
                 text_font.setFontColor(new_text_line.Font().fontColor());
             }
 
-            if ( new_text_line.Font().fontEffect().isEmpty() ) {
+            if ( new_text_line.Font().fontShadowEffect().isEmpty() ) {
 
-                text_font.setFontEffect(FONT_EFFECT_DEFAULT_VALUE);
+                text_font.setFontShadowEffect(FONT_SHADOW_EFFECT_DEFAULT_VALUE);
             }
             else {
-                text_font.setFontEffect(new_text_line.Font().fontEffect());
+                text_font.setFontShadowEffect(new_text_line.Font().fontShadowEffect());
             }
 
-            if ( new_text_line.Font().fontEffectColor().isEmpty() ) {
+            if ( new_text_line.Font().fontShadowEffectColor().isEmpty() ) {
 
-                text_font.setFontEffectColor(FONT_EFFECT_COLOR_DEFAULT_VALUE);
+                text_font.setFontShadowEffectColor(FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE);
             }
             else {
-                text_font.setFontEffectColor(new_text_line.Font().fontEffectColor());
+                text_font.setFontShadowEffectColor(new_text_line.Font().fontShadowEffectColor());
+            }
+
+            if ( new_text_line.Font().fontBorderEffect().isEmpty() ) {
+
+                text_font.setFontBorderEffect(FONT_BORDER_EFFECT_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontBorderEffect(new_text_line.Font().fontBorderEffect());
+            }
+
+            if ( new_text_line.Font().fontBorderEffectColor().isEmpty() ) {
+
+                text_font.setFontBorderEffectColor(FONT_BORDER_EFFECT_COLOR_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontBorderEffectColor(new_text_line.Font().fontBorderEffectColor());
             }
 
             if ( new_text_line.Font().fontItalic().isEmpty() ) {

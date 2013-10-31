@@ -176,3 +176,45 @@ qint32 MyAttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
 
     return qRound( (qreal)timeMs / frame_duration_ms );
 }
+
+
+// Convert a QColor in string with format AARRGGBB
+QString MyAttributesConverter::colorToString(QColor colorRgba) {
+
+    QString color_str = "";
+    QList<int> argb_list;
+
+    argb_list.append( colorRgba.alpha() );
+    argb_list.append( colorRgba.red() );
+    argb_list.append( colorRgba.green() );
+    argb_list.append( colorRgba.blue() );
+
+
+    for ( int i = 0; i < argb_list.count(); i++ ) {
+
+        if ( argb_list.at(i) == 0 ) {
+            color_str += "00";
+        }
+        else {
+            color_str += (QString::number(argb_list.at(i), 16 )).toUpper();
+        }
+    }
+
+    return color_str;
+}
+
+// Convert a AARRGGBB string in QColor argb
+QColor MyAttributesConverter::stringToColor(QString color_str) {
+
+    bool ok;
+
+    return QColor::fromRgba( color_str.toUInt(&ok, 16) );
+}
+
+// Fill QPushButton icon with the given color
+void MyAttributesConverter::setColorToButton(QPushButton* button, QColor color) {
+
+    QPixmap pix_map(button->iconSize().width(), button->iconSize().height());
+    pix_map.fill( color );
+    button->setIcon(QIcon(pix_map));
+}

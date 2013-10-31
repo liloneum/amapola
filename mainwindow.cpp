@@ -71,6 +71,38 @@ MainWindow::MainWindow(QWidget *parent) :
         qApp->setProperty("prop_FontUnderlined", "no");
     }
 
+    if ( ui->fontBorderCheckBox->isChecked() ) {
+        qApp->setProperty("prop_FontBorder", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontBorder", "no");
+    }
+
+    if ( ui->fontShadowCheckBox->isChecked() ) {
+        qApp->setProperty("prop_FontShadow", "yes");
+    }
+    else {
+        qApp->setProperty("prop_FontShadow", "no");
+    }
+
+    bool ok;
+
+    mTextBorderColor = MyAttributesConverter::stringToColor("FF000000");
+    mTextShadowColor = MyAttributesConverter::stringToColor("FF000000");
+
+    MyAttributesConverter::setColorToButton(ui->fontBorderColor, MyAttributesConverter::stringToColor("FF000000") );
+    MyAttributesConverter::setColorToButton(ui->fontShadowColor, MyAttributesConverter::stringToColor("FF000000") );
+
+    qApp->setProperty("prop_FontBorderColor", "FF000000");
+    qApp->setProperty("prop_FontShadowColor", "FF000000");
+
+    MyAttributesConverter::setColorToButton(ui->fontColorRButton, MyAttributesConverter::stringToColor("FFFF0000") );
+    MyAttributesConverter::setColorToButton(ui->fontColorGButton, MyAttributesConverter::stringToColor("FF00FF00") );
+    MyAttributesConverter::setColorToButton(ui->fontColorBButton, MyAttributesConverter::stringToColor("FF0000FF") );
+    MyAttributesConverter::setColorToButton(ui->fontColorYButton, MyAttributesConverter::stringToColor("FFFFFF00") );
+    MyAttributesConverter::setColorToButton(ui->fontColorBlButton, MyAttributesConverter::stringToColor("FF000000") );
+    MyAttributesConverter::setColorToButton(ui->fontColorWButton, MyAttributesConverter::stringToColor("FFFFFFFF") );
+
     if ( ui->fontColorRButton->isChecked() ) {
         qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
     }
@@ -98,7 +130,7 @@ MainWindow::MainWindow(QWidget *parent) :
     qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
     qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
 
-    ui->stEditDisplay->defaultSub();
+    ui->stEditDisplay->updateDefaultSub();
 
     ui->waveForm->openFile("", "");
 
@@ -432,6 +464,11 @@ void MainWindow::updateSubTableText() {
         }
     } // There are a subtitle for the current time. Update the text in the database
     else {
+
+        if ( ui->stEditDisplay->text().count() == 1 ) {
+
+            ui->stEditDisplay->updateTextFont(this->getFontToolBox(false), this->getPosToolBox());
+        }
         ui->subTable->updateText( ui->stEditDisplay->text());
     }
 }
@@ -1458,7 +1495,7 @@ void MainWindow::on_vAlignBox_activated(const QString &value) {
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             // Save the parameter as default parameter
             qApp->setProperty("prop_Valign", value);
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
         // Update the text edit position
@@ -1473,7 +1510,7 @@ void MainWindow::on_vPosSpinBox_valueChanged(const QString &value) {
 
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
         updateTextPosition();
@@ -1487,7 +1524,7 @@ void MainWindow::on_hAlignBox_activated(const QString &value) {
 
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             qApp->setProperty("prop_Halign", value);
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
         updateTextPosition();
@@ -1501,7 +1538,7 @@ void MainWindow::on_hPosSpinBox_valueChanged(const QString &value) {
 
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
         updateTextPosition();
@@ -1566,7 +1603,27 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
             ui->fontUnderlinedButton->setChecked(false);
         }
 
+        if ( textFont.fontBorderEffect().contains("yes", Qt::CaseInsensitive) == true ) {
+            ui->fontBorderCheckBox->setChecked(true);
+        }
+        else {
+            ui->fontBorderCheckBox->setChecked(false);
+        }
+
+        if ( textFont.fontShadowEffect().contains("yes", Qt::CaseInsensitive) == true ) {
+            ui->fontShadowCheckBox->setChecked(true);
+        }
+        else {
+            ui->fontShadowCheckBox->setChecked(false);
+        }
+
+        mTextBorderColor = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
+        mTextShadowColor = MyAttributesConverter::stringToColor( textFont.fontShadowEffectColor() );
+
+        MyAttributesConverter::setColorToButton(ui->fontBorderColor, mTextBorderColor);
+        MyAttributesConverter::setColorToButton(ui->fontShadowColor, mTextShadowColor);
     }
+
     mTextFontChangedBySoft = false;
 }
 
@@ -1606,10 +1663,10 @@ TextFont MainWindow::getFontToolBox(bool customColorClicked) {
         else if ( ui->fontColorOtherButton->isChecked() ) {
 
             if ( customColorClicked == true ) {
-                bool ok;
-                QColor init_color = QColor::fromRgba( ui->fontColorOtherText->text().toUInt(&ok, 16) );
+
+                QColor init_color = MyAttributesConverter::stringToColor( ui->fontColorOtherText->text() );
                 QColor font_color = QColorDialog::getColor(init_color, 0, "Select Color", QColorDialog::ShowAlphaChannel);
-                font_color_str = QString::number( font_color.rgba(), 16 ).toUpper();
+                font_color_str = MyAttributesConverter::colorToString(font_color);
                 ui->fontColorOtherText->setText(font_color_str);
             }
             else {
@@ -1622,7 +1679,7 @@ TextFont MainWindow::getFontToolBox(bool customColorClicked) {
 
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             qApp->setProperty("prop_FontColor_rgba", font_color_str);
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
 
@@ -1639,6 +1696,23 @@ TextFont MainWindow::getFontToolBox(bool customColorClicked) {
         else {
             text_font.setFontUnderlined("no");
         }
+
+        if ( ui->fontBorderCheckBox->isChecked() ) {
+            text_font.setFontBorderEffect("yes");
+        }
+        else {
+            text_font.setFontBorderEffect("no");
+        }
+
+        if ( ui->fontShadowCheckBox->isChecked() ) {
+            text_font.setFontShadowEffect("yes");
+        }
+        else {
+            text_font.setFontShadowEffect("no");
+        }
+
+        text_font.setFontBorderEffectColor( MyAttributesConverter::colorToString(mTextBorderColor) );
+        text_font.setFontShadowEffectColor( MyAttributesConverter::colorToString(mTextShadowColor) );
     }
 
     return text_font;
@@ -1693,7 +1767,7 @@ void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &value) {
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             // Save the parameter as default parameter
             qApp->setProperty("prop_FontSize_pt", ui->fontSizeSpinBox->cleanText());
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
         // Update the text edit font
@@ -1751,11 +1825,123 @@ void MainWindow::on_fontColorOtherButton_clicked() {
     }
 }
 
+// On font border on/off
+void MainWindow::on_fontBorderCheckBox_toggled(bool checked) {
+
+    if ( mTextFontChangedBySoft == false ) {
+
+        // If there are no subtitle for the current position,
+        // save this parameter as default parameter
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+
+            if ( checked ) {
+                qApp->setProperty("prop_FontBorder", "yes");
+            }
+            else {
+                qApp->setProperty("prop_FontBorder", "no");
+            }
+
+            ui->stEditDisplay->updateDefaultSub();
+        }
+
+        // Update the text font in the database and in the text edit
+        updateTextFont(false);
+    }
+}
+
+// On font shadow on/off
+void MainWindow::on_fontShadowCheckBox_toggled(bool checked) {
+
+    if ( mTextFontChangedBySoft == false ) {
+
+        // If there are no subtitle for the current position,
+        // save this parameter as default parameter
+        if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+
+            if ( checked ) {
+                qApp->setProperty("prop_FontShadow", "yes");
+            }
+            else {
+                qApp->setProperty("prop_FontShadow", "no");
+            }
+
+            ui->stEditDisplay->updateDefaultSub();
+        }
+
+        // Update the text font in the database and in the text edit
+        updateTextFont(false);
+    }
+
+}
+
+// On border color clicked
+void MainWindow::on_fontBorderColor_clicked() {
+
+    if ( mTextFontChangedBySoft == false ) {
+
+        // Open a dialog abling user to chose a color
+        QColor init_color = MyAttributesConverter::stringToColor( qApp->property("prop_FontBorderColor").toString() );
+        QColor font_border_color = QColorDialog::getColor(init_color, 0, "Select Color", QColorDialog::ShowAlphaChannel);
+
+        if ( font_border_color.isValid() ) {
+
+            // Save the color
+            mTextBorderColor = font_border_color;
+
+            // If there are no subtitle for the current position,
+            // save this parameter as default parameter
+            if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+                qApp->setProperty("prop_FontBorderColor", MyAttributesConverter::colorToString(font_border_color));
+                ui->stEditDisplay->updateDefaultSub();
+            }
+
+            // Change the color of the PushButton
+            MyAttributesConverter::setColorToButton(ui->fontBorderColor, font_border_color);
+
+            // Update the text font in the database and in the text edit
+            updateTextFont(false);
+        }
+    }
+}
+
+// On shadow color clicked
+void MainWindow::on_fontShadowColor_clicked() {
+
+    if ( mTextFontChangedBySoft == false ) {
+
+        // Open a dialog abling user to chose a color
+        QColor init_color = MyAttributesConverter::stringToColor( qApp->property("prop_FontShadowColor").toString() );
+        QColor font_shadow_color = QColorDialog::getColor(init_color, 0, "Select Color", QColorDialog::ShowAlphaChannel);
+
+        if ( font_shadow_color.isValid() ) {
+
+            // Save the color
+            mTextShadowColor = font_shadow_color;
+
+            // If there are no subtitle for the current position,
+            // save this parameter as default parameter
+            if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
+                qApp->setProperty("prop_FontShadowColor", MyAttributesConverter::colorToString(font_shadow_color));
+                ui->stEditDisplay->updateDefaultSub();
+            }
+
+            // Change the color of the PushButton
+            MyAttributesConverter::setColorToButton(ui->fontShadowColor, font_shadow_color);
+
+            // Update the text font in the database and in the text edit
+            updateTextFont(false);
+        }
+    }
+}
+
+
 // Italic value changed
 void MainWindow::on_fontItalicButton_toggled(bool checked) {
 
     if ( mTextFontChangedBySoft == false ) {
 
+        // If there are no subtitle for the current position,
+        // save this parameter as default parameter
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
 
             if ( checked ) {
@@ -1765,9 +1951,10 @@ void MainWindow::on_fontItalicButton_toggled(bool checked) {
                 qApp->setProperty("prop_FontItalic", "no");
             }
 
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
+        // Update the text font in the database and in the text edit
         updateTextFont(false);
     }
 }
@@ -1777,6 +1964,8 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
 
     if ( mTextFontChangedBySoft == false ) {
 
+        // If there are no subtitle for the current position,
+        // save this parameter as default parameter
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
 
             if ( checked ) {
@@ -1786,9 +1975,10 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
                 qApp->setProperty("prop_FontUnderlined", "no");
             }
 
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
+        // Update the text font in the database and in the text edit
         updateTextFont(false);
     }
 }
@@ -1798,12 +1988,15 @@ void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
 
     if ( mTextFontChangedBySoft == false ) {
 
+        // If there are no subtitle for the current position,
+        // save this parameter as default parameter
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
 
             qApp->setProperty("prop_FontName", ui->fontIdComboBox->currentText());
-            ui->stEditDisplay->defaultSub();
+            ui->stEditDisplay->updateDefaultSub();
         }
 
+        // Update the text font in the database and in the text edit
         updateTextFont(false);
     }
 }
@@ -2152,7 +2345,13 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
     custom_menu.actions().last()->setCheckable(true);
     custom_menu.addAction("Underline");
     custom_menu.actions().last()->setCheckable(true);
-    custom_menu.addAction("Color...");
+    custom_menu.addAction("Border");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Shadow");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Text color...");
+    custom_menu.addAction("Border color...");
+    custom_menu.addAction("Shadow color...");
     custom_menu.addAction("Font...");
     // ...
 
@@ -2160,6 +2359,8 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
     QList<TextLine> text_lines;
     bool italic_found = false;
     bool underlined_found = false;
+    bool border_found = false;
+    bool shadow_found = false;
     bool data_changed = false;
 
     // Retrieve the indexes of the selected subtitles
@@ -2174,6 +2375,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
         // If "Italic" or "Underlined" attribute is found, check the corresponding checkbox
         for ( qint16 i = 0; i < text_lines.count(); i++ ) {
+
             if ( text_lines[i].Font().fontItalic() == "yes" ) {
                 custom_menu.actions().at(2)->setChecked(true);
                 italic_found = true;
@@ -2183,9 +2385,20 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
                 custom_menu.actions().at(3)->setChecked(true);
                 underlined_found = true;
             }
+
+            if ( text_lines[i].Font().fontBorderEffect() == "yes" ) {
+                custom_menu.actions().at(4)->setChecked(true);
+                border_found = true;
+            }
+
+            if ( text_lines[i].Font().fontShadowEffect() == "yes" ) {
+                custom_menu.actions().at(5)->setChecked(true);
+                shadow_found = true;
+            }
+
         }
 
-        if ( ( italic_found ) && ( underlined_found) ) {
+        if ( ( italic_found ) && ( underlined_found) && ( border_found ) && ( shadow_found ) ) {
             break;
         }
     }
@@ -2262,16 +2475,78 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
             data_changed = true;
         }
-        // "Color"
-        else if ( selected_item->text() == "Color..." ) {
+        // "Border"
+        else if ( selected_item->text() == "Border" ) {
+
+            QString is_border;
+
+            // If at least one subtitle line has "Border" attribute,
+            // unset "Border" to all selected subtitles
+            // If not found, set "Border" to all selected subtitles
+
+            if ( border_found ) {
+                is_border = "no";
+            }
+            else {
+                is_border = "yes";
+            }
+
+            for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                current_sub = ui->subTable->getSubInfos(*it);
+
+                for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+
+                    current_sub.text()[i].Font().setFontBorderEffect(is_border);
+                }
+
+                // Push the new datas in the table
+                ui->subTable->updateDatas(current_sub, *it);
+            }
+
+            data_changed = true;
+        }
+        // "Shadow"
+        else if ( selected_item->text() == "Shadow" ) {
+
+            QString is_shadow;
+
+            // If at least one subtitle line has "Shadow" attribute,
+            // unset "Shadow" to all selected subtitles
+            // If not found, set "Shadow" to all selected subtitles
+
+            if ( shadow_found ) {
+                is_shadow = "no";
+            }
+            else {
+                is_shadow = "yes";
+            }
+
+            for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                current_sub = ui->subTable->getSubInfos(*it);
+
+                for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+
+                    current_sub.text()[i].Font().setFontShadowEffect(is_shadow);
+                }
+
+                // Push the new datas in the table
+                ui->subTable->updateDatas(current_sub, *it);
+            }
+
+            data_changed = true;
+        }
+        // "Text color"
+        else if ( selected_item->text() == "Text color..." ) {
 
             // Open a color chooser dialog
-            QColor font_color = QColorDialog::getColor(Qt::white, 0,"Select Color", QColorDialog::ShowAlphaChannel);
+            QColor font_color = QColorDialog::getColor(QColor("FFFFFFFF"), 0,"Select Color", QColorDialog::ShowAlphaChannel);
 
             // If valid color, set to all selected subtitles
             if ( font_color.isValid() ) {
 
-                QString font_color_str = QString::number( font_color.rgba(), 16 ).toUpper();
+                QString font_color_str = MyAttributesConverter::colorToString(font_color);
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
@@ -2279,6 +2554,64 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
                     for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
                         current_sub.text()[i].Font().setFontColor(font_color_str);
+                    }
+
+                    // Push the new datas in the database
+                    ui->subTable->updateDatas(current_sub, *it);
+                }
+
+                data_changed = true;
+            }
+            else {
+                data_changed = false;
+            }
+        }
+        // "Border color"
+        else if ( selected_item->text() == "Border color..." ) {
+
+            // Open a color chooser dialog
+            QColor border_color = QColorDialog::getColor(QColor("FF000000"), 0,"Select Color", QColorDialog::ShowAlphaChannel);
+
+            // If valid color, set to all selected subtitles
+            if ( border_color.isValid() ) {
+
+                QString border_color_str = MyAttributesConverter::colorToString(border_color);
+
+                for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                    current_sub = ui->subTable->getSubInfos(*it);
+
+                    for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+                        current_sub.text()[i].Font().setFontBorderEffectColor(border_color_str);
+                    }
+
+                    // Push the new datas in the database
+                    ui->subTable->updateDatas(current_sub, *it);
+                }
+
+                data_changed = true;
+            }
+            else {
+                data_changed = false;
+            }
+        }
+        // "Shadow color"
+        else if ( selected_item->text() == "Shadow color..." ) {
+
+            // Open a color chooser dialog
+            QColor shadow_color = QColorDialog::getColor(QColor("FF000000"), 0,"Select Color", QColorDialog::ShowAlphaChannel);
+
+            // If valid color, set to all selected subtitles
+            if ( shadow_color.isValid() ) {
+
+                QString shadow_color_str = MyAttributesConverter::colorToString(shadow_color);
+
+                for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
+
+                    current_sub = ui->subTable->getSubInfos(*it);
+
+                    for ( qint16 i = 0; i < current_sub.text().count(); i++ ) {
+                        current_sub.text()[i].Font().setFontShadowEffectColor(shadow_color_str);
                     }
 
                     // Push the new datas in the database

@@ -4,6 +4,8 @@
 #include <QTextDocumentFragment>
 #include <QDesktopWidget>
 #include <QApplication>
+#include <QGraphicsDropShadowEffect>
+#include <QTextCharFormat>
 
 // Maximum number of character by line
 #define MAX_CHAR_BY_LINE 40
@@ -19,8 +21,10 @@
 // Temp : Default font
 #define FONT_ID_DEFAULT_VALUE "Arial"
 #define FONT_COLOR_DEFAULT_VALUE "FF0000FF"
-#define FONT_EFFECT_DEFAULT_VALUE "none"
-#define FONT_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_SHADOW_EFFECT_DEFAULT_VALUE "yes"
+#define FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_BORDER_EFFECT_DEFAULT_VALUE "yes"
+#define FONT_BORDER_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_ITALIC_DEFAULT_VALUE "no"
 #define FONT_SCRIPT_DEFAULT_VALUE "normal"
 #define FONT_SIZE_DEFAULT_VALUE "42"
@@ -35,7 +39,7 @@
 
 
 // This widget class manage the edit zone.
-// Manage 2 lines of editable text, with position and font attributes
+// Manage many lines of editable text, with position and font attributes
 MyTextEdit::MyTextEdit(QWidget *parent) :
     QWidget(parent)
 {
@@ -72,6 +76,15 @@ QTextEdit* MyTextEdit::createNewTextEdit() {
 
     // Set text zones colors
     text_edit->setStyleSheet("background: transparent; border: 1px solid red;");
+
+    // Install a shadow effect on the text edit widget
+    QGraphicsDropShadowEffect* shadow_effect = new QGraphicsDropShadowEffect(this);
+    shadow_effect->setBlurRadius(3);
+    shadow_effect->setColor(QColor("#" +qApp->property("prop_FontShadowColor").toString()));
+    shadow_effect->setOffset(2,2);
+    shadow_effect->setEnabled(false);
+    text_edit->setGraphicsEffect(shadow_effect);
+
     // Disable scroll bar
     text_edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     text_edit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -85,7 +98,7 @@ QTextEdit* MyTextEdit::createNewTextEdit() {
 }
 
 // Save the default position and font parameter
-void MyTextEdit::defaultSub() {
+void MyTextEdit::updateDefaultSub() {
 
     TextLine default_line;
     TextFont default_font;
@@ -95,8 +108,10 @@ void MyTextEdit::defaultSub() {
 
     default_font.setFontId( qApp->property("prop_FontName").toString() );
     default_font.setFontColor( qApp->property("prop_FontColor_rgba").toString() );
-    default_font.setFontEffect( FONT_EFFECT_DEFAULT_VALUE );
-    default_font.setFontEffectColor( FONT_EFFECT_COLOR_DEFAULT_VALUE );
+    default_font.setFontShadowEffect( qApp->property("prop_FontShadow").toString() );
+    default_font.setFontShadowEffectColor( qApp->property("prop_FontShadowColor").toString() );
+    default_font.setFontBorderEffect( qApp->property("prop_FontBorder").toString() );
+    default_font.setFontBorderEffectColor( qApp->property("prop_FontBorderColor").toString() );
     default_font.setFontItalic( qApp->property("prop_FontItalic").toString() );
     default_font.setFontScript( FONT_SCRIPT_DEFAULT_VALUE );
     default_font.setFontSize( qApp->property("prop_FontSize_pt").toString() );
@@ -297,11 +312,11 @@ void MyTextEdit::setText(MySubtitles subtitle) {
             text_edit = mTextLinesList[i];
         }
 
-        // Apply the font to the QTextEdit
-        this->setTextFont(text_edit, text_lines[i].Font(), this->size());
-
         // Apply the text to the QTextEdit
         text_edit->setText(text_lines[i].Line());
+
+        // Apply the font to the QTextEdit
+        this->setTextFont(text_edit, text_lines[i].Font(), this->size());
 
         // Apply the position to the QTextEdit
         this->setTextPosition(text_edit, text_lines.at(i), this->size());
@@ -341,6 +356,8 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
     Qt::Alignment v_align; 
     qint32 widget_width;
     qint32 widget_height;
+
+    textEdit->setFixedWidth(widgetSize.width() - 20);
 
     // Retrieive the widget size
     widget_width = widgetSize.width();
@@ -465,7 +482,6 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     qint16 font_size_pt;
     qreal relative_font_size;
     QColor font_color;
-    bool ok;
 
     QFont font = textEdit->font();
 
@@ -493,16 +509,13 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     textEdit->setFont(font);
 
     // Set font color
-    font_color = QColor::fromRgba( textFont.fontColor().toUInt(&ok, 16) );
+    font_color = MyAttributesConverter::stringToColor( textFont.fontColor() );
     QPalette widget_palette = textEdit->palette();
     widget_palette.setColor(QPalette::Text,font_color);
     textEdit->setPalette(widget_palette);
 
 
     // Resize the height of subtitles edit zone in function of font size
-
-    //QString test_string_width;
-    //test_string_width.fill('W', MAX_CHAR_BY_LINE);
     QFontMetrics font_metrics( textEdit->font() );
 
     if ( font_metrics.leading() < 0 ) {
@@ -511,8 +524,36 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     else {
         textEdit->setFixedHeight( font_metrics.lineSpacing() + ( textEdit->frameWidth() * 2 ) );
     }
-    //textEdit->setFixedWidth( font_metrics.width(test_string_width) + ( textEdit->frameWidth() * 2 ) );
-    textEdit->setFixedWidth(widgetSize.width() - 20);
+
+    // Set shadow
+    if ( textFont.fontShadowEffect() == "yes" ) {
+
+        QGraphicsDropShadowEffect* shadow_effect = static_cast<QGraphicsDropShadowEffect*> (textEdit->graphicsEffect());
+        textEdit->graphicsEffect()->setEnabled(true);
+        shadow_effect->setColor( MyAttributesConverter::stringToColor( textFont.fontShadowEffectColor() ) );
+    }
+    else {
+        textEdit->graphicsEffect()->setEnabled(false);
+    }
+
+    // Set outline
+    Qt::PenStyle outline_pen_style;
+
+    if ( textFont.fontBorderEffect() == "yes" ) {
+        outline_pen_style = Qt::SolidLine;
+    }
+    else {
+        outline_pen_style = Qt::NoPen;
+    }
+
+    qreal outline_width = relative_font_size / 28.0;
+    QColor outline_color = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
+
+    QTextCharFormat char_format = textEdit->currentCharFormat();
+    char_format.setTextOutline(QPen (outline_color, outline_width, outline_pen_style, Qt::RoundCap, Qt::RoundJoin));
+    textEdit->selectAll();
+    textEdit->setCurrentCharFormat(char_format);
+    textEdit->moveCursor(QTextCursor::EndOfLine);
 
     // Save this font parameter to current
     this->saveCurrentTextFont(textFont, textEdit);
@@ -526,6 +567,7 @@ void MyTextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetS
     qint16 font_size_pt;
     qreal relative_font_size_pt;
     QColor font_color;
+    QColor effect_color;
 
     QFont font = textEdit->font();
     // Get font name
@@ -546,6 +588,18 @@ void MyTextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetS
     QPalette widget_palette = textEdit->palette();
     font_color = widget_palette.color(QPalette::Text);
     textFont.setFontColor( (QString::number( font_color.rgba(), 16 )).toUpper() );
+
+    if ( textEdit->graphicsEffect()->isEnabled() ) {
+        textFont.setFontShadowEffect("yes");
+    }
+    else {
+        textFont.setFontShadowEffect("no");
+    }
+
+    // Get font shadow color
+    QGraphicsDropShadowEffect* shadow_effect = static_cast<QGraphicsDropShadowEffect*> (textEdit->graphicsEffect());
+    effect_color = shadow_effect->color();
+    textFont.setFontShadowEffectColor( (QString::number( effect_color.rgba(), 16 )).toUpper() );
 }
 
 // Widget resize event

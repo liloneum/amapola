@@ -12,8 +12,10 @@ public:
     TextFont();
     void setFontId(QString fontId);
     void setFontColor(QString fontColor);
-    void setFontEffect(QString fontEffect);
-    void setFontEffectColor(QString fontEffectColor);
+    void setFontShadowEffect(QString fontEffect);
+    void setFontShadowEffectColor(QString fontEffectColor);
+    void setFontBorderEffect(QString fontEffect);
+    void setFontBorderEffectColor(QString fontEffectColor);
     void setFontSize(QString fontSize);
     void setFontItalic(QString fontItalic);
     void setFontUnderlined(QString fontUnderlined);
@@ -21,8 +23,10 @@ public:
 
     QString fontId();
     QString fontColor();
-    QString fontEffect();
-    QString fontEffectColor();
+    QString fontShadowEffect();
+    QString fontShadowEffectColor();
+    QString fontBorderEffect();
+    QString fontBorderEffectColor();
     QString fontSize();
     QString fontItalic();
     QString fontUnderlined();
@@ -35,10 +39,14 @@ private:
     QString mFontId;
     // attribute Color
     QString mColor;
-    // attribute Effect
-    QString mEffect;
-    // attribute EffectColor
-    QString mEffectColor;
+    // attribute Shadow Effect
+    QString mShadowEffect;
+    // attribute Shadow EffectColor
+    QString mShadowEffectColor;
+    // attribute Border Effect
+    QString mBorderEffect;
+    // attribute Border EffectColor
+    QString mBorderEffectColor;
     // attribute Size
     QString mSize;
     // attribute Italic

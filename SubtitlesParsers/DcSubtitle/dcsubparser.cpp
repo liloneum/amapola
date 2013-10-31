@@ -12,7 +12,8 @@
 // Define default values
 #define FONT_ID_DEFAULT_VALUE ""
 #define FONT_COLOR_DEFAULT_VALUE "FFFFFFFF"
-#define FONT_EFFECT_DEFAULT_VALUE "shadow"
+#define FONT_SHADOW_EFFECT_DEFAULT_VALUE "yes"
+#define FONT_BORDER_EFFECT_DEFAULT_VALUE "no"
 #define FONT_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_ITALIC_DEFAULT_VALUE "no"
 #define FONT_SCRIPT_DEFAULT_VALUE "normal"
@@ -35,8 +36,10 @@ DcSubParser::DcSubParser() {
 
     font_init.setFontId( FONT_ID_DEFAULT_VALUE );
     font_init.setFontColor( FONT_COLOR_DEFAULT_VALUE );
-    font_init.setFontEffect( FONT_EFFECT_DEFAULT_VALUE );
-    font_init.setFontEffectColor( FONT_EFFECT_COLOR_DEFAULT_VALUE );
+    font_init.setFontShadowEffect( FONT_SHADOW_EFFECT_DEFAULT_VALUE );
+    font_init.setFontShadowEffectColor( FONT_EFFECT_COLOR_DEFAULT_VALUE );
+    font_init.setFontBorderEffect( FONT_BORDER_EFFECT_DEFAULT_VALUE );
+    font_init.setFontBorderEffectColor( FONT_EFFECT_COLOR_DEFAULT_VALUE );
     font_init.setFontItalic( FONT_ITALIC_DEFAULT_VALUE );
     font_init.setFontScript( FONT_SCRIPT_DEFAULT_VALUE );
     font_init.setFontSize( FONT_SIZE_DEFAULT_VALUE );
@@ -407,12 +410,62 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
             xmlElement->setAttribute("Color", newFont.fontColor());
         }
 
-        if ( newFont.fontEffect() != "" ) {
-            xmlElement->setAttribute("Effect", newFont.fontEffect());
+        if ( newFont.fontShadowEffect() != "" ) {
+
+            if ( newFont.fontShadowEffect() == "yes" ) {
+                xmlElement->setAttribute("Effect", "shadow");
+            }
+            else {
+
+                if ( newFont.fontBorderEffect() != "" ) {
+
+                    if ( newFont.fontBorderEffect() == "yes" ) {
+                        xmlElement->setAttribute("Effect", "border");
+                    }
+                    else {
+                        xmlElement->setAttribute("Effect", "none");
+                    }
+                }
+                else {
+
+                    if ( previousFont.fontBorderEffect() == "yes" ) {
+                        xmlElement->setAttribute("Effect", "border");
+                    }
+                    else {
+                        xmlElement->setAttribute("Effect", "none");
+                    }
+                }
+            }
+        }
+        else if ( newFont.fontBorderEffect() != "" ) {
+
+            if ( previousFont.fontShadowEffect() == "no" ) {
+
+                if ( newFont.fontBorderEffect() == "yes" ) {
+                    xmlElement->setAttribute("Effect", "border");
+                }
+                else {
+                    xmlElement->setAttribute("Effect", "none");
+                }
+            }
         }
 
-        if ( newFont.fontEffectColor() != "" ) {
-            xmlElement->setAttribute("EffectColor", newFont.fontEffectColor());
+        if ( newFont.fontShadowEffectColor() != "" ) {
+
+            if ( ( newFont.fontShadowEffect() == "yes" ) ||
+                 ( previousFont.fontShadowEffect() == "yes" ) ) {
+
+                xmlElement->setAttribute("EffectColor", newFont.fontShadowEffectColor());
+            }
+        }
+        else if ( newFont.fontBorderEffectColor() != "" ) {
+
+            if ( ( ( newFont.fontBorderEffect() == "yes" ) ||
+                   ( previousFont.fontBorderEffect() == "yes" ) ) &&
+                 ( previousFont.fontShadowEffect() == "no" ) ) {
+
+                xmlElement->setAttribute("EffectColor", newFont.fontBorderEffectColor());
+            }
         }
 
         if ( newFont.fontItalic() != "" ) {
@@ -462,18 +515,33 @@ void DcSubParser::changeFont(QDomElement xmlElement) {
 
     // attribute Effect
     if ( !xmlElement.attribute("Effect").isNull() ) {
-        new_font.setFontEffect( xmlElement.attribute("Effect") );
+
+        if ( xmlElement.attribute("Effect") == "none" ) {
+            new_font.setFontShadowEffect("no");
+            new_font.setFontBorderEffect("no");
+        }
+        else if ( xmlElement.attribute("Effect") == "shadow" ) {
+            new_font.setFontShadowEffect("yes");
+            new_font.setFontBorderEffect("no");
+        }
+        else if ( xmlElement.attribute("Effect") == "border" ) {
+            new_font.setFontShadowEffect("no");
+            new_font.setFontBorderEffect("yes");
+        }
     }
     else {
-        new_font.setFontEffect( mFontList.last().fontEffect() );
+        new_font.setFontShadowEffect( mFontList.last().fontShadowEffect() );
+        new_font.setFontBorderEffect( mFontList.last().fontBorderEffect() );
     }
 
     // attribute EffectColor
     if ( !xmlElement.attribute("EffectColor").isNull() ) {
-        new_font.setFontEffectColor( xmlElement.attribute("EffectColor") );
+        new_font.setFontShadowEffectColor( xmlElement.attribute("EffectColor") );
+        new_font.setFontBorderEffectColor( xmlElement.attribute("EffectColor") );
     }
     else {
-        new_font.setFontEffectColor( mFontList.last().fontEffectColor() );
+        new_font.setFontShadowEffectColor( mFontList.last().fontShadowEffectColor() );
+        new_font.setFontBorderEffectColor( mFontList.last().fontBorderEffectColor() );
     }
 
     // attribute Size
