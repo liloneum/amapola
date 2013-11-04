@@ -551,9 +551,15 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
     QTextCharFormat char_format = textEdit->currentCharFormat();
     char_format.setTextOutline(QPen (outline_color, outline_width, outline_pen_style, Qt::RoundCap, Qt::RoundJoin));
+
+    qint16 cursor_position = textEdit->textCursor().position();
     textEdit->selectAll();
+
     textEdit->setCurrentCharFormat(char_format);
-    textEdit->moveCursor(QTextCursor::EndOfLine);
+
+    QTextCursor text_cursor = textEdit->textCursor();
+    text_cursor.setPosition(cursor_position);
+    textEdit->setTextCursor(text_cursor);
 
     // Save this font parameter to current
     this->saveCurrentTextFont(textFont, textEdit);
