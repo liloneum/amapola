@@ -466,8 +466,10 @@ void MyTextEdit::updateTextFont(TextFont textFont, TextLine textLine) {
 
     // Retrieive the line position before. Because if font size change,
     // the position need to be recomputed
-    this->setTextFont(mpLastFocused, textFont, this->size());
-    this->setTextPosition(mpLastFocused, textLine, this->size());
+    if ( mpLastFocused != NULL ) {
+        this->setTextFont(mpLastFocused, textFont, this->size());
+        this->setTextPosition(mpLastFocused, textLine, this->size());
+    }
 }
 
 // Set the font of the given textEdit zone
@@ -716,6 +718,8 @@ void MyTextEdit::removeLine(QTextEdit *textEdit) {
 
         mPreviousTextList.removeAt(text_line_index);
 
+        mpLastFocused = NULL;
+
         emit cursorPositionChanged();
         emit subDatasChanged( subtitleData() );
 
@@ -765,6 +769,11 @@ void MyTextEdit::newCursorPosition() {
         for ( qint16 i = 0; i < mTextLinesList.count(); i++ ) {
 
             if ( mTextLinesList.at(i)->toPlainText() != mPreviousTextList.at(i) ) {
+
+                if ( mPreviousTextList.at(i) == "" ) {
+                    this->setTextFont(mTextLinesList.at(i), mCurrentTextProp.text()[i].Font(), this->size());
+                }
+
                 text_changed = true;
                 break;
             }
@@ -772,7 +781,7 @@ void MyTextEdit::newCursorPosition() {
 
         if ( text_changed == true ) {
 
-            this->wrapText(mpLastFocused);
+//            this->wrapText(mpLastFocused);
 
             mPreviousTextList.clear();
 

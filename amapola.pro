@@ -40,7 +40,6 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     mywaveform.ui \
     myvideoplayer.ui \
-    mysettings.ui \
-    mytextedit.ui
+    mysettings.ui
 
 CONFIG += qwt

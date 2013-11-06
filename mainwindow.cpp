@@ -282,8 +282,19 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             // PageUp key : Select previous subtitle
             current_subtitle_index = ui->subTable->currentIndex();
 
-            if ( current_subtitle_index > 0 ) {
-                ui->subTable->selectRow(current_subtitle_index - 1);
+            if ( current_subtitle_index >= 0 ) {
+
+                qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).endTime() );
+
+                if ( ui->waveForm->currentPositonMs() > current_sub_end_time_ms ) {
+
+                    ui->subTable->clearSelection();
+                    ui->waveForm->updatePostionMarker(current_sub_end_time_ms);
+                }
+                else if ( current_subtitle_index > 0 ){
+
+                    ui->subTable->selectRow(current_subtitle_index - 1);
+                }
             }
             return true;
         }
@@ -292,8 +303,20 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             // PageDown key : Select next subtitle
             current_subtitle_index = ui->subTable->currentIndex();
 
-            if ( (current_subtitle_index + 1) < ui->subTable->subtitlesCount() ) {
-                ui->subTable->selectRow(current_subtitle_index + 1);
+            if ( current_subtitle_index < ui->subTable->subtitlesCount() ) {
+
+                qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).startTime() );
+
+                if ( ui->waveForm->currentPositonMs() < current_sub_start_time_ms ) {
+
+                    ui->subTable->clearSelection();
+                    ui->waveForm->updatePostionMarker(current_sub_start_time_ms);
+
+                }
+                else if ( (current_subtitle_index + 1) < ui->subTable->subtitlesCount() ){
+
+                    ui->subTable->selectRow(current_subtitle_index + 1);
+                }
             }
             return true;
         }
@@ -373,12 +396,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             //"[NUM]4" or "Ctrl + P" key : switch play / pause video player
 
-            current_position_ms = ui->waveForm->currentPositonMs();
             mMarkerPosChanged = true;
             ui->videoPlayer->on_playButton_clicked();
-            // QMediaplayer is bugged, position jump when "play" after "pause"
-            // Replace the position marker to force video position
-            ui->waveForm->updatePostionMarker(current_position_ms);
 
             return true;
         }
@@ -578,6 +597,10 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
         sub_list = subList;
     }
 
+    if ( ref_subtitle_index >= sub_list.count() ) {
+        return false;
+    }
+
     // Get the current subtitle start time and compute the time shift
     MySubtitles current_subtitle = sub_list[ref_subtitle_index];
     qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
@@ -772,6 +795,10 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
         sub_list = subList;
     }
 
+    if ( ref_subtitle_index >= sub_list.count() ) {
+        return false;
+    }
+
     // Get the current subtitle start time and compute the time shift
     MySubtitles current_subtitle = sub_list[ref_subtitle_index];
 
@@ -949,6 +976,13 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         ref_subtitle_index = index;
     }
 
+    QList<MySubtitles> sub_list;
+    sub_list = ui->subTable->saveSubtitles();
+
+    if ( ref_subtitle_index >= sub_list.count() ) {
+        return;
+    }
+
     MySubtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
     qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
     qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
@@ -964,9 +998,6 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         qSort(selected_indexes.begin(), selected_indexes.end());
     }
     else return;
-
-    QList<MySubtitles> sub_list;
-    sub_list = ui->subTable->saveSubtitles();
 
     QList<qint32>::iterator it;
     for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
