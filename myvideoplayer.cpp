@@ -103,16 +103,16 @@ bool MyVideoPlayer::changePlaybackRate(bool moreSpeed) {
     qreal current_playback_rate = mpPlayer->playbackRate();
 
     if ( moreSpeed == true ) {
-        if ( current_playback_rate <= 3.0 ) {
-            mpPlayer->setPlaybackRate(current_playback_rate + 1.0);
-            player_state_infos = "x " +QString::number(current_playback_rate + 1.0, 'f', 1);
+        if ( current_playback_rate <= 3.81 ) {
+            mpPlayer->setPlaybackRate(current_playback_rate + 0.2);
+            player_state_infos = "x " +QString::number(current_playback_rate + 0.2, 'f', 1);
             status = true;
         }
     }
     else {
-        if ( current_playback_rate >= 2.0 ) {
-            mpPlayer->setPlaybackRate(current_playback_rate - 1.0);
-            player_state_infos = "x " +QString::number(current_playback_rate - 1.0,'f', 1);
+        if ( current_playback_rate >= 1.19 ) {
+            mpPlayer->setPlaybackRate(current_playback_rate - 0.2);
+            player_state_infos = "x " +QString::number(current_playback_rate - 0.2,'f', 1);
             status = true;
         }
     }

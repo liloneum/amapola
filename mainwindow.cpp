@@ -333,7 +333,11 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             // "[NUM]1" or "F11" key : move current position 1 second before
             current_position_ms = ui->waveForm->currentPositonMs();
-            ui->waveForm->updatePostionMarker(current_position_ms - 1000);
+            qint64 new_position_ms = current_position_ms - 1000;
+            if ( new_position_ms < 0 ) {
+                new_position_ms = 0;
+            }
+            ui->waveForm->updatePostionMarker(new_position_ms);
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_8 ) ) ||
@@ -351,7 +355,12 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             // "[NUM]7" or "F9" key : move current position 1 frame before
             current_position_ms = ui->waveForm->currentPositonMs();
             qint16 frame_duration_ms = (qint16)( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
-            ui->waveForm->updatePostionMarker(current_position_ms - frame_duration_ms);
+            qint64 new_position_ms = current_position_ms - frame_duration_ms;
+
+            if ( new_position_ms < 0 ) {
+                new_position_ms = 0;
+            }
+            ui->waveForm->updatePostionMarker(new_position_ms);
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Minus ) ) ||
@@ -597,7 +606,8 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
         sub_list = subList;
     }
 
-    if ( ref_subtitle_index >= sub_list.count() ) {
+    if ( ( ref_subtitle_index >= sub_list.count() ) ||
+         ( ref_subtitle_index < 0 ) ) {
         return false;
     }
 
@@ -795,7 +805,8 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
         sub_list = subList;
     }
 
-    if ( ref_subtitle_index >= sub_list.count() ) {
+    if ( ( ref_subtitle_index >= sub_list.count() ) ||
+         ( ref_subtitle_index < 0 ) ) {
         return false;
     }
 
@@ -979,7 +990,8 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
     QList<MySubtitles> sub_list;
     sub_list = ui->subTable->saveSubtitles();
 
-    if ( ref_subtitle_index >= sub_list.count() ) {
+    if ( ( ref_subtitle_index >= sub_list.count() ) ||
+         ( ref_subtitle_index < 0 ) ) {
         return;
     }
 
@@ -1087,9 +1099,16 @@ void MainWindow::removeSubtitles() {
     // Save the database current state in history
     this->saveToHistory("Remove subtitle");
 
+    qint32 current_sub_index = ui->subTable->currentIndex();
+
+    // If there no more subtitle in the database, erase the text in edition zone
+    if ( current_sub_index < 0 ) {
+        ui->stEditDisplay->setText(ui->subTable->getSubInfos(current_sub_index));
+    }
+
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
-    ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
+    ui->waveForm->drawSubtitlesZone(sub_list, current_sub_index);
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
 }
 

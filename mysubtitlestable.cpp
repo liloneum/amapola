@@ -8,7 +8,7 @@
 
 // Temp : Default font
 #define FONT_ID_DEFAULT_VALUE "Arial"
-#define FONT_COLOR_DEFAULT_VALUE "FF0000FF"
+#define FONT_COLOR_DEFAULT_VALUE "FFFFFFFF"
 #define FONT_SHADOW_EFFECT_DEFAULT_VALUE "yes"
 #define FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_BORDER_EFFECT_DEFAULT_VALUE "yes"
@@ -125,6 +125,7 @@ void MySubtitlesTable::addRows(qint32 numberOfRow, qint32 fromRowNbr) {
             else if ( i == SUB_TEXT_COL ){
                 new_item->setText("");
                 new_item->setTextAlignment(Qt::AlignLeft);
+                this->hideRow(j);
             }
             else {
                 new_item->setText("");
@@ -175,6 +176,8 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 //Errorr
                 continue;
             }
+
+            this->showRow(mStCount);
 
             // If subtitle is valid, load it in the database
             mSubtitlesList.append( subtitlesList[i] ) ;
@@ -366,6 +369,8 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs)
             mErrorMsg = status_msg;
             return false;
         }
+
+        this->showRow(mCurrentIndex);
 
         // Add new rows to the table when empty rows remaining are less than 10
         if ( ( this->rowCount() - mStCount ) < 10 ) {
@@ -1129,14 +1134,14 @@ void MySubtitlesTable::updateStDisplay(qint64 positionMs) {
                 mSelectedBySoft = true;
                 this->selectRow(mCurrentIndex);
             }
-            else {
-                mSelectedByUser = false;
-            }
         }
 
         // Send a signal to display the subtilte or nothing if it's empty
         emit newTextToDisplay(subtitle);
     }
+
+    mSelectedByUser = false;
+    mSelectedBySoft = false;
     mPreviousIndex = st_index;
 }
 
