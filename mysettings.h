@@ -39,6 +39,7 @@ private slots:
 public slots:
     void setFrameRate(qreal frameRate);
     MyProperties getCurrentProp();
+    void updateDisplayAll();
 
 private:
     Ui::MySettings *ui;

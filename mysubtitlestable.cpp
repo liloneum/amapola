@@ -287,9 +287,11 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
             // Reset selection to 0
             mCurrentIndex = 0;
 
-            this->setSelectionMode(QAbstractItemView::SingleSelection);
-            this->selectRow(mCurrentIndex);
-            this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+            if ( mStCount > 0 ) {
+                this->setSelectionMode(QAbstractItemView::SingleSelection);
+                this->selectRow(mCurrentIndex);
+                this->setSelectionMode(QAbstractItemView::ExtendedSelection);
+            }
         }
 
         mSubLoadding = false;

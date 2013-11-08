@@ -27,6 +27,15 @@ MySettings::~MySettings()
     delete ui;
 }
 
+void MySettings::updateDisplayAll() {
+
+    ui->intervalMinSpinBox->setValue( qApp->property("prop_SubMinInterval_frame").toInt());
+    ui->displayTimeMinSpinBox->setValue( qApp->property("prop_SubMinDuration_ms").toInt());
+    this->setFrameRate(qApp->property("prop_FrameRate_fps").toDouble());
+    ui->maxCharPerLineSpinBox->setValue(qApp->property("prop_MaxCharPerLine").toInt());
+    ui->maxCharPerSecDoubleSpinBox->setValue(qApp->property("prop_MaxCharPerSec").toDouble());
+}
+
 void MySettings::on_displayTimeMinSpinBox_valueChanged(int value) {
 
     qApp->setProperty("prop_SubMinDuration_ms", value);

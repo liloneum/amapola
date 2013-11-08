@@ -128,15 +128,16 @@ void MyWaveFormSlider::openFile(QString waveform_file_name, qint64 mediaDuration
 
     mpFile->setFileName("");
 
+    // Erase previous waveform
+    mpWaveFormCurve->detach();
+    mpPosSlider->detach();
+
     if ( waveform_file_name.isEmpty() ) {
         initWaveForm(mediaDurationMs);
         return;
     }
 
     mpFile->setFileName(waveform_file_name);
-
-    // Erase previous waveform
-    mpWaveFormCurve->detach();
 
     initWaveForm(mediaDurationMs);
 }

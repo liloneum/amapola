@@ -1689,6 +1689,9 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionSave"/>
+    <addaction name="actionSave_as"/>
+    <addaction name="actionOpen_video"/>
     <addaction name="actionImport_Subtitles"/>
     <addaction name="actionExport_Subtitles"/>
     <addaction name="separator"/>
@@ -1707,7 +1710,7 @@
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>Open ...</string>
    </property>
   </action>
   <action name="actionQuit">
@@ -1717,12 +1720,30 @@
   </action>
   <action name="actionImport_Subtitles">
    <property name="text">
-    <string>Import Subtitles</string>
+    <string>Import Subtitles ...</string>
    </property>
   </action>
   <action name="actionExport_Subtitles">
    <property name="text">
-    <string>Export Subtitles</string>
+    <string>Export Subtitles ...</string>
+   </property>
+  </action>
+  <action name="actionOpen_video">
+   <property name="text">
+    <string>Open video ...</string>
+   </property>
+  </action>
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionSave_as">
+   <property name="text">
+    <string>Save as ...</string>
    </property>
   </action>
  </widget>

@@ -125,23 +125,36 @@ bool MyVideoPlayer::changePlaybackRate(bool moreSpeed) {
 }
 
 // Open a media file
-QString MyVideoPlayer::openFile() {
+QString MyVideoPlayer::openFile(QString fileName) {
 
-    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath() +"/Videos",
+    if ( fileName == "" ) {
+
+        fileName = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath() +"/Videos",
                                                      tr("Video Files (*.mp4 *.wmv *.avi)"));
+    }
 
-    if ( !file_name.isEmpty() ) {
+    if ( !fileName.isEmpty() ) {
 
         // Set the player position notify interval to 1 frame (1000ms/nbr of frame)
         mPlayerPositionNotifyIntervalMs = qRound( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
         mpPlayer->setNotifyInterval(mPlayerPositionNotifyIntervalMs);
 
-        mpPlayer->setMedia(QUrl::fromLocalFile(file_name));
+        mpPlayer->setMedia(QUrl::fromLocalFile(fileName));
         mpPlayer->play();
         mpPlayer->pause();
         ui->playButton->setEnabled(true);
     }
-    return file_name;
+
+    return fileName;
+}
+
+// Unload all media
+void MyVideoPlayer::unloadMedia() {
+
+    mpPlayer->stop();
+    mpPlayer->setMedia(NULL);
+    ui->timeSlider->openFile("", 0);
+    ui->playButton->setEnabled(false);
 }
 
 // Load tha waveform in the slider

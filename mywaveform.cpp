@@ -166,6 +166,7 @@ MyWaveForm::~MyWaveForm()
 void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
 
     if ( video_file_name.isEmpty() ) {
+        mpFile->setFileName("");
         initWaveForm();
         return;
     }
@@ -178,7 +179,7 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
     mpRTMarker->detach();
     mpLoadingTextItem->detach();
 
-    // If a ".wf" file doesn't exist, decode and save audio data
+    // If a ".awf" file doesn't exist, decode and save audio data
     if ( !mpFile->exists() ) {
 
         QAudioFormat desired_format;
@@ -210,13 +211,13 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
 
         ui->waveFormPlot->replot();
     }
-    else { // If ".wf" exit, retrive audios data from it directly
+    else { // If ".awf" exit, retrive audios data from it directly
         initWaveForm();
     }
 }
 
 // readBuffer is called when a decoded audio-buffer is ready
-// Write the audio-buffer data in ".wf" file
+// Write the audio-buffer data in ".awf" file
 void MyWaveForm::readBuffer() {
 
     QAudioBuffer audio_buffer;
@@ -268,7 +269,7 @@ void MyWaveForm::initWaveForm() {
 
         size_of_file = mpFile->size();
 
-        // Copy the data from ".wf" file to a vector
+        // Copy the data from ".awf" file to a vector
         for (qint32 i = 0; i < (size_of_file / SAMPLE_SIZE_BYTES); ++i) {
             qint16 buffer;
             *mpStream >> buffer;

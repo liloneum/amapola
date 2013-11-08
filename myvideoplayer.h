@@ -31,7 +31,8 @@ signals:
     void playerStateInfos(QString);
 
 public slots:
-    QString openFile();
+    QString openFile(QString fileName);
+    void unloadMedia();
     void setPosition(qint64 videoPlayerPositionMs);
     qint64 playerPosition();
     bool videoAvailable();

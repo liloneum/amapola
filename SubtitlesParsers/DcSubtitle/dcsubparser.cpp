@@ -510,7 +510,7 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
                 }
                 else {
 
-                    if ( previousFont.fontBorderEffect() == "yes" ) {
+                    if ( previousFont.fontBorderEffect() != "no" ) {
                         xmlElement->setAttribute("Effect", "border");
                     }
                     else {
@@ -521,7 +521,7 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
         }
         else if ( newFont.fontBorderEffect() != "" ) {
 
-            if ( previousFont.fontShadowEffect() == "no" ) {
+            if ( previousFont.fontShadowEffect() != "yes" ) {
 
                 if ( newFont.fontBorderEffect() == "yes" ) {
                     xmlElement->setAttribute("Effect", "border");

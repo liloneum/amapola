@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     SubtitlesParsers/DcSubtitle/dcsubparser.cpp \
     mysubtitlefileparser.cpp \
     mytextedit.cpp \
-    mywaveformslider.cpp
+    mywaveformslider.cpp \
+    amapolaprojfileparser.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -35,7 +36,8 @@ HEADERS  += mainwindow.h \
     SubtitlesParsers/DcSubtitle/dcsubparser.h \
     mysubtitlefileparser.h \
     mytextedit.h \
-    mywaveformslider.h
+    mywaveformslider.h \
+    amapolaprojfileparser.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \

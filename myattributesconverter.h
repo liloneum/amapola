@@ -4,6 +4,7 @@
 #include <Qt>
 #include <QColor>
 #include <QPushButton>
+#include <mysubtitles.h>
 
 // Class to define some converters statics methods
 class MyAttributesConverter
@@ -21,6 +22,7 @@ public:
     static QString toTimeHMSticks(QString time);
     static qint64 timeStrHMStoMs(QString time);
     static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
+    static void roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList);
     static qint32 timeMsToFrames(qint64 timeMs, qreal frameRate);
     static QString colorToString(QColor colorRgba);
     static QColor stringToColor(QString color_str);

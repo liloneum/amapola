@@ -15,6 +15,7 @@
 #include <QTimer>
 #include <QTime>
 #include <QAction>
+#include "amapolaprojfileparser.h"
 
 
 #define SEC_TO_MSEC 1000
@@ -131,6 +132,8 @@ MainWindow::MainWindow(QWidget *parent) :
     qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
 
     ui->stEditDisplay->updateDefaultSub();
+
+    qApp->setProperty("currentVideoFileName","");
 
     ui->waveForm->openFile("", "");
 
@@ -270,7 +273,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             }
             return true;
         }
-        else if ( key_event->key() == Qt::Key_Delete ) {
+        else if ( ( key_event->modifiers() == Qt::ControlModifier ) && ( key_event->key() == Qt::Key_Delete ) ) {
 
             // Delete key : remove subtitles selected
             this->removeSubtitles();
@@ -1079,6 +1082,7 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
 }
 
+// Remove the selected subtitles
 void MainWindow::removeSubtitles() {
 
     QList<qint32> selected_indexes = ui->subTable->selectedIndex();
@@ -1115,25 +1119,9 @@ void MainWindow::removeSubtitles() {
 // Frame rate change managment
 void MainWindow::updateFrameRate(qreal frameRate) {
 
-    qint32 start_time_ms;
-    qint32 end_time_ms;
-    MySubtitles subtitle;
-    QTime time_base(0, 0, 0, 0);
-
     QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
 
-    QList<MySubtitles>::iterator it;
-    for ( it = sub_list.begin(); it != sub_list.end(); ++it ) {
-
-        subtitle = *it;
-        start_time_ms = qAbs( QTime::fromString(subtitle.startTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        start_time_ms = MyAttributesConverter::roundToFrame(start_time_ms, frameRate);
-        it->setStartTime( time_base.addMSecs(start_time_ms).toString("hh:mm:ss.zzz") );
-
-        end_time_ms = qAbs( QTime::fromString(subtitle.endTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, frameRate);
-        it->setEndTime( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
-    }
+    MyAttributesConverter::roundSubListToFrame(frameRate, sub_list);
 
     ui->subTable->loadSubtitles(sub_list);
 
@@ -1147,19 +1135,162 @@ void MainWindow::updateFrameRate(qreal frameRate) {
     ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), current_subtitle_index);
 }
 
-// Manage the openning of video file when "Open" button is triggered
-void MainWindow::on_actionOpen_triggered()
-{
+// When "Open" action is triggered
+void MainWindow::on_actionOpen_triggered() {
+
+    QString current_video_file_name;
+
+    // Open an Amapola Project File (.apf)
+    QString file_name = QFileDialog::getOpenFileName(this, tr("Open Amapola project"),QDir::homePath(),
+                                                     "AmpaProj (*.apf)");
+
+
+    // Read the file
+    MyFileReader file_reader(file_name, "UTF-8");
+
+    if ( file_reader.readFile(file_name, "UTF-8") == false ) {
+        QString error_msg = file_reader.errorMsg();
+        QMessageBox::warning(this, "Open Amapola project", error_msg);
+        return;
+    }
+
+    // Remember the current project file path name
+    qApp->setProperty("currentProjFile",file_name);
+
+    // Remember the current video file
+    current_video_file_name = qApp->property("currentVideoFileName").toString();
+
+
+    // Parse the file
+    AmapolaProjFileParser* parser = new AmapolaProjFileParser();
+
+    QList<MySubtitles> subtitles_list = parser->open(file_reader);
+
+    // Update the default parameters
+    ui->stEditDisplay->updateDefaultSub();
+    // Update the settings
+    ui->settings->updateDisplayAll();
+
+    // Load the subtitles list in the database
+    ui->subTable->loadSubtitles(subtitles_list, false);
+    // Save the database current state in history
+    this->saveToHistory("Import subtitles");
+    // Remove all and draw subtitles zones in the waveform
+    ui->waveForm->removeAllSubtitlesZones();
+
+    if ( !subtitles_list.isEmpty() ) {
+
+        // Update the subtitles draw zones in the waveform
+        qint32 current_subtitle_index = ui->subTable->currentIndex();
+        ui->waveForm->drawSubtitlesZone(subtitles_list, current_subtitle_index);
+        ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), current_subtitle_index);
+    }
+    else {
+
+        // Erase the text edit zone
+        MySubtitles empty_sub;
+        ui->stEditDisplay->setText(empty_sub);
+    }
+
+    // Retrieive the new video file path name
+    QString new_video_file_name = qApp->property("currentVideoFileName").toString();
+
+    if ( !new_video_file_name.isEmpty() ) {
+
+        // If the video have changed, load the new one
+        if ( new_video_file_name != current_video_file_name ) {
+
+            this->openVideo(new_video_file_name);
+        }
+    }
+    else {
+
+        // Unload all media, erase the waveform
+        ui->waveForm->openFile("", "");
+        ui->videoPlayer->unloadMedia();
+    }
+}
+
+// When "Save as" action is triggered
+void MainWindow::on_actionSave_as_triggered() {
+
+    // Create or open file to write datas
+    QString file_name = QFileDialog::getSaveFileName(this, tr("Save Amapola project"),QDir::homePath(),
+                                                     tr("AmpaProj (*.apf)") );
+
+    if ( !file_name.isEmpty() ) {
+
+        // Add the ".apf" extension if it miss
+        if ( !file_name.contains(".apf") ) {
+            file_name.append(".apf");
+        }
+
+        // Save the project
+        this->saveProject(file_name);
+    }
+}
+
+// When "Save" action is triggered
+void MainWindow::on_actionSave_triggered() {
+
+    // If there are no file specified to save the project
+    if ( qApp->property("currentProjFile").toString().isEmpty() ) {
+
+        // Call "Save as" action to open a file dialog
+        this->on_actionSave_as_triggered();
+    }
+    else {
+
+        this->saveProject( qApp->property("currentProjFile").toString() );
+    }
+}
+
+// Save the current state of Amapola application into a ".apf" file
+void MainWindow::saveProject(QString fileName) {
+
+    MyFileWriter file_writer(fileName, "UTF-8");
+
+    AmapolaProjFileParser* parser = new AmapolaProjFileParser();
+
+    // Retreive the subtitles datas from databases
+    QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();
+
+    // Save the subtitles, the video opened, all default parameters and current settings
+    parser->save(file_writer, subtitles_list, qApp->property("currentVideoFileName").toString());
+
+    if ( file_writer.toFile() == false ) {
+        QString error_msg = file_writer.errorMsg();
+        QMessageBox::warning(this, "Save project", error_msg);
+    }
+    else {
+
+        // Remember the current project file path name
+        qApp->setProperty("currentProjFile", fileName);
+    }
+}
+
+// When "Open" action is triggered
+void MainWindow::on_actionOpen_video_triggered() {
+
+    // Open video with no file name specified to open a file dialog
+    this->openVideo("");
+}
+
+// Manage the openning of video file
+void MainWindow::openVideo(QString fileName ) {
+
     // Open a video file with the palyer
-    QString video_file_name = ui->videoPlayer->openFile();
+    QString video_file_name = ui->videoPlayer->openFile(fileName);
 
     // If the media player has openned the video
     if ( !video_file_name.isEmpty() ) {
 
+        qApp->setProperty("currentVideoFileName",video_file_name);
+
         // Open the corresponding waveform
         QString wf_file_name = video_file_name;
         wf_file_name.truncate(wf_file_name.lastIndexOf("."));
-        wf_file_name.append(".wf");
+        wf_file_name.append(".awf");
 
         ui->waveForm->openFile(wf_file_name, video_file_name);
     }
@@ -1272,6 +1403,8 @@ void MainWindow::on_actionImport_Subtitles_triggered()
     // If parsing is successfull, load the subtitles list in the database
     if ( !subtitles_list.isEmpty() ) {
 
+        // Round the timecodes to the current frame rate and load subtitles
+        MyAttributesConverter::roundSubListToFrame(qApp->property("prop_FrameRate_fps").toDouble(), subtitles_list);
         ui->subTable->loadSubtitles(subtitles_list, false);
 
         // Save the database current state in history
@@ -1296,20 +1429,28 @@ void MainWindow::on_actionExport_Subtitles_triggered() {
                                                      &selected_filter);
 
 
-    MyFileWriter file_writer(file_name, "UTF-8");
-
     // Choose the good parser
     MySubtitleFileParser* parser;
+    QString file_extension = "";
 
     if ( selected_filter ==  ("SubRip (*.srt)") ) {
         parser = new SubRipParser();
+        file_extension = ".srt";
     }
     else if ( selected_filter ==  ("DCSubtitle (*.xml)") ) {
         parser = new DcSubParser();
+        file_extension = ".xml";
     }
     else {
         //TO DO
     }
+
+    // Add the extension if it miss
+    if ( !file_name.contains(file_extension) ) {
+        file_name.append(file_extension);
+    }
+
+    MyFileWriter file_writer(file_name, "UTF-8");
 
     // Retreive the subtitles datas from databases
     QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();

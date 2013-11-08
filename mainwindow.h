@@ -23,6 +23,11 @@ public:
 private slots:
     void on_actionOpen_triggered();
     void on_actionQuit_triggered();
+    void saveProject(QString fileName);
+    void on_actionOpen_video_triggered();
+    void openVideo(QString fileName);
+    void on_actionSave_as_triggered();
+    void on_actionSave_triggered();
     void onCtrlLeftClickEvent(qint64 positionMs);
     void onCtrlRightClickEvent(qint64 positionMs);
     void updateSubTableText();

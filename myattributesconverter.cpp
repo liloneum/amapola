@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
+#include <mysubtitles.h>
 
 
 #define SEC_TO_MSEC 1000
@@ -172,6 +173,28 @@ qint64 MyAttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
     qreal frame_duration_ms = (qreal)SEC_TO_MSEC / frameRate;
 
     return  qRound( (qreal)qRound( (qreal)timeMs / frame_duration_ms )  * frame_duration_ms );
+}
+
+// Round the given subtitles list to the nearest frame time
+void MyAttributesConverter::roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList) {
+
+    qint32 start_time_ms;
+    qint32 end_time_ms;
+    MySubtitles subtitle;
+    QTime time_base(0, 0, 0, 0);
+
+    QList<MySubtitles>::iterator it;
+    for ( it = subList.begin(); it != subList.end(); ++it ) {
+
+        subtitle = *it;
+        start_time_ms = qAbs( QTime::fromString(subtitle.startTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
+        start_time_ms = MyAttributesConverter::roundToFrame(start_time_ms, frameRate);
+        it->setStartTime( time_base.addMSecs(start_time_ms).toString("hh:mm:ss.zzz") );
+
+        end_time_ms = qAbs( QTime::fromString(subtitle.endTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
+        end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, frameRate);
+        it->setEndTime( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
+    }
 }
 
 qint32 MyAttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
