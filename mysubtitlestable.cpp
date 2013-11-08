@@ -201,16 +201,17 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
                 }
 
                 TextLine text_line = text_list.at(j);
+                QString plain_text = MyAttributesConverter::htmlToPlainText( text_line.Line() );
 
                 // Calculate characters number per second
-                char_per_sec += ( (qreal)text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)MyAttributesConverter::timeStrHMStoMs( this->item(mStCount, SUB_DURATION_COL)->text() );
+                char_per_sec += ( (qreal)plain_text.count() * (qreal)SEC_TO_MSEC ) / (qreal)MyAttributesConverter::timeStrHMStoMs( this->item(mStCount, SUB_DURATION_COL)->text() );
                 // Count characters number for the line
-                char_number_str += QString::number( text_line.Line().count() );
+                char_number_str += QString::number( plain_text.count() );
 
-                text += text_line.Line();
+                text += plain_text;
 
                 // Check if characters number per line is superior to specified
-                if ( text_line.Line().count()> qApp->property("prop_MaxCharPerLine").toInt() ) {
+                if ( plain_text.count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
                     max_cher_exceeded = true;
                 }
             }
@@ -253,6 +254,9 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
         // Keep the same selection as before changment loading
         if ( keepSelection == true ) {
 
+            // Change the selection mode to "Multiselection" to avoid "Shift" or "Ctrl" key modifiers conflict
+            this->setSelectionMode(QAbstractItemView::MultiSelection);
+
             // If the current index always exist, keep it. Else set to last subtitle
             if ( mCurrentIndex < mStCount ) {
                 // Nothing to do
@@ -268,9 +272,6 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
 
             }
 
-            // Change the selection mode to "Multiselection" to avoid "Shift" or "Ctrl" key modifiers conflict
-            this->setSelectionMode(QAbstractItemView::MultiSelection);
-
             // Reselect the row
             if ( !selected_ranges.isEmpty() ) {
                 QList<QTableWidgetSelectionRange>::iterator it;
@@ -285,7 +286,10 @@ void MySubtitlesTable::loadSubtitles(QList<MySubtitles> subtitlesList, bool keep
         else {
             // Reset selection to 0
             mCurrentIndex = 0;
+
+            this->setSelectionMode(QAbstractItemView::SingleSelection);
             this->selectRow(mCurrentIndex);
+            this->setSelectionMode(QAbstractItemView::ExtendedSelection);
         }
 
         mSubLoadding = false;
@@ -397,7 +401,9 @@ bool MySubtitlesTable::insertNewSub(MySubtitles &newSubtitle, qint64 positionMs)
     mSubtitlesList[mCurrentIndex].setStartTime(this->item(mCurrentIndex, SUB_START_TIME_COL)->text());
     mSubtitlesList[mCurrentIndex].setEndTime(this->item(mCurrentIndex, SUB_END_TIME_COL)->text());
 
+    this->setSelectionMode(QAbstractItemView::SingleSelection);
     this->selectRow(mCurrentIndex);
+    this->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     return true;
 }
@@ -437,12 +443,14 @@ void MySubtitlesTable::deleteCurrentSub() {
 
         this->removeRow(mCurrentIndex);
 
+        this->setSelectionMode(QAbstractItemView::SingleSelection);
         if ( mCurrentIndex < mStCount ) {
             this->selectRow(mCurrentIndex);
         }
         else if ( mStCount > 0 ) {
             this->selectRow(mStCount - 1);
         }
+        this->setSelectionMode(QAbstractItemView::ExtendedSelection);
     }
 }
 
@@ -465,13 +473,14 @@ bool MySubtitlesTable::isNewEntry(qint64 positionMs) {
 void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
     qint32 row_index;
-    QString plain_text = "";
+    QString text = "";
     QString char_number_line_str = "";
     QString char_per_sec_str = "";
     TextLine new_text_line;
     qint16 char_number_total = 0;
     qreal char_per_sec = 0.0;
     qint32 sub_duration_ms;
+    QString plain_text;
     bool max_cher_exceeded = false;
 
     // Retrieve the index for this given time
@@ -489,24 +498,25 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
         // If it's the second line, add a "line return" caractere
         if ( i > 0 ) {
-            plain_text += "\n";
+            text += "\n";
             char_number_line_str += "\n";
         }
 
         new_text_line = textLines.at(i);
+        plain_text = MyAttributesConverter::htmlToPlainText(new_text_line.Line());
 
         // Set the line in the subtitles list
         mSubtitlesList[mCurrentIndex].text()[i].setLine(new_text_line.Line());
 
-        char_number_total += new_text_line.Line().count();
+        char_number_total += plain_text.count();
         // Calculate characters number per second
-        char_per_sec += ( ( (qreal)new_text_line.Line().count() * (qreal)SEC_TO_MSEC ) / (qreal)sub_duration_ms );
+        char_per_sec += ( ( (qreal)plain_text.count() * (qreal)SEC_TO_MSEC ) / (qreal)sub_duration_ms );
         // Count characters number for the line
-        char_number_line_str += QString::number( new_text_line.Line().count() );
+        char_number_line_str += QString::number( plain_text.count() );
 
-        plain_text += new_text_line.Line();
+        text += plain_text;
 
-        if ( new_text_line.Line().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+        if ( plain_text.count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
             max_cher_exceeded = true;
         }
     }
@@ -571,7 +581,7 @@ void MySubtitlesTable::updateText(QList<TextLine> textLines) {
 
     this->item(row_index, SUB_CHARNUM_COL)->setText(char_number_line_str);
     this->item(row_index, SUB_CHAR_PER_SEC_COL)->setText(char_per_sec_str);
-    this->item(row_index, SUB_TEXT_COL)->setText(plain_text);
+    this->item(row_index, SUB_TEXT_COL)->setText(text);
 
     this->resizeRowToContents(row_index);
 }
@@ -1129,10 +1139,13 @@ void MySubtitlesTable::updateStDisplay(qint64 positionMs) {
             subtitle = getSubInfos(st_index);
             // Change the current index
             mCurrentIndex = st_index;
-            // If time was changed by software, highlight the row corresponding to the index
+            // If update was foced by software, highlight the row corresponding to the index
             if ( mSelectedByUser == false ) {
                 mSelectedBySoft = true;
+
+                this->setSelectionMode(QAbstractItemView::SingleSelection);
                 this->selectRow(mCurrentIndex);
+                this->setSelectionMode(QAbstractItemView::ExtendedSelection);
             }
         }
 

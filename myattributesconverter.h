@@ -25,6 +25,8 @@ public:
     static QString colorToString(QColor colorRgba);
     static QColor stringToColor(QString color_str);
     static void setColorToButton(QPushButton* button, QColor color);
+    static QString htmlToPlainText(QString htmlText);
+    static QString simplifyRichTextFilter(QString in);
 };
 
 #endif // MYATTRIBUTESCONVERTER_H

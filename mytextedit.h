@@ -48,6 +48,7 @@ private slots:
      void addLine(QTextEdit *textEdit);
      void removeLine(QTextEdit *textEdit);
      QTextEdit* createNewTextEdit();
+     void showCustomContextMenu(const QPoint &pos);
     
 private:
 

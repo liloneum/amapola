@@ -2,6 +2,7 @@
 #include <QRegExp>
 #include <QStringList>
 #include <mysubtitles.h>
+#include <QXmlStreamReader>
 
 
 // SubRip format
@@ -93,12 +94,96 @@ void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
             TextLine text_line = subtitlesList[i].text().at(j);
 
+            QXmlStreamReader reader(text_line.Line());
+
+            QString line = "";
+            bool all_italic = false;
+            bool all_colored = false;
+            bool italic_tag_open = false;
+            bool color_tag_open = false;
+
+            if ( text_line.Font().fontColor() != "FFFFFFFF") {
+                line += "<font color=#" + text_line.Font().fontColor().remove(0, 2);
+                all_colored = true;
+            }
+
+            if ( text_line.Font().fontItalic() == "yes" ) {
+                line += "<i>";
+                all_italic = true;
+            }
+
+            while ( !reader.atEnd() ) {
+
+                switch (reader.readNext()) {
+                case QXmlStreamReader::StartElement:
+
+                    if ( reader.name() == "span" ) {
+
+                        QXmlStreamAttributes attributes = reader.attributes();
+
+                        if ( attributes.hasAttribute( QStringLiteral("style") ) ) {
+
+                            QString style_str = attributes.value("style").toString();
+
+                            if ( style_str.contains("color") ) {
+
+                                QString color_str = style_str.mid( (style_str.indexOf("#") + 1), 6 );
+                                color_str = color_str.toUpper();
+
+                                line += "<font color=#" +color_str +">";
+
+                                color_tag_open = true;
+                            }
+
+                            if ( style_str.contains("italic") ) {
+
+                                if ( !all_italic ) {
+                                    line += "<i>";
+                                    italic_tag_open = true;
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case QXmlStreamReader::EndElement:
+
+                    if ( reader.name() == "span" ) {
+
+                        if ( color_tag_open ) {
+                            line += "</font>";
+                            color_tag_open = false;
+                        }
+
+                        if ( italic_tag_open ) {
+                            line += "</i>";
+                            italic_tag_open = false;
+                        }
+                    }
+                    break;
+                case QXmlStreamReader::Characters:
+
+                    line += reader.text().toString();
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            if ( all_italic ) {
+                line += "</i>";
+            }
+
+            if ( all_colored ) {
+                line += "</font>";
+            }
+
             if ( text.isEmpty() ) {
-                text = text_line.Line();
+                text = line;
             }
             else {
                 text += "\n";
-                text += text_line.Line();
+                text += line;
             }
         }
 

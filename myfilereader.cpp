@@ -24,7 +24,7 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
         // Open a stream from the file
         QTextStream in(&file_read);
         // Set the text encoding - DEBUG : textCodec not used
-        in.setCodec("ISO8859-15");
+//        in.setCodec("ISO8859-15");
 
         do {
             mLines.append(in.readLine());

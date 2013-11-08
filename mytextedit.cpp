@@ -6,6 +6,8 @@
 #include <QApplication>
 #include <QGraphicsDropShadowEffect>
 #include <QTextCharFormat>
+#include <QMenu>
+#include <QColorDialog>
 
 // Maximum number of character by line
 #define MAX_CHAR_BY_LINE 40
@@ -85,13 +87,16 @@ QTextEdit* MyTextEdit::createNewTextEdit() {
     shadow_effect->setEnabled(false);
     text_edit->setGraphicsEffect(shadow_effect);
 
+    text_edit->setAcceptRichText(false);
     // Disable scroll bar
     text_edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     text_edit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     // Add an event filter on the subtitles textedit object
     text_edit->installEventFilter(this);
+    text_edit->setContextMenuPolicy(Qt::CustomContextMenu);
     // Init connections
     connect(text_edit, SIGNAL(cursorPositionChanged()), this, SLOT(newCursorPosition()));
+    connect(text_edit, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(showCustomContextMenu(QPoint)));
     text_edit->show();
 
     return text_edit;
@@ -195,7 +200,8 @@ QList<TextLine> MyTextEdit::text() {
 
     for ( qint16 i = 0; i < mTextLinesList.count(); i++ ) {
 
-        QString text = mTextLinesList[i]->toPlainText();
+//        QString text = mTextLinesList[i]->toPlainText();
+        QString text = MyAttributesConverter::simplifyRichTextFilter( mTextLinesList[i]->toHtml() );
         TextLine line;
         line.setLine(text);
         text_lines.append(line);
@@ -313,7 +319,8 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         }
 
         // Apply the text to the QTextEdit
-        text_edit->setText(text_lines[i].Line());
+//        text_edit->setText(text_lines[i].Line());
+        text_edit->setHtml(text_lines[i].Line());
 
         // Apply the font to the QTextEdit
         this->setTextFont(text_edit, text_lines[i].Font(), this->size());
@@ -326,7 +333,7 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         text_edit->moveCursor(QTextCursor::End);
 
         // Keep a backup of the last texts displayed
-        mPreviousTextList.append(text_lines[i].Line());
+        mPreviousTextList.append( MyAttributesConverter::htmlToPlainText( text_lines[i].Line() ) );
     }
 
     mIsSettingLines = false;
@@ -484,6 +491,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     qint16 font_size_pt;
     qreal relative_font_size;
     QColor font_color;
+    qreal outline_width;
 
     QFont font = textEdit->font();
 
@@ -499,6 +507,9 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     // Recompute the font size in point, relative to the real displayed video size in pixel
     qint32 widget_height_px = widgetSize.height();
     relative_font_size = ( font_size_pt * ( ( (qreal)widget_height_px / ( (qreal)mPxPerInch  * (qreal)REF_HEIGHT_INCH ) ) ) );
+
+    outline_width = relative_font_size / 60.0;
+
     font.setPointSizeF(relative_font_size);
 
     // Set Italic
@@ -548,17 +559,18 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
         outline_pen_style = Qt::NoPen;
     }
 
-    qreal outline_width = relative_font_size / 28.0;
     QColor outline_color = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
 
-    QTextCharFormat char_format = textEdit->currentCharFormat();
-    char_format.setTextOutline(QPen (outline_color, outline_width, outline_pen_style, Qt::RoundCap, Qt::RoundJoin));
+    QTextCharFormat char_format;
+
+    QPen outline_pen(outline_color, outline_width, outline_pen_style, Qt::RoundCap, Qt::RoundJoin);
+
+    char_format.setTextOutline(outline_pen);
 
     qint16 cursor_position = textEdit->textCursor().position();
+
     textEdit->selectAll();
-
-    textEdit->setCurrentCharFormat(char_format);
-
+    textEdit->mergeCurrentCharFormat(char_format);
     QTextCursor text_cursor = textEdit->textCursor();
     text_cursor.setPosition(cursor_position);
     textEdit->setTextCursor(text_cursor);
@@ -643,7 +655,7 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
     text_font = text_line.Font();
 
     QTextEdit* new_text_edit = this->createNewTextEdit();
-   mTextLinesList.insert(text_line_index + 1, new_text_edit);
+    mTextLinesList.insert(text_line_index + 1, new_text_edit);
 
     // Move text from the cursor to the end to the new line
     if ( !textEdit->textCursor().atBlockEnd() ) {
@@ -651,14 +663,16 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
         mIsSettingLines = true;
 
         if ( textEdit->textCursor().selectedText().count() > 0 ) {
-            textEdit->cut();
+            // Nothing to do
         }
         else {
             textEdit->moveCursor(QTextCursor::EndOfLine, QTextCursor::KeepAnchor);
-            textEdit->cut();
         }
 
-        new_text_edit->paste();
+        QString html_copied = textEdit->textCursor().selection().toHtml();
+        textEdit->textCursor().deleteChar();
+
+        new_text_edit->setHtml(html_copied);
 
         mIsSettingLines = false;
     }
@@ -804,6 +818,96 @@ qint16 MyTextEdit::lastFocused() {
     }
     else {
         return 0;
+    }
+}
+
+// Manage the text edit context menu
+void MyTextEdit::showCustomContextMenu(const QPoint &pos) {
+
+    QTextEdit* textEdit = mpLastFocused;
+
+    // Set context menu position
+    QPoint global_pos = textEdit->mapToGlobal(pos);
+
+    // Build the menu
+    QMenu custom_menu;
+    custom_menu.addAction("Italic");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Underline");
+    custom_menu.actions().last()->setCheckable(true);
+    custom_menu.addAction("Text color...");
+    // ...
+
+    bool italic_found = false;
+    bool underlined_found = false;
+    bool data_changed = false;
+
+
+    if ( textEdit->fontItalic() ) {
+        custom_menu.actions().at(0)->setChecked(true);
+        italic_found = true;
+    }
+
+    if ( textEdit->fontUnderline() ) {
+        custom_menu.actions().at(1)->setChecked(true);
+        underlined_found = true;
+    }
+
+    // Execute the menu and retrieve the selected action
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+
+        // "Italic"
+        if ( selected_item->text() == "Italic" ) {
+
+            if ( italic_found ) {
+                textEdit->setFontItalic(false);
+            }
+            else {
+                textEdit->setFontItalic(true);
+            }
+
+            data_changed = true;
+        }
+        // "Underline"
+        else if ( selected_item->text() == "Underline" ) {
+
+            if ( underlined_found ) {
+                textEdit->setFontUnderline(false);
+            }
+            else {
+                textEdit->setFontUnderline(true);
+            }
+
+            data_changed = true;
+        }
+        // "Text color"
+        else if ( selected_item->text() == "Text color..." ) {
+
+            // Open a color chooser dialog
+            QColor font_color = QColorDialog::getColor(textEdit->palette().color(QPalette::Text), 0,"Select Color", QColorDialog::ShowAlphaChannel);
+
+            // If valid color, set to all selected subtitles
+            if ( font_color.isValid() ) {
+
+                textEdit->setTextColor(font_color);
+
+                data_changed = true;
+            }
+            else {
+                data_changed = false;
+            }
+        }
+
+        // There are change to load in the database
+        if ( data_changed == true ) {
+
+            emit cursorPositionChanged();
+        }
+    }
+    else {
+        // nothing was chosen
     }
 }
 

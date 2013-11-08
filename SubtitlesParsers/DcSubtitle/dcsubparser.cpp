@@ -5,6 +5,8 @@
 #include <QUuid>
 #include <mainwindow.h>
 #include "myattributesconverter.h"
+#include <QXmlStreamReader>
+#include <QTextEdit>
 
 
 // See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
@@ -172,22 +174,43 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                                          "<i>" + text_with_font_changed + "</i>");
                         }
                     }
-                    if ( xml_font_changed.hasAttribute("Color") ) {
+                    if ( xml_font_changed.hasAttribute("Underlined") ) {
 
-                        QString current_color;
-                        current_color.setNum(mColor.rgba(), 16);
-                        // If "Color" attribute is different than current color, add "<font color = #AARRGGBB></font>" markup inside text
-                        if ( xml_font_changed.attribute("Color") != current_color ){
+                        // If "Underlined" attribute = "yes", add "<u></u>" markup inside text
+                        if (xml_font_changed.attribute("Underlined") == "yes") {
                             text.replace(text.indexOf(text_with_font_changed),
                                          text_with_font_changed.size(),
-                                         "<font color = #" + xml_font_changed.attribute("Color") + ">"
-                                         + text_with_font_changed + "</font>");
+                                         "<u>" + text_with_font_changed + "</u>");
+                        }
+                    }
+                    if ( xml_font_changed.hasAttribute("Color") ) {
+
+                        QString current_color_str;
+                        current_color_str.setNum(mColor.rgba(), 16);
+                        QString new_color_str = xml_font_changed.attribute("Color");
+
+                        // If "Color" attribute is different than current color, add "<font color = #RRGGBB></font>" markup inside text
+                        if ( new_color_str != current_color_str ){
+
+                            if ( new_color_str.count() == 8 ) {
+
+                                new_color_str = new_color_str.remove(0, 2);
+
+                                text.replace(text.indexOf(text_with_font_changed),
+                                             text_with_font_changed.size(),
+                                             "<font color = #" +new_color_str  + ">"
+                                             + text_with_font_changed + "</font>");
+                            }
                         }
                     }
                 }
 
+                QTextEdit text_edit;
+                text_edit.setHtml(text);
+                QString text_html = text_edit.toHtml();
+
                 // Set text and font attributes in MySubtitltes container
-                mNewText.setLine(text);
+                mNewText.setLine( MyAttributesConverter::simplifyRichTextFilter(text_html) );
                 mNewSubtitle.setText(mNewText, mFontList.last());
 
                 if ( font_inside_whole_text == true ) {
@@ -309,7 +332,8 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
     // Add first "Font" tag with attributes
     TextFont text_font0 = subtitlesList.first().text().first().Font();
     QDomElement xml_font0 = doc.createElement("Font");
-    this->writeFont(&xml_font0, mFontList.first(), text_font0);
+    TextFont empty_font;
+    this->writeFont(&xml_font0, empty_font, text_font0);
     xml_root.appendChild(xml_font0);
 
     // For each subtitles
@@ -386,9 +410,67 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
             }
 
             xml_current_element.appendChild(xml_text);
+            xml_current_element = xml_text;
 
-            QDomText text_text = doc.createTextNode(text_line.Line());
-            xml_text.appendChild(text_text);
+            QXmlStreamReader reader(text_line.Line());
+
+            while ( !reader.atEnd() ) {
+
+                switch (reader.readNext()) {
+                case QXmlStreamReader::StartElement:
+
+                    if ( reader.name() == "span" ) {
+
+                        QXmlStreamAttributes attributes = reader.attributes();
+
+                        if ( attributes.hasAttribute( QStringLiteral("style") ) ) {
+
+                            QString style_str = attributes.value("style").toString();
+
+                            if ( style_str.contains("color") ) {
+
+                                QString color_str = style_str.mid( (style_str.indexOf("#") + 1), 6 );
+                                color_str.prepend("FF");
+                                color_str = color_str.toUpper();
+
+                                if ( ( color_str != text_font.fontColor() ) &&
+                                     ( color_str != text_font0.fontColor() ) ) {
+
+                                    xml_current_element = xml_current_element.appendChild( doc.createElement("Font") ).toElement();
+                                    xml_current_element.setAttribute("Color", color_str);
+                                }
+                            }
+
+                            if ( style_str.contains("italic") ) {
+
+                                if ( ( text_font.fontItalic() == "no" ) &&
+                                     ( text_font0.fontItalic() == "no" ) ) {
+
+                                    if ( xml_current_element.tagName() != "Font") {
+
+                                        xml_current_element = xml_current_element.appendChild( doc.createElement("Font") ).toElement();
+                                    }
+                                    xml_current_element.setAttribute("Italic", "yes");
+                                }
+                            }
+                        }
+                    }
+                    break;
+
+                case QXmlStreamReader::EndElement:
+
+                    if ( reader.name() == "span" ) {
+                        xml_current_element = xml_current_element.parentNode().toElement();
+                    }
+                    break;
+                case QXmlStreamReader::Characters:
+
+                    xml_current_element.appendChild( doc.createTextNode( reader.text().toString() ) );
+                    break;
+                default:
+                    break;
+                }
+            }
         }
     }
 
