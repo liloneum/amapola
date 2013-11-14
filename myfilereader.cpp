@@ -35,7 +35,7 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
 
         return true;
     }
-    mErrorMsg = "no file name specified";
+    mErrorMsg = "No file name specified";
     return false;
 }
 

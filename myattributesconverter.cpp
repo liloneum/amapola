@@ -51,6 +51,36 @@ Qt::Alignment MyAttributesConverter::vAlignFromString(QString vAlignAttribute) {
     }
 }
 
+// Convert a direction "left-to-right", "right-to-left", "top-to-bottom", "bottom-to-top"
+// into a direction "horizontal", "vertical"
+QString MyAttributesConverter::dirToHorVer(QString direction) {
+
+    if ( ( direction == "ltr" ) || ( direction == "rtl") ) {
+        return "horizontal";
+    }
+    else if ( ( direction == "ttb" ) || ( direction == "btt" ) ) {
+        return "vertical";
+    }
+    else {
+        return "";
+    }
+}
+
+// Convert a direction "horizontal", "vertical"
+// Into a direction "left-to-right", "top-to-bottom"
+QString MyAttributesConverter::dirToLtrTtb(QString direction) {
+
+    if ( direction == "horizontal" ) {
+        return "ltr";
+    }
+    else if ( direction == "vertical" ) {
+        return "ttb";
+    }
+    else {
+        return "";
+    }
+}
+
 // Convert a boolean to string "yes" or "no"
 QString MyAttributesConverter::isItalic(bool italic) {
 
@@ -82,7 +112,7 @@ QString MyAttributesConverter::boolToString(bool boolean) {
 }
 
 // Convert time given with "ticks" or "1/10 second" to time with millisecond,
-// with HH:MM:SS:zzz format.
+// with HH:MM:SS.zzz format.
 // One tick equal to 4 milliseconds
 QString MyAttributesConverter::toTimeHMSms(QString time) {
 
@@ -148,6 +178,48 @@ QString MyAttributesConverter::toTimeHMSticks(QString time) {
 
     return time;
 
+}
+
+// Convert time given in frame to time with millisecond,
+// with HH:MM:SS.zzz format.
+QString MyAttributesConverter::framesToTimeHMSms(QString time, qint16 timeCodeRate) {
+
+    qint16 time_frames = time.section(":", -1).toInt();
+
+    if ( time_frames >= timeCodeRate ) {
+        time_frames = timeCodeRate - 1;
+    }
+
+    qint32 millisecond = qint32( ( (qreal)1000 / (qreal)timeCodeRate ) * (qreal)time_frames );
+    qBound(0, millisecond, 999);
+
+    QString str_ms;
+    if ( millisecond >= 100 ) { str_ms = QString::number(millisecond);}
+    else if ( millisecond >= 10 ) { str_ms = "0" + QString::number(millisecond);}
+    else { str_ms = "00" + QString::number(millisecond); }
+
+    time.replace(time.lastIndexOf(":"),
+                 4,
+                 "." + str_ms);
+
+    return time;
+}
+
+QString MyAttributesConverter::timeHMSmsToFrames(QString time, qint16 timeCodeRate) {
+
+    qint32 millisecond = time.section(".", -1).toInt();
+    qint32 frames = qint16( (qreal)millisecond / ( (qreal)1000 / (qreal)timeCodeRate ) );
+    qBound(0, frames, (timeCodeRate - 1));
+
+    QString str_frames;
+    if ( frames >= 10 ) { str_frames = QString::number(frames);}
+    else { str_frames = "0" +QString::number(frames); }
+
+    time.replace(time.lastIndexOf("."),
+                 4,
+                 ":" + str_frames);
+
+    return time;
 }
 
 // Convert a time with format HH:MM:SS:zzz, where zzz are millisecond

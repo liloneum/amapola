@@ -3,6 +3,7 @@
 #include <QStringList>
 #include <mysubtitles.h>
 #include <QXmlStreamReader>
+#include "myattributesconverter.h"
 
 
 // SubRip format
@@ -22,6 +23,25 @@
 
 SubRipParser::SubRipParser()
 {
+}
+
+bool SubRipParser::readSample(MyFileReader file) {
+
+    QStringList lines = file.lines();
+    QRegExp time_regexp("^(\\d+):(\\d+):(\\d+),(\\d+)\\s-->\\s(\\d+):(\\d+):(\\d+),(\\d+)");
+
+        for ( qint16 i = 0; i < lines.count(); i++ ) {
+
+            if ( time_regexp.exactMatch(lines[i]) ) {
+
+                if ( lines[i - 1]  == "1" ) {
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
 }
 
 // Parse SubRip file, retrieve subtitles infos.
@@ -78,7 +98,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
 
 // Write the subtitles list in a file (SubRip format)
-void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
+void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
@@ -94,9 +114,12 @@ void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
             TextLine text_line = subtitlesList[i].text().at(j);
 
-            QXmlStreamReader reader(text_line.Line());
-
             QString line = "";
+
+            if ( exportDialog->hasHtmlTags() == true ) {
+
+                QXmlStreamReader reader(text_line.Line());
+
             bool all_italic = false;
             bool all_colored = false;
             bool italic_tag_open = false;
@@ -176,6 +199,10 @@ void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 
             if ( all_colored ) {
                 line += "</font>";
+            }
+            }
+            else {
+                line = MyAttributesConverter::htmlToPlainText( text_line.Line() );
             }
 
             if ( text.isEmpty() ) {

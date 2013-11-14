@@ -1,10 +1,11 @@
-#ifndef DCSUBPARSER_H
-#define DCSUBPARSER_H
+#ifndef DCSUBINTEROPPARSER_H
+#define DCSUBINTEROPPARSER_H
 
 #include "myfilereader.h"
 #include "myfilewriter.h"
 #include "mysubtitles.h"
 #include "mysubtitlefileparser.h"
+#include "subexportdialog.h"
 #include <QFile>
 #include <QDomElement>
 #include <QString>
@@ -12,12 +13,13 @@
 #include <QColor>
 #include <QList>
 
-class DcSubParser : public MySubtitleFileParser
+class DcSubInteropParser : public MySubtitleFileParser
 {
 public:
-    DcSubParser();
+    DcSubInteropParser();
     QList<MySubtitles> open(MyFileReader file);
-    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList);
+    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(MyFileReader file);
 
 private:
     void changeFont(QDomElement xmlElement);
@@ -26,17 +28,13 @@ private:
 
     // TextFont containers list
     QList<TextFont> mFontList;
-    // TextLine container
-    TextLine mNewText;
-    // TextFont container
-    TextFont mNewFont;
     // Subtitles container
     MySubtitles mNewSubtitle;
     // MySubtitles containers list
     QList<MySubtitles> mSubtitlesList;
 
-    // attribute Color
-    QColor mColor;
+    QString mPreferredEffect;
+    QString mCurrentEffect;
 };
 
-#endif // DCSUBPARSER_H
+#endif // DCSUBINTEROPPARSER_H

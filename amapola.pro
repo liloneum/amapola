@@ -17,11 +17,14 @@ SOURCES += main.cpp\
     myfilewriter.cpp \
     mysettings.cpp \
     myattributesconverter.cpp \
-    SubtitlesParsers/DcSubtitle/dcsubparser.cpp \
     mysubtitlefileparser.cpp \
     mytextedit.cpp \
     mywaveformslider.cpp \
-    amapolaprojfileparser.cpp
+    amapolaprojfileparser.cpp \
+    SubtitlesParsers/DcSubtitle/interop/dcsubinteropparser.cpp \
+    SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.cpp \
+    subexportdialog.cpp \
+    subimportmanager.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -33,15 +36,19 @@ HEADERS  += mainwindow.h \
     myfilewriter.h \
     mysettings.h \
     myattributesconverter.h \
-    SubtitlesParsers/DcSubtitle/dcsubparser.h \
     mysubtitlefileparser.h \
     mytextedit.h \
     mywaveformslider.h \
-    amapolaprojfileparser.h
+    amapolaprojfileparser.h \
+    SubtitlesParsers/DcSubtitle/interop/dcsubinteropparser.h \
+    SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h \
+    subexportdialog.h \
+    subimportmanager.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
     myvideoplayer.ui \
-    mysettings.ui
+    mysettings.ui \
+    subexportdialog.ui
 
 CONFIG += qwt

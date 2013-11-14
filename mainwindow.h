@@ -49,6 +49,7 @@ private slots:
     void removeSubtitles();
     void updateFrameRate(qreal frameRate);
     void saveToHistory(QString changeReason);
+    void clearHistory();
     bool undo();
     bool redo();
 

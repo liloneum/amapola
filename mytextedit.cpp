@@ -33,7 +33,7 @@
 #define FONT_UNDERLINED_DEFAULT_VALUE "no"
 
 // Temp : Default position
-#define TEXT1_DIRECTION_DEFAULT_VALUE "horizontal"
+#define TEXT1_DIRECTION_DEFAULT_VALUE "ltr"
 #define TEXT1_HALIGN_DEFAULT_VALUE "center"
 #define TEXT1_HPOSITION_DEFAULT_VALUE "0"
 #define TEXT1_VALIGN_DEFAULT_VALUE "bottom"
@@ -495,6 +495,10 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
     QFont font = textEdit->font();
 
+    if ( textFont.fontBorderEffect() == "yes" ) {
+        font.setStyleStrategy(QFont::ForceOutline);
+    }
+
     // Set font name
     font.setFamily( textFont.fontId() );
 
@@ -749,8 +753,6 @@ void MyTextEdit::wrapText(QTextEdit *textEdit) {
     // If the number of characters of the current line exceed the maximum specified
     if ( textEdit->toPlainText().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
 
-        QTextCursor text_cursor;
-
         mIsSettingLines = true;
 
         qint16 text_line_index = mTextLinesList.indexOf(textEdit);
@@ -758,13 +760,48 @@ void MyTextEdit::wrapText(QTextEdit *textEdit) {
         // Characters added
         if ( ( textEdit->toPlainText().count() > mPreviousTextList[text_line_index].count() ) ) {
 
+            QTextEdit temp_text_edit;
+            temp_text_edit.setLineWrapMode(QTextEdit::FixedColumnWidth);
+            temp_text_edit.setLineWrapColumnOrWidth(qApp->property("prop_MaxCharPerLine").toInt());
+
+            bool cursor_at_end = true;
+            qint16 original_cursor_pos = 0;
+
             // Select all characters superior to the maximum specified
-            text_cursor = textEdit->textCursor();
-            text_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, textEdit->toPlainText().count() - qApp->property("prop_MaxCharPerLine").toInt());
-            textEdit->setTextCursor(text_cursor);
+            QTextCursor original_text_cursor = textEdit->textCursor();
+            if ( original_text_cursor.atBlockEnd() == false ) {
+                cursor_at_end = false;
+                original_cursor_pos = original_text_cursor.position();
+            }
+
+            QTextCursor moved_text_cursor = original_text_cursor;
+            moved_text_cursor.movePosition(QTextCursor::End, QTextCursor::MoveAnchor);
+
+            if ( mPreviousTextList[text_line_index].count() >  qApp->property("prop_MaxCharPerLine").toInt() ) {
+                moved_text_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, textEdit->toPlainText().count() - mPreviousTextList[text_line_index].count() );
+            }
+            else {
+                moved_text_cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor, textEdit->toPlainText().count() - qApp->property("prop_MaxCharPerLine").toInt());
+            }
+
+            QTextCursor moved_text_cursor2 = moved_text_cursor;
+            moved_text_cursor2.movePosition(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
+
+            if ( moved_text_cursor2.position() <= 0 ) {
+                textEdit->setTextCursor(moved_text_cursor);
+            }
+            else {
+                textEdit->setTextCursor(moved_text_cursor2);
+            }
 
             // Create a new line
             this->addLine(textEdit);
+
+            if ( cursor_at_end == false ) {
+                textEdit->setFocus(Qt::OtherFocusReason);
+                original_text_cursor.setPosition(original_cursor_pos);
+                textEdit->setTextCursor(original_text_cursor);
+            }
         }
 
         mIsSettingLines = false;

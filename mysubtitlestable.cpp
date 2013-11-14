@@ -19,7 +19,7 @@
 #define FONT_UNDERLINED_DEFAULT_VALUE "no"
 
 // Temp : Default position
-#define TEXT1_DIRECTION_DEFAULT_VALUE "horizontal"
+#define TEXT1_DIRECTION_DEFAULT_VALUE "ltr"
 #define TEXT1_HALIGN_DEFAULT_VALUE "center"
 #define TEXT1_HPOSITION_DEFAULT_VALUE "0"
 #define TEXT1_VALIGN_DEFAULT_VALUE "bottom"

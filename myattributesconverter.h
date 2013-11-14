@@ -13,6 +13,8 @@ public:
     MyAttributesConverter();
     static Qt::Alignment vAlignFromString(QString vAlignAttribute);
     static Qt::Alignment hAlignFromString(QString hAlignAttribute);
+    static QString dirToHorVer(QString direction);
+    static QString dirToLtrTtb(QString direction);
     static QString isItalic(bool italic);
     static QString isUnderlined(bool underlined);
     static QString boolToString(bool boolean);
@@ -20,6 +22,8 @@ public:
     static qint16 fontSizeToHeight(QString fontName, QString fontSize);
     static QString toTimeHMSms(QString time);
     static QString toTimeHMSticks(QString time);
+    static QString framesToTimeHMSms(QString time, qint16 timeCodeRate);
+    static QString timeHMSmsToFrames(QString time, qint16 timeCodeRate);
     static qint64 timeStrHMStoMs(QString time);
     static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
     static void roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList);

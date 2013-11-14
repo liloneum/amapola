@@ -5,7 +5,8 @@
 #include "mysubtitlefileparser.h"
 #include "myattributesconverter.h"
 #include "SubtitlesParsers/SubRip/subripparser.h"
-#include "SubtitlesParsers/DcSubtitle/dcsubparser.h"
+#include "SubtitlesParsers/DcSubtitle/interop/dcsubinteropparser.h"
+#include "SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h"
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QFontDialog>
@@ -16,6 +17,8 @@
 #include <QTime>
 #include <QAction>
 #include "amapolaprojfileparser.h"
+#include "subexportdialog.h"
+#include "subimportmanager.h"
 
 
 #define SEC_TO_MSEC 1000
@@ -43,10 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->subTable->initStTable(0);
 
     // Init history (undo/redo)
-    mSubListHistory.clear();
-    mHistoryReasons.clear();
-    mPropertyHistory.clear();
-    mHistoryCurrentIndex = -1;
+    this->clearHistory();
 
     // Save the database current state in history
     this->saveToHistory("Init");
@@ -1174,7 +1174,8 @@ void MainWindow::on_actionOpen_triggered() {
     // Load the subtitles list in the database
     ui->subTable->loadSubtitles(subtitles_list, false);
     // Save the database current state in history
-    this->saveToHistory("Import subtitles");
+    this->clearHistory();
+    this->saveToHistory("Init");
     // Remove all and draw subtitles zones in the waveform
     ui->waveForm->removeAllSubtitlesZones();
 
@@ -1372,7 +1373,7 @@ void MainWindow::on_actionImport_Subtitles_triggered()
 
     // Open a subtitle file
     QString file_name = QFileDialog::getOpenFileName(this, tr("Open Subtitles"),QDir::homePath() + "/Videos",
-                                                     tr("SubRip (*.srt);;DCSubtitle (*.xml);;All Files(*)"),
+                                                     tr("All Files(*);;SubRip (*.srt);;DCSubtitle (*.xml)"),
                                                      &selected_filter);
 
 
@@ -1385,86 +1386,48 @@ void MainWindow::on_actionImport_Subtitles_triggered()
     }
 
     // Choose a parser to parse the file
-    MySubtitleFileParser* parser;
+    MySubtitleFileParser* parser = SubImportManager::findSubFileParser(file_reader);
 
-    if ( selected_filter ==  ("SubRip (*.srt)") ) {
-        parser = new SubRipParser();
-    }
-    else if ( selected_filter ==  ("DCSubtitle (*.xml)") ) {
-        parser = new DcSubParser();
+    if ( parser != NULL ) {
+
+        // Parse the file
+        QList<MySubtitles> subtitles_list = parser->open(file_reader);
+
+        // If parsing is successfull, load the subtitles list in the database
+        if ( !subtitles_list.isEmpty() ) {
+
+            // Round the timecodes to the current frame rate and load subtitles
+            MyAttributesConverter::roundSubListToFrame(qApp->property("prop_FrameRate_fps").toDouble(), subtitles_list);
+            ui->subTable->loadSubtitles(subtitles_list, false);
+
+            // Save the database current state in history
+            this->saveToHistory("Import subtitles");
+
+            // Remove all and draw subtitles zones in the waveform
+            ui->waveForm->removeAllSubtitlesZones();
+            qint32 current_subtitle_index = ui->subTable->currentIndex();
+            ui->waveForm->drawSubtitlesZone(subtitles_list, current_subtitle_index);
+            ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), current_subtitle_index);
+        }
     }
     else {
-        //TO DO
-    }
 
-    // Parse the file
-    QList<MySubtitles> subtitles_list = parser->open(file_reader);
-
-    // If parsing is successfull, load the subtitles list in the database
-    if ( !subtitles_list.isEmpty() ) {
-
-        // Round the timecodes to the current frame rate and load subtitles
-        MyAttributesConverter::roundSubListToFrame(qApp->property("prop_FrameRate_fps").toDouble(), subtitles_list);
-        ui->subTable->loadSubtitles(subtitles_list, false);
-
-        // Save the database current state in history
-        this->saveToHistory("Import subtitles");
-
-        // Remove all and draw subtitles zones in the waveform
-        ui->waveForm->removeAllSubtitlesZones();
-        qint32 current_subtitle_index = ui->subTable->currentIndex();
-        ui->waveForm->drawSubtitlesZone(subtitles_list, current_subtitle_index);
-        ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), current_subtitle_index);
+        QMessageBox::warning(this, "Import subtitles", "This file format is not supported");
+        return;
     }
 }
 
 // Manage the subtitles export when "Export" button triggered
 void MainWindow::on_actionExport_Subtitles_triggered() {
 
-    QString selected_filter;
+    SubExportDialog export_dialog(ui->subTable->saveSubtitles(), ui->subTable->selectedIndex(), this);
 
-    // Create or open file to write datas
-    QString file_name = QFileDialog::getSaveFileName(this, tr("Open Subtitles"),QDir::homePath() + "/Videos",
-                                                     tr("SubRip (*.srt);;DCSubtitle (*.xml);;All Files(*)"),
-                                                     &selected_filter);
-
-
-    // Choose the good parser
-    MySubtitleFileParser* parser;
-    QString file_extension = "";
-
-    if ( selected_filter ==  ("SubRip (*.srt)") ) {
-        parser = new SubRipParser();
-        file_extension = ".srt";
-    }
-    else if ( selected_filter ==  ("DCSubtitle (*.xml)") ) {
-        parser = new DcSubParser();
-        file_extension = ".xml";
+    if ( export_dialog.exec() == QDialog::Accepted ) {
+        // Ok
     }
     else {
-        //TO DO
+        // Rejected or error
     }
-
-    // Add the extension if it miss
-    if ( !file_name.contains(file_extension) ) {
-        file_name.append(file_extension);
-    }
-
-    MyFileWriter file_writer(file_name, "UTF-8");
-
-    // Retreive the subtitles datas from databases
-    QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();
-
-    // If there are datas, write it to asked format
-   if ( !subtitles_list.isEmpty() ) {
-
-       parser->save(file_writer, subtitles_list);
-
-       if ( file_writer.toFile() == false ) {
-           QString error_msg = file_writer.errorMsg();
-           QMessageBox::warning(this, "Export subtitles", error_msg);
-       }
-   }
 }
 
 // Save the current state in "history", to allow undo/redo
@@ -1494,6 +1457,15 @@ void MainWindow::saveToHistory(QString changeReason) {
     mSubListHistory.append(ui->subTable->saveSubtitles());
     mPropertyHistory.append(ui->settings->getCurrentProp());
     mHistoryCurrentIndex++;
+}
+
+void MainWindow::clearHistory() {
+
+    // Init history (undo/redo)
+    mSubListHistory.clear();
+    mHistoryReasons.clear();
+    mPropertyHistory.clear();
+    mHistoryCurrentIndex = -1;
 }
 
 bool MainWindow::undo() {

@@ -1,12 +1,11 @@
-#include "dcsubparser.h"
-#include <QXmlSimpleReader>
+#include "dcsubinteropparser.h"
 #include <QDomDocument>
 #include <QMessageBox>
 #include <QUuid>
-#include <mainwindow.h>
 #include "myattributesconverter.h"
 #include <QXmlStreamReader>
 #include <QTextEdit>
+#include <QApplication>
 
 
 // See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
@@ -29,7 +28,7 @@
 #define TEXT_VPOSITION_DEFAULT_VALUE "0"
 
 
-DcSubParser::DcSubParser() {
+DcSubInteropParser::DcSubInteropParser() {
 
     mNewSubtitle.clear();
     mSubtitlesList.clear();
@@ -49,12 +48,39 @@ DcSubParser::DcSubParser() {
 
     mFontList.append(font_init);
 
+    mPreferredEffect = "";
+    mCurrentEffect = "";
+}
+
+// Read a sample of the file (10 lines). Try to found "DCSubtitle" tag
+bool DcSubInteropParser::readSample(MyFileReader file) {
+
+    QXmlStreamReader xml_reader;
+    QStringList lines_list = file.lines();
+
+    for ( qint32 i = 0; i < lines_list.count(); i++ ) {
+
+        xml_reader.addData(lines_list[i]);
+        xml_reader.readNext();
+
+        if ( xml_reader.isStartElement() ) {
+
+            if ( xml_reader.name() == "DCSubtitle" ) {
+                return true;
+            }
+        }
+
+        if ( i == 10 ) {
+            return false;
+        }
+    }
+    return false;
 }
 
 // Parse the xml tree to retrieve the subtitles infos.
 // This function is RECURSIVE to be able to handle "Font" tag in cascade
 // So be carefull if you change something in the code
-void DcSubParser::parseTree(QDomElement xmlElement) {
+void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
     bool font_inside_text = false;
     bool font_inside_whole_text = false;
@@ -105,44 +131,46 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
 
             if ( !xmlElement.text().isEmpty() ) {
 
+                TextLine new_text;
+
                 // attribute Direction
                 if ( !xmlElement.attribute("Direction").isNull() ) {
-                mNewText.setTextDirection( xmlElement.attribute("Direction") );
+                new_text.setTextDirection( MyAttributesConverter::dirToLtrTtb( xmlElement.attribute("Direction") ) );
                 }
                 else {
-                    mNewText.setTextDirection( TEXT_DIRECTION_DEFAULT_VALUE );
+                    new_text.setTextDirection( TEXT_DIRECTION_DEFAULT_VALUE );
                 }
 
                 // attribute HAlign
                 if ( !xmlElement.attribute("HAlign").isNull() ) {
-                mNewText.setTextHAlign( xmlElement.attribute("HAlign") );
+                new_text.setTextHAlign( xmlElement.attribute("HAlign") );
                 }
                 else {
-                    mNewText.setTextHAlign( TEXT_HALIGN_DEFAULT_VALUE );
+                    new_text.setTextHAlign( TEXT_HALIGN_DEFAULT_VALUE );
                 }
 
                 // attribute HPosition
                 if ( !xmlElement.attribute("HPosition").isNull() ) {
-                mNewText.setTextHPosition( xmlElement.attribute("HPosition") );
+                new_text.setTextHPosition( xmlElement.attribute("HPosition") );
                 }
                 else {
-                    mNewText.setTextHPosition( TEXT_HPOSITION_DEFAULT_VALUE );
+                    new_text.setTextHPosition( TEXT_HPOSITION_DEFAULT_VALUE );
                 }
 
                 // attribute VAlign
                 if ( !xmlElement.attribute("VAlign").isNull() ) {
-                mNewText.setTextVAlign( xmlElement.attribute("VAlign") );
+                new_text.setTextVAlign( xmlElement.attribute("VAlign") );
                 }
                 else {
-                    mNewText.setTextVAlign( TEXT_VALIGN_DEFAULT_VALUE );
+                    new_text.setTextVAlign( TEXT_VALIGN_DEFAULT_VALUE );
                 }
 
                 // attribute VPosition
                 if ( !xmlElement.attribute("VPosition").isNull() ) {
-                mNewText.setTextVPosition( xmlElement.attribute("VPosition") );
+                new_text.setTextVPosition( xmlElement.attribute("VPosition") );
                 }
                 else {
-                     mNewText.setTextVPosition( TEXT_VPOSITION_DEFAULT_VALUE );
+                     new_text.setTextVPosition( TEXT_VPOSITION_DEFAULT_VALUE );
                 }
 
 
@@ -186,7 +214,7 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                     if ( xml_font_changed.hasAttribute("Color") ) {
 
                         QString current_color_str;
-                        current_color_str.setNum(mColor.rgba(), 16);
+                        current_color_str = mFontList.last().fontColor();
                         QString new_color_str = xml_font_changed.attribute("Color");
 
                         // If "Color" attribute is different than current color, add "<font color = #RRGGBB></font>" markup inside text
@@ -210,12 +238,12 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
                 QString text_html = text_edit.toHtml();
 
                 // Set text and font attributes in MySubtitltes container
-                mNewText.setLine( MyAttributesConverter::simplifyRichTextFilter(text_html) );
-                mNewSubtitle.setText(mNewText, mFontList.last());
+                new_text.setLine( MyAttributesConverter::simplifyRichTextFilter(text_html) );
+                mNewSubtitle.setText(new_text, mFontList.last());
 
                 if ( font_inside_whole_text == true ) {
                     mFontList.removeLast();
-                    font_inside_whole_text =false;
+                    font_inside_whole_text = false;
                 }
             }
         }
@@ -239,7 +267,7 @@ void DcSubParser::parseTree(QDomElement xmlElement) {
 
 // Parse DCSub file, retrieve subtitles infos.
 // Subtitles read are saved in "MySubtitles" container
-QList<MySubtitles> DcSubParser::open(MyFileReader file) {
+QList<MySubtitles> DcSubInteropParser::open(MyFileReader file) {
 
     QFile file_read( file.getFileName() );
 
@@ -285,52 +313,79 @@ QList<MySubtitles> DcSubParser::open(MyFileReader file) {
 }
 
 // Create an xml DCSub document from the subtitle list
-void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
+void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
-    QDomDocument doc("dcsub");
+    QDomDocument doc("dcsub_interop");
 
     QDomProcessingInstruction xml_version = doc.createProcessingInstruction("xml", "version=\"1.0\" encoding=\"UTF-8\"");
     doc.appendChild(xml_version);
 
     // Create the root node "DCSubtitle"
     QDomElement xml_root = doc.createElement("DCSubtitle");
-    xml_root.setAttribute("Version", "1.1");
+    xml_root.setAttribute("Version", exportDialog->version());
     doc.appendChild(xml_root);
 
     // Generate an UUID an create the node "SubtitleID"
     QDomElement xml_SubId = doc.createElement("SubtitleID");
     xml_root.appendChild( xml_SubId );
-    QDomText subid_text = doc.createTextNode( QUuid::createUuid().toString().remove('{').remove('}') );
+    QDomText subid_text = doc.createTextNode( exportDialog->subId() );
     xml_SubId.appendChild(subid_text);
 
     // Add "MovieTitle" node
     QDomElement xml_MovTitl = doc.createElement("MovieTitle");
     xml_root.appendChild(xml_MovTitl);
-    QDomText movtitl_text = doc.createTextNode("the movie title");
+    QDomText movtitl_text = doc.createTextNode( exportDialog->movieTitle() );
     xml_MovTitl.appendChild(movtitl_text);
 
     // Add "ReelNumber" node
     QDomElement xml_RealNum = doc.createElement("ReelNumber");
     xml_root.appendChild(xml_RealNum);
-    QDomText realnum_text = doc.createTextNode("1");
+    QDomText realnum_text = doc.createTextNode( exportDialog->reelNumber() );
     xml_RealNum.appendChild(realnum_text);
 
     // Add "Language" node
     QDomElement xml_Lang = doc.createElement("Language");
     xml_root.appendChild(xml_Lang);
-    QDomText lang_text = doc.createTextNode("fr");
+    QDomText lang_text = doc.createTextNode( exportDialog->language() );
     xml_Lang.appendChild(lang_text);
 
     // Add "LoadFont" node
     QDomElement xml_LoadFont = doc.createElement("LoadFont");
-    QString font_id = subtitlesList.first().text().first().Font().fontId();
+    QString font_id;
+    QString font_uri;
+
+    if ( exportDialog->fontPath() != "" ) {
+
+        font_uri = exportDialog->fontPath();
+        font_id = font_uri;
+        font_id = font_id.section('/',-1);
+        font_id = font_id.section('.',0,0);
+    }
+    else {
+        font_id = subtitlesList.first().text().first().Font().fontId();
+        font_uri = font_id +".ttf";
+    }
+
     mFontList.first().setFontId(font_id);
     xml_LoadFont.setAttribute("Id", font_id);
-    xml_LoadFont.setAttribute("URI", (font_id +".ttf"));
+    xml_LoadFont.setAttribute("URI", font_uri);
     xml_root.appendChild(xml_LoadFont);
 
+    mPreferredEffect = exportDialog->preferredEffect();
+
     // Add first "Font" tag with attributes
-    TextFont text_font0 = subtitlesList.first().text().first().Font();
+    TextFont text_font0;
+    text_font0.setFontId(font_id);
+    text_font0.setFontColor( qApp->property("prop_FontColor_rgba").toString() );
+    text_font0.setFontShadowEffect( qApp->property("prop_FontShadow").toString() );
+    text_font0.setFontShadowEffectColor( qApp->property("prop_FontShadowColor").toString() );
+    text_font0.setFontBorderEffect( qApp->property("prop_FontBorder").toString() );
+    text_font0.setFontBorderEffectColor( qApp->property("prop_FontBorderColor").toString() );
+    text_font0.setFontItalic( qApp->property("prop_FontItalic").toString() );
+    text_font0.setFontScript( FONT_SCRIPT_DEFAULT_VALUE );
+    text_font0.setFontSize( qApp->property("prop_FontSize_pt").toString() );
+    text_font0.setFontUnderlined( qApp->property("prop_FontUnderlined").toString() );
+
     QDomElement xml_font0 = doc.createElement("Font");
     TextFont empty_font;
     this->writeFont(&xml_font0, empty_font, text_font0);
@@ -378,7 +433,7 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
                 xml_text.setAttribute("Direction", TEXT_DIRECTION_DEFAULT_VALUE);
             }
             else {
-                xml_text.setAttribute("Direction", text_line.textDirection());
+                xml_text.setAttribute("Direction", MyAttributesConverter::dirToHorVer( text_line.textDirection() ) );
             }
 
             if ( text_line.textHAlign() == "") {
@@ -480,7 +535,7 @@ void DcSubParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList) {
 }
 
 // Compare old and new font attributes, return a font container with only the changed attributes setted
-void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont) {
+void DcSubInteropParser::writeFont(QDomElement* xmlElement, TextFont previousFont, TextFont newFont) {
 
     if ( previousFont.findDiff(newFont) ) {
 
@@ -490,61 +545,142 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
 
         if ( newFont.fontColor() != "" ) {
             xmlElement->setAttribute("Color", newFont.fontColor());
-        }
+        } 
+
 
         if ( newFont.fontShadowEffect() != "" ) {
 
             if ( newFont.fontShadowEffect() == "yes" ) {
-                xmlElement->setAttribute("Effect", "shadow");
-            }
-            else {
 
-                if ( newFont.fontBorderEffect() != "" ) {
+                if ( newFont.fontBorderEffect() == "yes" ) {
 
-                    if ( newFont.fontBorderEffect() == "yes" ) {
-                        xmlElement->setAttribute("Effect", "border");
+                    if ( mPreferredEffect == "shadow" ) {
+                        xmlElement->setAttribute("Effect", "shadow");
+                        mCurrentEffect = "shadow";
                     }
                     else {
-                        xmlElement->setAttribute("Effect", "none");
+                        xmlElement->setAttribute("Effect", "border");
+                        mCurrentEffect = "border";
                     }
                 }
-                else {
+                else if ( newFont.fontBorderEffect() == "no" ) {
 
-                    if ( previousFont.fontBorderEffect() != "no" ) {
-                        xmlElement->setAttribute("Effect", "border");
+                    xmlElement->setAttribute("Effect", "shadow");
+                    mCurrentEffect = "shadow";
+                }
+                else if ( newFont.fontBorderEffect() == "" ) {
+
+                    if ( previousFont.fontBorderEffect() == "yes" ) {
+
+                        if ( mPreferredEffect == "shadow" ) {
+                            xmlElement->setAttribute("Effect", "shadow");
+                            mCurrentEffect = "shadow";
+                        }
+                        else {
+                            xmlElement->setAttribute("Effect", "border");
+                            mCurrentEffect = "border";
+                        }
                     }
-                    else {
+                    else if ( previousFont.fontBorderEffect() == "no" ) {
+                        xmlElement->setAttribute("Effect", "shadow");
+                        mCurrentEffect = "shadow";
+                    }
+                    else if ( previousFont.fontBorderEffect() == "" ) {
+                        xmlElement->setAttribute("Effect", "shadow");
+                        mCurrentEffect = "shadow";
+                    }
+                }
+            }
+            else if ( newFont.fontShadowEffect() == "no" ) {
+
+                if ( newFont.fontBorderEffect() == "yes" ) {
+                    xmlElement->setAttribute("Effect", "border");
+                    mCurrentEffect = "border";
+                }
+                else if ( newFont.fontBorderEffect() == "no" ) {
+                    xmlElement->setAttribute("Effect", "none");
+                    mCurrentEffect = "none";
+                }
+                else if ( newFont.fontBorderEffect() == "" ) {
+
+                    if ( previousFont.fontBorderEffect() == "yes" ) {
+
+                        if ( mPreferredEffect == "shadow" ) {
+                            xmlElement->setAttribute("Effect", "border");
+                            mCurrentEffect = "border";
+                        }
+                    }
+                    else if ( previousFont.fontBorderEffect() == "no" ) {
                         xmlElement->setAttribute("Effect", "none");
+                        mCurrentEffect = "none";
+                    }
+                    else if ( previousFont.fontBorderEffect() == "" ) {
+                        xmlElement->setAttribute("Effect", "none");
+                        mCurrentEffect = "none";
                     }
                 }
             }
         }
         else if ( newFont.fontBorderEffect() != "" ) {
 
-            if ( previousFont.fontShadowEffect() != "yes" ) {
+            if ( newFont.fontBorderEffect() == "yes" ) {
 
-                if ( newFont.fontBorderEffect() == "yes" ) {
-                    xmlElement->setAttribute("Effect", "border");
+                if ( newFont.fontShadowEffect() == "" ) {
+
+                    if ( previousFont.fontShadowEffect() == "yes" ) {
+
+                        if ( mPreferredEffect == "shadow" ) {
+                            xmlElement->setAttribute("Effect", "shadow");
+                            mCurrentEffect = "shadow";
+                        }
+                        else {
+                            xmlElement->setAttribute("Effect", "border");
+                            mCurrentEffect = "border";
+                        }
+                    }
+                    else if ( previousFont.fontShadowEffect() == "no" ) {
+                        xmlElement->setAttribute("Effect", "border");
+                        mCurrentEffect = "border";
+                    }
+                    else if ( previousFont.fontShadowEffect() == "" ) {
+                        xmlElement->setAttribute("Effect", "border");
+                        mCurrentEffect = "border";
+                    }
                 }
-                else {
-                    xmlElement->setAttribute("Effect", "none");
+            }
+            else if ( newFont.fontShadowEffect() == "no" ) {
+
+                if ( newFont.fontShadowEffect() == "" ) {
+
+                    if ( previousFont.fontShadowEffect() == "yes" ) {
+
+                        if ( mPreferredEffect == "border" ) {
+                            xmlElement->setAttribute("Effect", "shadow");
+                            mCurrentEffect = "shadow";
+                        }
+                    }
+                    else if ( previousFont.fontShadowEffect() == "no" ) {
+                        xmlElement->setAttribute("Effect", "none");
+                        mCurrentEffect = "none";
+                    }
+                    else if ( previousFont.fontShadowEffect() == "" ) {
+                        xmlElement->setAttribute("Effect", "none");
+                        mCurrentEffect = "none";
+                    }
                 }
             }
         }
 
         if ( newFont.fontShadowEffectColor() != "" ) {
 
-            if ( ( newFont.fontShadowEffect() == "yes" ) ||
-                 ( previousFont.fontShadowEffect() == "yes" ) ) {
+            if ( mCurrentEffect == "shadow" ) {
 
                 xmlElement->setAttribute("EffectColor", newFont.fontShadowEffectColor());
             }
         }
-        else if ( newFont.fontBorderEffectColor() != "" ) {
+        if ( newFont.fontBorderEffectColor() != "" ) {
 
-            if ( ( ( newFont.fontBorderEffect() == "yes" ) ||
-                   ( previousFont.fontBorderEffect() == "yes" ) ) &&
-                 ( previousFont.fontShadowEffect() == "no" ) ) {
+            if ( mCurrentEffect == "border" ) {
 
                 xmlElement->setAttribute("EffectColor", newFont.fontBorderEffectColor());
             }
@@ -571,7 +707,7 @@ void DcSubParser::writeFont(QDomElement* xmlElement, TextFont previousFont, Text
 
 // Append a new font container in the font list.
 // When an attribute is null, retrieve the parent font attribute
-void DcSubParser::changeFont(QDomElement xmlElement) {
+void DcSubInteropParser::changeFont(QDomElement xmlElement) {
 
     if ( ( xmlElement.isNull() ) || ( xmlElement.tagName() != "Font") ) {
         return;
