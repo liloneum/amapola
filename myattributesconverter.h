@@ -29,9 +29,11 @@ public:
     static void roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList);
     static qint32 timeMsToFrames(qint64 timeMs, qreal frameRate);
     static QString colorToString(QColor colorRgba);
-    static QColor stringToColor(QString color_str);
+    static QColor stringToColor(QString colorStr);
+    static QString simplifyColorStr(QString colorStr);
     static void setColorToButton(QPushButton* button, QColor color);
     static QString htmlToPlainText(QString htmlText);
+    static QString plainTextToHtml(QString plainText);
     static QString simplifyRichTextFilter(QString in);
 };
 

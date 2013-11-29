@@ -28,10 +28,53 @@ public:
     QString preferredEffect();
     bool hasHtmlTags();
 
+    QString maxRow();
+    bool isDoubleHeight();
+    QString diskFormatCode();
+    QString stlFileName();
+    QString displayMode();
+    QString charCodeTable();
+    quint8 languageCode();
+    QString progTitleVO();
+    QString progTitleTR();
+    QString epTitleVO();
+    QString epTitleTR();
+    QString translatorName();
+    QString translatorContact();
+    QString subListRef();
+    QString creationDate();
+    quint16 revisionNbr();
+    QString startOfProg();
+    QString countryOrigin();
+    QString publisher();
+    QString editorName();
+    QString editorContact();
+
+    // Ebu
+    void setDiskFormatCode(QString diskFormatCode);
+    void setDisplayMode(QString displayMode);
+    void setCharCodeTable(QString charCodeTable);
+    void setLanguageCode(QString languageCode);
+    void setProgTitleVO(QString progTitle);
+    void setProgTitleTR(QString progTitle);
+    void setEpTitleVO(QString epTitle);
+    void setEpTitleTR(QString epTitle);
+    void setTranslatorName(QString translatorName);
+    void setTranslatorContact(QString translatorContact);
+    void setSubListRef(QString subListRef);
+    void setCreationDate(QString creationDate);
+    void setRevisionNbr(QString revisionNbr);
+    void setMaxRow(QString maxRow);
+    void setStartOfProg(QString startOfProg);
+    void setCountryOrigin(QString countryOrigin);
+    void setPublisher(QString publisher);
+    void setEditorsName(QString editorName);
+    void setEditorsContact(QString editorContact);
+
 private slots:
     void on_subNormList_currentTextChanged(const QString &currentText);
     void exportDatas();
-    void on_cancelPushButton_clicked();
+    void on_closePushButton_clicked();
     void on_versionLineEdit_editingFinished();
     void on_subIDLineEdit_editingFinished();
     void on_movieTitleLineEdit_editingFinished();
@@ -46,6 +89,22 @@ private slots:
     void on_htmlYesRadioButton_toggled(bool checked);
     void on_genIDPushButton_clicked();
     void on_fontPushButton_clicked();
+
+    // Ebu
+    void on_dfcSpinBox_editingFinished();
+    void on_mnrSpinBox_editingFinished();
+    void on_dscComboBox_currentTextChanged(const QString &arg1);
+    void on_cctComboBox_currentTextChanged(const QString &arg1);
+    void on_languageComboBox_currentIndexChanged(int index);
+    void on_optLineEdit_editingFinished();
+    void on_tptLineEdit_editingFinished();
+    void on_oetLineEdit_editingFinished();
+    void on_tetLineEdit_editingFinished();
+    void on_tnLineEdit_editingFinished();
+    void on_tcdLineEdit_editingFinished();
+    void on_slrLineEdit_editingFinished();
+    void on_filePushButton_clicked();
+    void on_doubleHeightcheckBox_toggled(bool checked);
 
 private:
     Ui::SubExportDialog *ui;
@@ -64,6 +123,30 @@ private:
     QString mStartTime;
     QString mPreferredEffect;
     bool mHtmlTags;
+
+    // Ebu
+    QString mStlFileName;
+    QString mDiskFormatCode;
+    QString mMaxRow;
+    bool mDoubleHeight;
+    QString mDisplayMode;
+    QString mCharCodeTable;
+    quint8 mLanguageCode;
+    QString mProgTitleVO;
+    QString mProgTitleTR;
+    QString mEpTitleVO;
+    QString mEpTitleTR;
+    QString mTranslatorName;
+    QString mTranslatorContact;
+    QString mSubListRef;
+    QString mCreationDate;
+    quint16 mRevisionNbr;
+    QString mStartOfProg;
+    QString mCountryOrigin;
+    QString mPublisher;
+    QString mEditorName;
+    QString mEditorContact;
+
 };
 
 #endif // SUBEXPORTDIALOG_H

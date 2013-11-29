@@ -20,6 +20,8 @@ public:
     QList<MySubtitles> open(MyFileReader file);
     void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
     bool readSample(MyFileReader file);
+    QString convertVposToAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos);
+    QString convertVposFromAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos);
 
 private:
     void changeFont(QDomElement xmlElement);

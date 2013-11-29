@@ -290,13 +290,13 @@ void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitle
         }
 
         sub_to_write += "\n\n";
-        file.write(sub_to_write);
+        file.writeText(sub_to_write);
     }
 
     // Save the video file path name
     QString video_file_name = "";
     video_file_name = "\n\nVideoFileName->" +videoFilePath +"\n";
-    file.write(video_file_name);
+    file.writeText(video_file_name);
 
     // Save the settings
     QString properties = "";
@@ -324,5 +324,5 @@ void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitle
     properties += "DefaultVposition->" +qApp->property("prop_Vposition_percent").toString() +"\n";
     properties += "DefaultHposition->" +qApp->property("prop_Hposition_percent").toString() +"\n";
 
-    file.write(properties);
+    file.writeText(properties);
 }

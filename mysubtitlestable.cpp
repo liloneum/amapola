@@ -13,6 +13,8 @@
 #define FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_BORDER_EFFECT_DEFAULT_VALUE "yes"
 #define FONT_BORDER_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_BACKGROUND_EFFECT_DEFAULT_VALUE "no"
+#define FONT_BACKGROUND_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_ITALIC_DEFAULT_VALUE "no"
 #define FONT_SCRIPT_DEFAULT_VALUE "normal"
 #define FONT_SIZE_DEFAULT_VALUE "42"
@@ -702,6 +704,22 @@ void MySubtitlesTable::updateDatas(MySubtitles subtitle, qint32 index) {
                 text_font.setFontBorderEffectColor(new_text_line.Font().fontBorderEffectColor());
             }
 
+            if ( new_text_line.Font().fontBackgroundEffect().isEmpty() ) {
+
+                text_font.setFontBackgroundEffect(FONT_BACKGROUND_EFFECT_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontBackgroundEffect(new_text_line.Font().fontBackgroundEffect());
+            }
+
+            if ( new_text_line.Font().fontBackgroundEffectColor().isEmpty() ) {
+
+                text_font.setFontBackgroundEffectColor(FONT_BACKGROUND_EFFECT_COLOR_DEFAULT_VALUE);
+            }
+            else {
+                text_font.setFontBackgroundEffectColor(new_text_line.Font().fontBackgroundEffectColor());
+            }
+
             if ( new_text_line.Font().fontItalic().isEmpty() ) {
 
                 text_font.setFontItalic(FONT_ITALIC_DEFAULT_VALUE);
@@ -959,7 +977,7 @@ QString MySubtitlesTable::updateStTime(QTableWidgetItem* time_item) {
             // No more place in the lookup table. Add 30 minutes (1800000 ms).
             if ( end_time_ms >= mPositionMsToStIndex.size() ) {
                 QVector<qint32> temp_vector;
-                temp_vector.resize(1800000);
+                temp_vector.resize(end_time_ms - mPositionMsToStIndex.size() + 1800000);
                 temp_vector.fill(-1);
                 mPositionMsToStIndex += temp_vector;
             }

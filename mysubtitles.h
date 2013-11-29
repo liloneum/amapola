@@ -16,6 +16,8 @@ public:
     void setFontShadowEffectColor(QString fontEffectColor);
     void setFontBorderEffect(QString fontEffect);
     void setFontBorderEffectColor(QString fontEffectColor);
+    void setFontBackgroundEffect(QString fontEffect);
+    void setFontBackgroundEffectColor(QString fontEffectColor);
     void setFontSize(QString fontSize);
     void setFontItalic(QString fontItalic);
     void setFontUnderlined(QString fontUnderlined);
@@ -27,6 +29,8 @@ public:
     QString fontShadowEffectColor();
     QString fontBorderEffect();
     QString fontBorderEffectColor();
+    QString fontBackgroundEffect();
+    QString fontBackgroundEffectColor();
     QString fontSize();
     QString fontItalic();
     QString fontUnderlined();
@@ -47,6 +51,10 @@ private:
     QString mBorderEffect;
     // attribute Border EffectColor
     QString mBorderEffectColor;
+    // attribute Background Effect
+    QString mBackgroundEffect;
+    // attribute Background EffectColor
+    QString mBackgroundEffectColor;
     // attribute Size
     QString mSize;
     // attribute Italic

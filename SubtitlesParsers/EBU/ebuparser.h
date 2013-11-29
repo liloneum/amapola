@@ -1,0 +1,212 @@
+#ifndef EBUPARSER_H
+#define EBUPARSER_H
+
+#include "mysubtitlefileparser.h"
+
+class EbuParser : public MySubtitleFileParser
+{
+public:
+    EbuParser();
+    QList<MySubtitles> open(MyFileReader file);
+    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(MyFileReader file);
+    void readGsiBlock(MyFileReader file, SubExportDialog* exportDialog);
+
+    static const QString LANGUAGES_CODES[128];
+
+private:
+
+    quint16 latinCombinigChar(quint16 inputCode);
+    quint16 latinToUnicodeChar(quint8 inputCode);
+    quint8 unicodeToLatinChar(quint16 inputCode);
+    quint8 colorStrToTeletextCode(QString colorStr);
+    quint16 unicodeTolatinCombinigChar(quint16 inputCode);
+
+    // GSI block data address, length and value define
+#define GSI_BLOCK_ADD 0
+#define GSI_BLOCK_LENGTH 1024
+
+#define CODE_PAGE_NUMBER_ADD 0
+#define CODE_PAGE_NUMBER_LENGTH 3
+#define CPN_MULTILINGUAL "850"
+#define CPN_US "437"
+#define CPN_PORTUGAL "860"
+#define CPN_FRENCH "863"
+#define CPN_NORDIC "865"
+
+
+#define DISK_FORMAT_CODE_ADD 3
+#define DISK_FORMAT_CODE_LENGTH 8
+#define DFC_TIME_CODE_RATE_OFFSET 3
+#define DFC_TIME_CODE_RATE_LENGTH 2
+
+#define DISPLAY_STANDARD_CODE_ADD 11
+#define DISPLAY_STANDARD_CODE_LENGTH 1
+#define DSC_OPEN_SUB 0x30
+#define DSC_LEVEL1_TELETEXT 0x31
+#define DSC_LEVEL2_TELETEXT 0x32
+
+#define CHARACTER_CODE_TABLE_NUMBER_ADD 12
+#define CHARACTER_CODE_TABLE_NUMBER_LENGTH 2
+#define CCT_LATIN "00"
+#define CCT_CYRILIC "01"
+#define CCT_ARABIC "02"
+#define CCT_GREEK "03"
+#define CCT_HEBREW "04"
+
+#define LANGUAGE_CODE_ADD 14
+#define LANGUAGE_CODE_LENGTH 2
+
+#define ORIGINAL_PROGRAMME_TITLE_ADD 16
+#define ORIGINAL_PROGRAMME_TITLE_LENGTH 32
+
+#define ORIGINAL_EPISODE_TITLE_ADD 48
+#define ORIGINAL_EPISODE_TITLE_LENGTH 32
+
+#define TRANSLATED_PROGRAMME_TITLE_ADD 80
+#define TRANSLATED_PROGRAMME_TITLE_LENGTH 32
+
+#define TRANSLATED_EPISODE_TITLE_ADD 112
+#define TRANSLATED_EPISODE_TITLE_LENGTH 32
+
+#define TRANSLATORS_NAME_ADD 144
+#define TRANSLATORS_NAME_LENGTH 32
+
+#define TRANSLATORS_CONTACT_DETAILS_ADD 176
+#define TRANSLATORS_CONTACT_DETAILS_LENGTH 32
+
+#define SUBTITLE_LIST_REFERENCE_CODE_ADD 208
+#define SUBTITLE_LIST_REFERENCE_CODE_LENGTH 16
+
+#define CREATION_DATE_ADD 224
+#define CREATION_DATE_LENGTH 6
+
+#define REVISION_DATE_ADD 230
+#define REVISION_DATE_LENGTH 6
+
+#define REVISION_NUMBER_ADD 236
+#define REVISION_NUMBER_LENGTH 2
+
+#define TOTAL_NUMBER_OF_TTI_BLOCKS_ADD 238
+#define TOTAL_NUMBER_OF_TTI_BLOCKS_LENGTH 5
+
+#define TOTAL_NUMBER_OF_SUBTITLES_ADD 243
+#define TOTAL_NUMBER_OF_SUBTITLES_LENGTH 5
+
+#define TOTAL_NUMBER_OF_SUBTITLE_GROUPS_ADD 248
+#define TOTAL_NUMBER_OF_SUBTITLE_GROUPS_LENGTH 3
+
+#define MAX_NUMBER_OF_DISPLAYABLE_CHAR_IN_ROW_ADD 251
+#define MAX_NUMBER_OF_DISPLAYABLE_CHAR_IN_ROW_LENGTH 2
+
+#define MAX_NUMBER_OF_DISPLAYABLE_ROW_ADD 253
+#define MAX_NUMBER_OF_DISPLAYABLE_ROW_LENGTH 2
+
+#define TIME_CODE_STATUS_ADD 255
+#define TIME_CODE_STATUS_LENGTH 1
+#define TCS_NOT_INTENTED_TO_USE 0
+#define TCS_INTENTED_TO_USE 1
+
+#define TIME_CODE_START_OF_PROG_ADD 256
+#define TIME_CODE_START_OF_PROG_LENGTH 8
+
+#define TIME_CODE_FIRST_IN_CUE_ADD 264
+#define TIME_CODE_FIRST_IN_CUE_LENGTH 8
+
+#define TOTAL_NUMBER_OF_DISK_ADD 272
+#define TOTAL_NUMBER_OF_DISK_LENGTH 1
+
+#define DISK_SEQUENCE_NUMBER_ADD 273
+#define DISK_SEQUENCE_NUMBER_LENGTH 1
+
+#define COUNTRY_OF_ORIGINE_ADD 274
+#define COUNTRY_OF_ORIGINE_LENGTH 3
+
+#define PUBLISHER_ADD 277
+#define PUBLISHER_LENGTH 32
+
+#define EDITORS_NAME_ADD 309
+#define EDITORS_NAME_LENGTH 32
+
+#define EDITORS_CONTACT_DETAILS_ADD 341
+#define EDITORS_CONTACT_DETAILS_LENGTH 32
+
+#define GSI_UNUSED_BYTE 0x20
+
+    // TTI block define
+#define TTI_ADD 1024
+#define TTI_BLOCK_LENGTH 128
+
+#define SUB_GROUP_NUMBER_ADD 0
+#define SUB_GROUP_NUMBER_LENGTH 1
+
+#define SUB_NUMBER_ADD 1
+#define SUB_NUMBER_LENGTH 2
+
+#define EXTENSION_BLOCK_NUMBER_ADD 3
+#define EXTENSION_BLOCK_NUMBER_LENGTH 1
+
+#define CUMULATIV_STATUS_ADD 4
+#define CUMULATIV_STATUS_LENGTH 1
+#define CS_NOT 0X00
+#define CS_FIRST 0X01
+#define CS_INTERMEDIATE 0X02
+#define CS_LAST 0X03
+
+#define TIME_CODE_IN_ADD 5
+#define TIME_CODE_IN_LENGTH 4
+
+#define TIME_CODE_OUT_ADD 9
+#define TIME_CODE_OUT_LENGTH 4
+
+#define VERTICAL_POSITION_ADD 13
+#define VERTICAL_POSITION_LENGTH 1
+
+#define JUSTIFICATION_CODE_ADD 14
+#define JUSTIFICATION_CODE_LENGTH 1
+#define JC_UNCHANGED 0X00
+#define JC_LEFT 0X01
+#define JC_CENTER 0X02
+#define JC_RIGHT 0X03
+
+#define COMMENT_FLAG_ADD 15
+#define COMMENT_FLAG_LENGTH 1
+#define CF_DATA 0x00
+#define CF_COMMENT 0x01
+
+#define TEXT_FIELD_ADD 16
+#define TEXT_FIELD_LENGTH 112
+
+#define SUB_NEW_ROW 0x8A
+#define SUB_TEXT_END 0x8F
+#define SUB_TEXT_UNUSED 0x8F
+
+// Teletext control codes
+#define ALPHA_BLACK 0x00
+#define ALPHA_RED 0x01
+#define ALPHA_GREEN 0x02
+#define ALPHA_YELLOW 0x03
+#define ALPHA_BLUE 0x04
+#define ALPHA_MAGENTA 0x05
+#define ALPHA_CYAN 0x06
+#define ALPHA_WHITE 0x07
+#define FLASH 0x08
+#define STEADY 0x09
+#define END_BOX 0x0A
+#define START_BOX 0x0B
+#define NORMAL_HEIGHT 0x0C
+#define DOUBLE_HEIGHT 0x0D
+#define DOUBLE_WIDTH 0x0E
+#define DOUBLE_SIZE 0x0F
+#define NEW_BACKGROUND 0x1D
+
+// Open sub control codes
+#define ITALIC_ON 0x80
+#define ITALIC_OFF 0x81
+#define UNDERLINE_ON 0x82
+#define UNDERLINE_OFF 0x83
+#define BOXING_ON 0x84
+#define BOXINF_OFF 0x85
+};
+
+#endif // EBUPARSER_H

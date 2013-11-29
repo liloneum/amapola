@@ -12,7 +12,9 @@ class MyFileReader
 public:
     MyFileReader(const QString fileName, QString textCodec);
     bool readFile(const QString fileName, QString textCodec);
+    bool readRawData(const QString fileName);
     QStringList lines();
+    QList<quint8> *data();
     QString getFileName();
     QString errorMsg();
 
@@ -22,6 +24,8 @@ private:
 
     // List of string lines
     QStringList mLines;
+    // Data of the file read
+    QList<quint8> mData;
     // Number of lines read
     qint32 mNumberOfLines;
     // File name read

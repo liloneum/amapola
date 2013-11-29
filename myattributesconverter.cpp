@@ -303,11 +303,33 @@ QString MyAttributesConverter::colorToString(QColor colorRgba) {
 }
 
 // Convert a AARRGGBB string in QColor argb
-QColor MyAttributesConverter::stringToColor(QString color_str) {
+QColor MyAttributesConverter::stringToColor(QString colorStr) {
 
     bool ok;
 
-    return QColor::fromRgba( color_str.toUInt(&ok, 16) );
+    return QColor::fromRgba( colorStr.toUInt(&ok, 16) );
+}
+
+// Simplify a color AARRGGBB formated.
+// Set A, R, G, B parmaters to 0 or FF.
+QString MyAttributesConverter::simplifyColorStr(QString colorStr) {
+
+    bool ok;
+    QString simplified_color_str = "FF";
+
+    for ( quint16 i = 1; i < 4; i++ ) {
+
+        quint8 color_composant = colorStr.mid((i * 2), 2).toInt(&ok, 16);
+
+        if ( color_composant <= (255 / 2) ) {
+            simplified_color_str.append("00");
+        }
+        else {
+            simplified_color_str.append("FF");
+        }
+    }
+
+    return simplified_color_str;
 }
 
 // Fill QPushButton icon with the given color
@@ -325,6 +347,13 @@ QString MyAttributesConverter::htmlToPlainText(QString htmlText) {
     text_edit.setText(htmlText);
 
     return text_edit.toPlainText();
+}
+
+QString MyAttributesConverter::plainTextToHtml(QString plainText) {
+
+    QTextEdit text_edit;
+    text_edit.setHtml(plainText);
+    return simplifyRichTextFilter(text_edit.toHtml());
 }
 
 // Richtext simplification filter helpers: Elements to be discarded
@@ -357,6 +386,26 @@ static inline void filterAttributes(const QStringRef &name,
                 *paragraphAlignmentFound = true;
             } else {
                 it = atts->erase(it);
+            }
+        }
+        return;
+    }
+
+    if (name == QStringLiteral("span")) {
+        for (AttributeIt it = atts->begin(); it != atts->end(); ) {
+            if (it->name() == QStringLiteral("style")) {
+                QString style_value = it->value().toString();
+                if ( style_value.contains("background-color") ) {
+                    int from_index = style_value.indexOf("background-color");
+                    int lenght = style_value.indexOf(";", from_index) - from_index + 1;
+                    style_value.remove(from_index, lenght);
+                    it = atts->erase(it);
+                    atts->insert(it, QXmlStreamAttribute("style", style_value));
+                }
+                ++it;
+            }
+            else {
+                ++it;
             }
         }
         return;

@@ -235,12 +235,8 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
                     }
                 }
 
-                QTextEdit text_edit;
-                text_edit.setHtml(text);
-                QString text_html = text_edit.toHtml();
-
                 // Set text and font attributes in MySubtitltes container
-                new_text.setLine( MyAttributesConverter::simplifyRichTextFilter(text_html) );
+                new_text.setLine( MyAttributesConverter::plainTextToHtml(text) );
                 mNewSubtitle.setText(new_text, mFontList.last());
 
                 if ( font_inside_whole_text == true ) {
@@ -554,6 +550,19 @@ void DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
                                     xml_current_element.setAttribute("Italic", "yes");
                                 }
                             }
+
+                            if ( style_str.contains("underline") ) {
+
+                                if ( ( text_font.fontUnderlined() == "no" ) &&
+                                     ( text_font0.fontUnderlined() == "no" ) ) {
+
+                                    if ( xml_current_element.tagName() != "Font") {
+
+                                        xml_current_element = xml_current_element.appendChild( doc.createElement("Font") ).toElement();
+                                    }
+                                    xml_current_element.setAttribute("Underlined", "yes");
+                                }
+                            }
                         }
                     }
                     break;
@@ -577,7 +586,7 @@ void DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
 
     // Write the document in file
     QString xml = doc.toString();
-    file.write( xml );
+    file.writeText( xml );
 }
 
 // Compare old and new font attributes, return a font container with only the changed attributes setted

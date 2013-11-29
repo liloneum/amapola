@@ -16,7 +16,7 @@
 //      - Font :
 //          - name
 //          - size (in pt)
-//          - effect (border, shadow, none) - not used yet
+//          - effect (border, shadow, background, none)
 //          - effect color (#AARRGGBB)
 //          - color (#AARRGGBB)
 //          - italic (yes / no)
@@ -231,6 +231,12 @@ TextFont::TextFont() {
     // attribute Border EffectColor
     mBorderEffectColor = "";
 
+    // attribute Background Effect
+    mBackgroundEffect = "";
+
+    // attribute Background EffectColor
+    mBackgroundEffectColor = "";
+
     // attribute Size
     mSize = "";
 
@@ -268,6 +274,14 @@ void TextFont::setFontBorderEffect(QString fontEffect) {
 
 void TextFont::setFontBorderEffectColor(QString fontEffectColor) {
     mBorderEffectColor = fontEffectColor;
+}
+
+void TextFont::setFontBackgroundEffect(QString fontEffect) {
+    mBackgroundEffect = fontEffect;
+}
+
+void TextFont::setFontBackgroundEffectColor(QString fontEffectColor) {
+    mBackgroundEffectColor = fontEffectColor;
 }
 
 void TextFont::setFontSize(QString fontSize) {
@@ -310,6 +324,14 @@ QString TextFont::fontBorderEffect() {
 
 QString TextFont::fontBorderEffectColor() {
     return mBorderEffectColor;
+}
+
+QString TextFont::fontBackgroundEffect() {
+    return mBackgroundEffect;
+}
+
+QString TextFont::fontBackgroundEffectColor() {
+    return mBackgroundEffectColor;
 }
 
 QString TextFont::fontSize() {

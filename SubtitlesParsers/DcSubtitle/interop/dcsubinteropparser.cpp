@@ -6,6 +6,7 @@
 #include <QXmlStreamReader>
 #include <QTextEdit>
 #include <QApplication>
+#include <QDesktopWidget>
 
 
 // See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
@@ -133,6 +134,9 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 TextLine new_text;
 
+                QString font_id = mFontList.last().fontId();
+                QString font_size = mFontList.last().fontSize();
+
                 // attribute Direction
                 if ( !xmlElement.attribute("Direction").isNull() ) {
                 new_text.setTextDirection( MyAttributesConverter::dirToLtrTtb( xmlElement.attribute("Direction") ) );
@@ -143,7 +147,7 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 // attribute HAlign
                 if ( !xmlElement.attribute("HAlign").isNull() ) {
-                new_text.setTextHAlign( xmlElement.attribute("HAlign") );
+                    new_text.setTextHAlign( xmlElement.attribute("HAlign") );
                 }
                 else {
                     new_text.setTextHAlign( TEXT_HALIGN_DEFAULT_VALUE );
@@ -151,7 +155,7 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 // attribute HPosition
                 if ( !xmlElement.attribute("HPosition").isNull() ) {
-                new_text.setTextHPosition( xmlElement.attribute("HPosition") );
+                    new_text.setTextHPosition( xmlElement.attribute("HPosition") );
                 }
                 else {
                     new_text.setTextHPosition( TEXT_HPOSITION_DEFAULT_VALUE );
@@ -159,7 +163,7 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 // attribute VAlign
                 if ( !xmlElement.attribute("VAlign").isNull() ) {
-                new_text.setTextVAlign( xmlElement.attribute("VAlign") );
+                    new_text.setTextVAlign( xmlElement.attribute("VAlign") );
                 }
                 else {
                     new_text.setTextVAlign( TEXT_VALIGN_DEFAULT_VALUE );
@@ -167,10 +171,10 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 // attribute VPosition
                 if ( !xmlElement.attribute("VPosition").isNull() ) {
-                new_text.setTextVPosition( xmlElement.attribute("VPosition") );
+                    new_text.setTextVPosition( this->convertVposToAmapolaRef(font_id, font_size, new_text.textVAlign(), xmlElement.attribute("VPosition")) );
                 }
                 else {
-                     new_text.setTextVPosition( TEXT_VPOSITION_DEFAULT_VALUE );
+                     new_text.setTextVPosition( this->convertVposToAmapolaRef(font_id, font_size, new_text.textVAlign(), TEXT_VPOSITION_DEFAULT_VALUE) );
                 }
 
 
@@ -233,12 +237,8 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
                     }
                 }
 
-                QTextEdit text_edit;
-                text_edit.setHtml(text);
-                QString text_html = text_edit.toHtml();
-
                 // Set text and font attributes in MySubtitltes container
-                new_text.setLine( MyAttributesConverter::simplifyRichTextFilter(text_html) );
+                new_text.setLine( MyAttributesConverter::plainTextToHtml(text) );
                 mNewSubtitle.setText(new_text, mFontList.last());
 
                 if ( font_inside_whole_text == true ) {
@@ -310,6 +310,70 @@ QList<MySubtitles> DcSubInteropParser::open(MyFileReader file) {
     }
 
     return mSubtitlesList;
+}
+
+QString DcSubInteropParser::convertVposToAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos) {
+
+    QFont font(fontId, fontSize.toInt());
+    QFontMetrics font_metrics(font);
+
+    quint16 pixel_per_inch = qApp->desktop()->logicalDpiY();
+    quint16 ref_height_px = pixel_per_inch * 11;
+
+
+    if ( vAlign == "top" ) {
+
+        quint16 font_ascent_px = font_metrics.ascent();
+        qreal font_ascent_percent = ( (qreal)font_ascent_px / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() - font_ascent_percent ), 'f', 1 );
+    }
+    else if ( vAlign == "center" ) {
+
+        quint16 font_ascent_px = font_metrics.ascent();
+        qreal font_ascent_percent = ( ( (qreal)font_ascent_px / 2.0 ) / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() - font_ascent_percent ), 'f', 1 );
+    }
+    else if ( vAlign == "bottom" ) {
+
+        quint16 font_descent_px = font_metrics.descent();
+        qreal font_descent_percent = ( (qreal)font_descent_px / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() - font_descent_percent ), 'f', 1 );
+    }
+}
+
+QString DcSubInteropParser::convertVposFromAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos) {
+
+    QFont font(fontId, fontSize.toInt());
+    QFontMetrics font_metrics(font);
+
+    quint16 pixel_per_inch = qApp->desktop()->logicalDpiY();
+    quint16 ref_height_px = pixel_per_inch * 11;
+
+
+    if ( vAlign == "top" ) {
+
+        quint16 font_ascent_px = font_metrics.ascent();
+        qreal font_ascent_percent = ( (qreal)font_ascent_px / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() + font_ascent_percent ), 'f', 1 );
+    }
+    else if ( vAlign == "center" ) {
+
+        quint16 font_ascent_px = font_metrics.ascent();
+        qreal font_ascent_percent = ( ( (qreal)font_ascent_px / 2.0 ) / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() + font_ascent_percent ), 'f', 1 );
+    }
+    else if ( vAlign == "bottom" ) {
+
+        quint16 font_descent_px = font_metrics.descent();
+        qreal font_descent_percent = ( (qreal)font_descent_px / (qreal)ref_height_px ) * 100.0;
+
+        return QString::number(( vPos.toDouble() + font_descent_percent ), 'f', 1 );
+    }
 }
 
 // Create an xml DCSub document from the subtitle list
@@ -450,18 +514,20 @@ void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
                 xml_text.setAttribute("HPosition", text_line.textHPosition());
             }
 
+            QString v_align;
             if ( text_line.textVAlign() == "") {
-                xml_text.setAttribute("VAlign", TEXT_VALIGN_DEFAULT_VALUE);
+                v_align = TEXT_VALIGN_DEFAULT_VALUE;
             }
             else {
-                xml_text.setAttribute("VAlign", text_line.textVAlign());
+                v_align = text_line.textVAlign();
             }
+            xml_text.setAttribute("VAlign", v_align);
 
             if ( text_line.textVPosition() == "") {
-                xml_text.setAttribute("VPosition", TEXT_VPOSITION_DEFAULT_VALUE);
+                xml_text.setAttribute("VPosition", this->convertVposFromAmapolaRef(text_font.fontId(), text_font.fontSize(), v_align, TEXT_VPOSITION_DEFAULT_VALUE) );
             }
             else {
-                xml_text.setAttribute("VPosition", text_line.textVPosition());
+                xml_text.setAttribute("VPosition", this->convertVposFromAmapolaRef(text_font.fontId(), text_font.fontSize(), v_align, text_line.textVPosition()) );
             }
 
             xml_current_element.appendChild(xml_text);
@@ -508,6 +574,19 @@ void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
                                     xml_current_element.setAttribute("Italic", "yes");
                                 }
                             }
+
+                            if ( style_str.contains("underline") ) {
+
+                                if ( ( text_font.fontUnderlined() == "no" ) &&
+                                     ( text_font0.fontUnderlined() == "no" ) ) {
+
+                                    if ( xml_current_element.tagName() != "Font") {
+
+                                        xml_current_element = xml_current_element.appendChild( doc.createElement("Font") ).toElement();
+                                    }
+                                    xml_current_element.setAttribute("Underlined", "yes");
+                                }
+                            }
                         }
                     }
                     break;
@@ -531,7 +610,7 @@ void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
 
     // Write the document in file
     QString xml = doc.toString();
-    file.write( xml );
+    file.writeText( xml );
 }
 
 // Compare old and new font attributes, return a font container with only the changed attributes setted

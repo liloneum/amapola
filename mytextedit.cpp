@@ -27,6 +27,8 @@
 #define FONT_SHADOW_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_BORDER_EFFECT_DEFAULT_VALUE "yes"
 #define FONT_BORDER_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
+#define FONT_BACKGROUND_EFFECT_DEFAULT_VALUE "no"
+#define FONT_BACKGROUND_EFFECT_COLOR_DEFAULT_VALUE "FF000000"
 #define FONT_ITALIC_DEFAULT_VALUE "no"
 #define FONT_SCRIPT_DEFAULT_VALUE "normal"
 #define FONT_SIZE_DEFAULT_VALUE "42"
@@ -77,7 +79,7 @@ QTextEdit* MyTextEdit::createNewTextEdit() {
     QTextEdit* text_edit = new QTextEdit(this);
 
     // Set text zones colors
-    text_edit->setStyleSheet("background: transparent; border: 1px solid red;");
+    text_edit->setStyleSheet("background: transparent; border: 1px solid white;");
 
     // Install a shadow effect on the text edit widget
     QGraphicsDropShadowEffect* shadow_effect = new QGraphicsDropShadowEffect(this);
@@ -117,6 +119,8 @@ void MyTextEdit::updateDefaultSub() {
     default_font.setFontShadowEffectColor( qApp->property("prop_FontShadowColor").toString() );
     default_font.setFontBorderEffect( qApp->property("prop_FontBorder").toString() );
     default_font.setFontBorderEffectColor( qApp->property("prop_FontBorderColor").toString() );
+    default_font.setFontBackgroundEffect( qApp->property("prop_FontBackground").toString() );
+    default_font.setFontBackgroundEffectColor( qApp->property("prop_FontBackgroundColor").toString() );
     default_font.setFontItalic( qApp->property("prop_FontItalic").toString() );
     default_font.setFontScript( FONT_SCRIPT_DEFAULT_VALUE );
     default_font.setFontSize( qApp->property("prop_FontSize_pt").toString() );
@@ -318,9 +322,22 @@ void MyTextEdit::setText(MySubtitles subtitle) {
             text_edit = mTextLinesList[i];
         }
 
+        QString text_html = text_lines[i].Line();
+        QString plain_text = MyAttributesConverter::htmlToPlainText(text_html);
+
+        // Change the text edit border color function of the number of character
+        if ( plain_text.count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+            text_edit->setStyleSheet("background: transparent; border: 1px solid red;");
+        }
+        else if ( plain_text.count() == qApp->property("prop_MaxCharPerLine").toInt() ) {
+            text_edit->setStyleSheet("background: transparent; border: 1px solid orange;");
+        }
+        else {
+            text_edit->setStyleSheet("background: transparent; border: 1px solid white;");
+        }
+
         // Apply the text to the QTextEdit
-//        text_edit->setText(text_lines[i].Line());
-        text_edit->setHtml(text_lines[i].Line());
+        text_edit->setHtml(text_html);
 
         // Apply the font to the QTextEdit
         this->setTextFont(text_edit, text_lines[i].Font(), this->size());
@@ -402,17 +419,17 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
     // Calculate the position relative to the top of the widget
     if ( v_align == Qt::AlignCenter ) {
 
-        QFontMetrics font_metrics(textEdit->font());
+//        QFontMetrics font_metrics(textEdit->font());
 
-        pos_y = ( ( widget_height / 2 ) + pos_y_offset - textEdit->height() + font_metrics.descent() /*+ ( font_metrics.leading() / 2 )*/ );
+        pos_y = ( ( widget_height / 2 ) + pos_y_offset - ( textEdit->height() / 2 ) /*+ font_metrics.descent() + ( font_metrics.leading() / 2 )*/ );
     }
     else if ( v_align == Qt::AlignBottom) {
 
-        pos_y = ( widget_height - pos_y_offset - textEdit->height() + font_metrics.descent() /*+ ( font_metrics.leading() / 2 )*/ );
+        pos_y = ( widget_height - pos_y_offset - textEdit->height() /*+ font_metrics.descent() + ( font_metrics.leading() / 2 )*/ );
     }
     else if ( v_align == Qt::AlignTop ) {
 
-        pos_y = ( pos_y_offset - textEdit->height() + font_metrics.descent() + ( font_metrics.leading() / 2 ) );
+        pos_y = ( pos_y_offset /* - textEdit->height() + font_metrics.descent() + ( font_metrics.leading() / 2 )*/ );
     }
 
     // Move the line to the new position
@@ -436,7 +453,7 @@ void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize wid
     widget_width = widgetSize.width();
     widget_height = widgetSize.height();
 
-    QFontMetrics font_metrics(textEdit->font());
+//    QFontMetrics font_metrics(textEdit->font());
 
     // Horizontal position
     h_align = textEdit->alignment();
@@ -457,10 +474,21 @@ void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize wid
         h_position = widget_width - textEdit->width() - textEdit->x();
     }
 
-    // Vertical position : alignment is always "bottom"
-    textLine.setTextVAlign("bottom");
+    QString v_align = textLine.textVAlign();
 
-    v_position = ( widget_height - textEdit->y() - textEdit->height() + font_metrics.descent() /*+ ( font_metrics.leading() / 2 )*/ );
+    if ( v_align == "center" ) {
+        textLine.setTextVAlign("center");
+        v_position = ( textEdit->y() - ( widget_height / 2) + ( textEdit->height() / 2 ) );
+    }
+    else if (  v_align == "top" ) {
+        textLine.setTextVAlign("top");
+        v_position = textEdit->y();
+    }
+    else  {
+        // bottom
+        textLine.setTextVAlign("bottom");
+        v_position = ( widget_height - textEdit->y() - textEdit->height() /*+ font_metrics.descent() + ( font_metrics.leading() / 2 )*/ );
+    }
 
     textLine.setTextHPosition(  QString::number(( ( (qreal)h_position * (qreal)100 ) / (qreal)widget_width ), 'f', 1  ) );
     textLine.setTextVPosition(  QString::number(( ( (qreal)v_position * (qreal)100 ) / (qreal)widget_height ), 'f', 1  ) );
@@ -570,6 +598,12 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     QPen outline_pen(outline_color, outline_width, outline_pen_style, Qt::RoundCap, Qt::RoundJoin);
 
     char_format.setTextOutline(outline_pen);
+    if ( textFont.fontBackgroundEffect() == "yes" ) {
+        char_format.setBackground( QBrush( MyAttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() ) ) );
+    }
+    else {
+        char_format.setBackground(QBrush(Qt::transparent));
+    }
 
     qint16 cursor_position = textEdit->textCursor().position();
 
@@ -652,11 +686,14 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
     // Font and position, except for horizontal position
     TextLine text_line;
     TextFont text_font;
+    QString current_v_align;
 
     qint16 text_line_index = mTextLinesList.indexOf(textEdit);
 
     text_line = mCurrentTextProp.text().at(text_line_index);
     text_font = text_line.Font();
+
+    current_v_align = text_line.textVAlign();
 
     QTextEdit* new_text_edit = this->createNewTextEdit();
     mTextLinesList.insert(text_line_index + 1, new_text_edit);
@@ -685,14 +722,42 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
     this->setTextFont(new_text_edit, text_font, this->size());
     this->setTextPosition(new_text_edit, text_line, this->size());
 
-    for ( qint16 i = 0; i <= text_line_index; i++ ) {
+    if ( ( current_v_align == "bottom" ) || ( current_v_align == "center") ) {
 
-        // Move current line on top of the new line with spacing defined by LINE_SPACING
-        mTextLinesList[i]->move( mTextLinesList[i]->x(), ( mTextLinesList[i]->y() - mTextLinesList[i]->height() - LINE_SAPACING ) );
+        for ( qint16 i = 0; i <= text_line_index; i++ ) {
 
-        // Save current line new position
-        this->textPosition(mTextLinesList[i], text_line, this->size());
-        this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+            text_line = mCurrentTextProp.text().at(i);
+
+            if ( text_line.textVAlign() == current_v_align ) {
+
+                // Move current line on top of the new line with spacing defined by LINE_SPACING
+                mTextLinesList[i]->move( mTextLinesList[i]->x(), ( mTextLinesList[i]->y() - mTextLinesList[i]->height() - LINE_SAPACING ) );
+
+                // Save current line new position
+                this->textPosition(mTextLinesList[i], text_line, this->size());
+                this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+            }
+        }
+
+    }
+    else if ( current_v_align == "top" ) {
+
+        for ( qint16 i = (text_line_index + 1); i < mTextLinesList.count(); i++ ) {
+
+            if ( i != ( text_line_index + 1 ) ) {
+                text_line = mCurrentTextProp.text().at(i);
+            }
+
+            if ( text_line.textVAlign() == current_v_align ) {
+
+                // Move current line on bottom of the new line with spacing defined by LINE_SPACING
+                mTextLinesList[i]->move( mTextLinesList[i]->x(), ( mTextLinesList[i]->y() + mTextLinesList[i]->height() + LINE_SAPACING ) );
+
+                // Save current line new position
+                this->textPosition(mTextLinesList[i], text_line, this->size());
+                this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+            }
+        }
     }
 
     mPreviousTextList.insert(text_line_index + 1, mTextLinesList[text_line_index + 1]->toPlainText());
@@ -711,30 +776,73 @@ void MyTextEdit::removeLine(QTextEdit *textEdit) {
     if ( textEdit != mTextLinesList.first() ) {
 
         TextLine text_line;
+        QString current_v_align;
+        qint32 lines_sapcing;
+        bool lines_to_move = true;
 
         qint16 text_line_index = mTextLinesList.indexOf(textEdit);
 
-        qint32 lines_sapcing =  mTextLinesList[text_line_index]->y() - mTextLinesList[text_line_index - 1]->y();
+        text_line = mCurrentTextProp.text().at(text_line_index);
+        current_v_align = text_line.textVAlign();
 
-        // Delete the line and move the previous line to its position
-        mTextLinesList.at(text_line_index)->~QTextEdit();
-        mTextLinesList.removeOne(textEdit);
+        if ( ( current_v_align == "bottom" ) || ( current_v_align == "center" ) ) {
+            lines_sapcing =  mTextLinesList[text_line_index]->y() - mTextLinesList[text_line_index - 1]->y();
+        }
+        else if ( current_v_align == "top" ) {
 
-        for ( qint16 i = 0; i < text_line_index; i++ ) {
+            if ( (text_line_index + 1) < mTextLinesList.count() ) {
 
-            mTextLinesList[i]->move( mTextLinesList[i]->x(), mTextLinesList[i]->y() + lines_sapcing);
-
-            // Save current line new position
-            this->textPosition(mTextLinesList[i], text_line, this->size());
-            this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+                lines_sapcing =  mTextLinesList[text_line_index + 1]->y() - mTextLinesList[text_line_index]->y();
+            }
+            else {
+                lines_to_move = false;
+            }
         }
 
-        text_line = mCurrentTextProp.text().at(text_line_index);
-        this->setTextPosition(mTextLinesList[text_line_index - 1], text_line, this->size());
-
+        // Delete the line
+        mTextLinesList.at(text_line_index)->~QTextEdit();
+        mTextLinesList.removeOne(textEdit);
         mCurrentTextProp.removeTextAt(text_line_index);
-
         mPreviousTextList.removeAt(text_line_index);
+
+        // and move the previous/next line to its position
+        if ( lines_to_move == true ) {
+
+            // Move previous lines
+            if ( ( current_v_align == "bottom" ) || ( current_v_align == "center" ) ) {
+
+                for ( qint16 i = 0; i < text_line_index; i++ ) {
+
+                    text_line = mCurrentTextProp.text().at(i);
+
+                    if ( text_line.textVAlign() == current_v_align ) {
+
+                        mTextLinesList[i]->move( mTextLinesList[i]->x(), mTextLinesList[i]->y() + lines_sapcing);
+
+                        // Save current line new position
+                        this->textPosition(mTextLinesList[i], text_line, this->size());
+                        this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+                    }
+                }
+            }
+            // Move next lines
+            else if ( current_v_align == "top" ) {
+
+                for ( qint16 i = text_line_index; i < mTextLinesList.count(); i++ ) {
+
+                    text_line = mCurrentTextProp.text().at(i);
+
+                    if ( text_line.textVAlign() == current_v_align ) {
+
+                        mTextLinesList[i]->move( mTextLinesList[i]->x(), mTextLinesList[i]->y() - lines_sapcing);
+
+                        // Save current line new position
+                        this->textPosition(mTextLinesList[i], text_line, this->size());
+                        this->saveCurrentTextPos(text_line, mTextLinesList[i]);
+                    }
+                }
+            }
+        }
 
         mpLastFocused = NULL;
 
@@ -819,11 +927,23 @@ void MyTextEdit::newCursorPosition() {
         // If user has changed the text, send a signal
         for ( qint16 i = 0; i < mTextLinesList.count(); i++ ) {
 
-            if ( mTextLinesList.at(i)->toPlainText() != mPreviousTextList.at(i) ) {
+            QString current_text = mTextLinesList.at(i)->toPlainText();
+            if ( current_text != mPreviousTextList.at(i) ) {
 
-                if ( mPreviousTextList.at(i) == "" ) {
-                    this->setTextFont(mTextLinesList.at(i), mCurrentTextProp.text()[i].Font(), this->size());
+                // Change the text edit border color function of the number of character
+                if ( current_text.count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
+                    mTextLinesList[i]->setStyleSheet("background: transparent; border: 1px solid red;");
                 }
+                else if ( current_text.count() == qApp->property("prop_MaxCharPerLine").toInt() ) {
+                    mTextLinesList[i]->setStyleSheet("background: transparent; border: 1px solid orange;");
+                }
+                else {
+                    mTextLinesList[i]->setStyleSheet("background: transparent; border: 1px solid white;");
+                }
+
+//                if ( mPreviousTextList.at(i) == "" ) {
+                    this->setTextFont(mTextLinesList.at(i), mCurrentTextProp.text()[i].Font(), this->size());
+//                }
 
                 text_changed = true;
                 break;
@@ -923,7 +1043,7 @@ void MyTextEdit::showCustomContextMenu(const QPoint &pos) {
         else if ( selected_item->text() == "Text color..." ) {
 
             // Open a color chooser dialog
-            QColor font_color = QColorDialog::getColor(textEdit->palette().color(QPalette::Text), 0,"Select Color", QColorDialog::ShowAlphaChannel);
+            QColor font_color = QColorDialog::getColor(textEdit->palette().color(QPalette::Text), this, tr("Select text color"), QColorDialog::ShowAlphaChannel);
 
             // If valid color, set to all selected subtitles
             if ( font_color.isValid() ) {

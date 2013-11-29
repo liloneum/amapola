@@ -129,6 +129,10 @@ private slots:
 
     void on_fontShadowColor_clicked();
 
+    void on_fontBackgroundCheckBox_toggled(bool checked);
+
+    void on_fontBackgroundColor_clicked();
+
 private:
     Ui::MainWindow* ui;
 
@@ -145,6 +149,7 @@ private:
 
     QColor mTextBorderColor;
     QColor mTextShadowColor;
+    QColor mTextBackgroundColor;
 
     // History (undo/redo) varaiables
     QList<QString> mHistoryReasons;

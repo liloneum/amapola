@@ -24,7 +24,7 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
         // Open a stream from the file
         QTextStream in(&file_read);
         // Set the text encoding - DEBUG : textCodec not used
-//        in.setCodec("ISO8859-15");
+//        in.setCodec("ISO6937");
 
         do {
             mLines.append(in.readLine());
@@ -37,6 +37,37 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
     }
     mErrorMsg = "No file name specified";
     return false;
+}
+
+bool MyFileReader::readRawData(const QString fileName) {
+
+    if(!fileName.isEmpty()) {
+        QFile file_read(fileName);
+        if ( !file_read.open(QIODevice::ReadOnly) ) {
+            mErrorMsg = "Can't open file" +mFileName;
+            return false;
+        }
+
+        // Open a stream from the file
+        QDataStream in(&file_read);
+        quint8 buffer;
+
+        do {
+            in >> buffer;
+            mData.append(buffer);
+        } while (!in.atEnd());
+
+        file_read.close();
+
+        return true;
+    }
+    mErrorMsg = "No file name specified";
+    return false;
+}
+
+QList<quint8>* MyFileReader::data() {
+
+    return &mData;
 }
 
 // Get the list of string lines

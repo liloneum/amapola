@@ -1,6 +1,7 @@
 #include "myfilewriter.h"
 #include <QFile>
 #include <QTextStream>
+#include <QDataStream>
 #include <QTextCodec>
 
 // Class to write text datas in a specified file "fileName" with specified format "textCodec"
@@ -8,17 +9,25 @@ MyFileWriter::MyFileWriter(QString fileName, QString textCodec) {
 
     mFileName = fileName;
     mTextCodec = textCodec;
+    mStringData.clear();
+    mRawData.clear();
     mErrorMsg = "";
 }
 
 // Add datas
-void MyFileWriter::write(QString buffer) {
+void MyFileWriter::writeText(QString buffer) {
 
-    mData += buffer;
+    mStringData += buffer;
+}
+
+// Add datas
+void MyFileWriter::writeRawData(QList<quint8> buffer) {
+
+    mRawData.append(buffer);
 }
 
 // Write the datas in the file
-bool MyFileWriter::toFile() {
+bool MyFileWriter::toFile(bool rawData) {
 
     if ( !mFileName.isEmpty() ) {
         QFile file_write(mFileName);
@@ -27,18 +36,30 @@ bool MyFileWriter::toFile() {
             return false;
         } else {
 
-            // Open a stream to the file
-            QTextStream stream_out(&file_write);
+            if ( rawData == false ) {
 
-            // If a codec is specified, force the stream to use it
-            if ( !mTextCodec.isEmpty() ) {
-                QTextCodec* text_codec = QTextCodec::codecForName(mTextCodec.toLocal8Bit());
-                stream_out.setCodec(text_codec);
+                // Open a stream to the file
+                QTextStream stream_out(&file_write);
+
+                // If a codec is specified, force the stream to use it
+                if ( !mTextCodec.isEmpty() ) {
+                    QTextCodec* text_codec = QTextCodec::codecForName(mTextCodec.toLocal8Bit());
+                    stream_out.setCodec(text_codec);
+                }
+
+                // Write all the datas and close the file
+                stream_out << mStringData;
+                stream_out.flush();
+            }
+            else {
+
+                char data_array[mRawData.size()];
+                for ( quint16 i = 0; i < mRawData.count(); i++ ) {
+                    data_array[i] = mRawData[i];
+                }
+                file_write.write(data_array, mRawData.size());
             }
 
-            // Write all the datas and close the file
-            stream_out << mData;
-            stream_out.flush();
             file_write.close();
 
             return true;
