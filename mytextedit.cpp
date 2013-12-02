@@ -60,6 +60,8 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
 
     // Test flag : text is updating from the database
     mIsSettingLines = false;
+    // Test flag : : font is updating. Cursor maybe moved by soft
+    mIsChangingFont = false;
 
     // Init copies of the last texts wrote from the database
     mPreviousTextList.append("");
@@ -607,11 +609,15 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
     qint16 cursor_position = textEdit->textCursor().position();
 
+    mIsChangingFont = true;
+
     textEdit->selectAll();
     textEdit->mergeCurrentCharFormat(char_format);
     QTextCursor text_cursor = textEdit->textCursor();
     text_cursor.setPosition(cursor_position);
     textEdit->setTextCursor(text_cursor);
+
+    mIsChangingFont = false;
 
     // Save this font parameter to current
     this->saveCurrentTextFont(textFont, textEdit);
@@ -920,7 +926,8 @@ void MyTextEdit::newCursorPosition() {
 
     // If a new text line is setting, cursor has not moved by user but automatically.
     // So do nothing
-    if ( mIsSettingLines == false ) {
+    if ( ( mIsSettingLines == false ) &&
+        ( mIsChangingFont == false ) ) {
 
         bool text_changed = false;
 
@@ -941,9 +948,8 @@ void MyTextEdit::newCursorPosition() {
                     mTextLinesList[i]->setStyleSheet("background: transparent; border: 1px solid white;");
                 }
 
-//                if ( mPreviousTextList.at(i) == "" ) {
-                    this->setTextFont(mTextLinesList.at(i), mCurrentTextProp.text()[i].Font(), this->size());
-//                }
+                // Conflict between "stylesheet" and font color. Force to re-set the font parameters
+                this->setTextFont(mTextLinesList.at(i), mCurrentTextProp.text()[i].Font(), this->size());
 
                 text_changed = true;
                 break;

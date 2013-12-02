@@ -54,6 +54,8 @@ private:
 
     // Test flag : text is updating from the database
     bool mIsSettingLines;
+    // Test flag : : font is updating. Cursor maybe moved by soft
+    bool mIsChangingFont;
     // Save defaut subtitle container
     MySubtitles mDefaultSub;
     // Save current text edit zones position and font
