@@ -562,10 +562,11 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     else {
 
                         if ( has_color_tag_open ) {
-                            current_line.append(">");
+                            current_line.append("</font>");
                         }
 
-                        current_line.append("<font color = #" +color_str);
+                        color_str = color_str.remove(0, 2);
+                        current_line.append("<font color = #" +color_str +">");
                         has_color_tag_open = true;
                     }
                 }
@@ -639,6 +640,19 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                 }
                 else {
 
+                    if ( has_color_tag_open ) {
+                        current_line.append("</font>");
+                        has_color_tag_open = false;
+                    }
+                    if ( has_underlined_tag_open ) {
+                        current_line.append("</u>");
+                        has_underlined_tag_open = false;
+                    }
+                    if ( has_italic_tag_open ) {
+                        current_line.append("</i>");
+                        has_italic_tag_open = false;
+                    }
+
                     current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
                     current_line = "";
 
@@ -651,8 +665,6 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         is_double_height = false;
                         crlf_count++;
                     }
-
-                    has_color_tag_open = false;
                 }
             }
             // Is specific encoded charater
@@ -739,7 +751,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
                 // Close the calor tag, if anyone is open
                 if ( has_color_tag_open ) {
-                    current_line.append(">");
+                    current_line.append("</font>");
                     has_color_tag_open = false;
                 }
                 if ( has_italic_tag_open ) {
