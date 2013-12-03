@@ -53,11 +53,13 @@ bool MyFileWriter::toFile(bool rawData) {
             }
             else {
 
-                char data_array[mRawData.size()];
-                for ( quint16 i = 0; i < mRawData.count(); i++ ) {
-                    data_array[i] = mRawData[i];
+                quint32 data_size = mRawData.size();
+
+                for ( quint32 i = 0; i < data_size; i++ ) {
+                    char data_array[1] = "";
+                    data_array[0] = mRawData.at(i);
+                    file_write.write(data_array, 1);
                 }
-                file_write.write(data_array, mRawData.size());
             }
 
             file_write.close();

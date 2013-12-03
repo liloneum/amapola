@@ -5,6 +5,11 @@
 #include <QXmlStreamReader>
 #include <QTextEdit>
 #include <QTextCodec>
+#include <QDesktopWidget>
+
+// Fonts are rendered as if the screen height is 11 inches,
+// so a 72pt font would be 1/11 screen height.
+#define REF_HEIGHT_INCH 11
 
 // Languages code table
 const QString EbuParser::LANGUAGES_CODES[128] =
@@ -437,7 +442,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
             current_sub->setEndTime( MyAttributesConverter::framesToTimeHMSms(end_time_str, time_code_rate) );
 
-            // Duation auto ON
+            // Duration auto ON
             current_sub->setDurationAuto(true);
 
             // Compute font size
@@ -468,7 +473,11 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
             // Retrieive the horizontal alignment
             justification_code = sub_text_data.at(JUSTIFICATION_CODE_ADD);
 
-            if ( ( justification_code == 0x00 ) || ( justification_code == 0x01 ) ){
+            if ( justification_code == 0x00 ) {
+                new_text_line.setTextHAlign("left");
+                new_text_line.setTextHPosition("0.0");
+            }
+            else if ( justification_code == 0x01 ) {
                 new_text_line.setTextHAlign("left");
                 new_text_line.setTextHPosition("0.0");
             }
@@ -580,9 +589,10 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     if ( current_line == "" ) {
 
                         if ( justification_code == 0x00 ) {
+
                             qreal current_h_pos = current_sub->text().last().textHPosition().toDouble();
                             current_h_pos = current_h_pos + (100.0 / (qreal)char_per_row_max);
-                            current_sub->text().last().setTextHPosition( QString::number(char_per_row_max, 'f', 1));
+                            current_sub->text().last().setTextHPosition( QString::number(current_h_pos, 'f', 1));
                         }
                     }
                     else {
@@ -1183,6 +1193,10 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
     // TTI blocks
     quint16 sub_nbr = 0;
     quint16 tti_block_count = 0;
+    quint16 edit_widget_width = qApp->property("prop_editWidgetSize_px").toSize().width();
+    quint16 edit_widget_height = qApp->property("prop_editWidgetSize_px").toSize().height();
+    quint16 px_per_inch = qApp->desktop()->logicalDpiY();
+    QFont font_for_metrics;
 
     for ( qint32 sub_it = 0; sub_it < subtitlesList.count(); sub_it++ ) {
 
@@ -1317,6 +1331,16 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         else {
             justification_code = JC_UNCHANGED;
             column_step = 100.0 / (qreal)char_per_row_max;
+
+            // The font size is given in "point", the number of point per inch depending of the screen.
+            // The font size is given as if the screen height is 11 inches,
+            // so a 72pt font would be 1/11 screen height.
+            // Recompute the font size in point, relative to the edit widget size in pixels
+            quint16 font_size_pt = current_subtitle.text().first().Font().fontSize().toInt();
+            qreal relative_font_size = ( font_size_pt * ( ( (qreal)edit_widget_height / ( (qreal)px_per_inch  * (qreal)REF_HEIGHT_INCH ) ) ) );
+
+            font_for_metrics.setFamily(current_subtitle.text().first().Font().fontId());
+            font_for_metrics.setPointSizeF(relative_font_size);
         }
 
         tti_block_data.replace(JUSTIFICATION_CODE_ADD, justification_code);
@@ -1372,9 +1396,45 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             if ( justification_code == JC_UNCHANGED ) {
 
                 qreal h_pos = current_line.textHPosition().toDouble();
-                quint16 nbr_of_spacing = (quint16)(h_pos / column_step);
+                QString cur_h_align = current_line.textHAlign();
+                QString cur_plain_text = MyAttributesConverter::htmlToPlainText(current_line.Line());
+                quint16 nbr_of_char = cur_plain_text.count();
+                qint16 nbr_of_spacing;
 
-                for ( quint16 spacing_it = 0; spacing_it < nbr_of_spacing; spacing_it++ ) {
+                if ( cur_h_align == "center" ) {
+
+                    QFontMetrics font_metrics(font_for_metrics);
+                    qreal vertical_offset_percent = ( ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / 2.0 ) / (qreal)edit_widget_width ) * 100.0 );
+
+                    h_pos = 50.0 + h_pos - vertical_offset_percent;
+
+                    nbr_of_spacing = (quint16)(h_pos / column_step);
+
+                    if ( nbr_of_spacing < 0 ) {
+                        nbr_of_spacing = 0;
+                    }
+                }
+                else if ( cur_h_align == "right" ) {
+
+                    QFontMetrics font_metrics(font_for_metrics);
+                    qreal vertical_offset_percent = ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / (qreal)edit_widget_width ) * 100.0 );
+
+                    h_pos = 100.0 - h_pos - vertical_offset_percent;
+
+                    nbr_of_spacing = (quint16)(h_pos / column_step);
+
+                    if ( nbr_of_spacing < 0 ) {
+                        nbr_of_spacing = char_per_row_max - nbr_of_char;
+                        if ( nbr_of_spacing  < 0 ) {
+                            nbr_of_spacing = 0;
+                        }
+                    }
+                }
+                else {
+                    nbr_of_spacing = (quint16)(h_pos / column_step);
+                }
+
+                for ( qint16 spacing_it = 0; spacing_it < nbr_of_spacing; spacing_it++ ) {
                     text_field.append(0x20);
                 }
             }

@@ -1352,6 +1352,8 @@ void MainWindow::updateStEditSize() {
         }
     }
 
+    qApp->setProperty("prop_editWidgetSize_px", video_current_size.toSize());
+
     // Set the edit region size and position mapped on video.
     ui->stEditDisplay->setFixedSize(video_current_size.toSize());
     ui->stEditDisplay->move(video_x_pos, video_y_pos);
