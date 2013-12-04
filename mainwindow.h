@@ -69,68 +69,46 @@ private slots:
     void updateTextPosition();
 
     void on_vPosSpinBox_valueChanged(const QString &value);
-
     void on_hPosSpinBox_valueChanged(const QString &value);
-
     void on_vAlignBox_activated(const QString &value);
-
     void on_hAlignBox_activated(const QString &value);
 
 
     void updateFontToolBox(TextFont textFont);
-    TextFont getFontToolBox(bool customColorClicked);
-    void updateTextFont(bool customColorClicked);
+    TextFont getFontToolBox();
+    void updateTextFont();
 
     void on_fontSizeSpinBox_valueChanged(const QString &value);
-
-    void on_fontColorRButton_toggled(bool checked);
-
-    void on_fontColorGButton_toggled(bool checked);
-
-    void on_fontColorBButton_toggled(bool checked);
-
-    void on_fontColorYButton_toggled(bool checked);
-
-    void on_fontColorBlButton_toggled(bool checked);
-
-    void on_fontColorWButton_toggled(bool checked);
-
+    void on_fontColor1Button_toggled(bool checked);
+    void on_fontColor2Button_toggled(bool checked);
+    void on_fontColor3Button_toggled(bool checked);
+    void on_fontColor4Button_toggled(bool checked);
+    void on_fontColor5Button_toggled(bool checked);
+    void on_fontColor6Button_toggled(bool checked);
+    void on_fontColor7Button_toggled(bool checked);
+    void on_fontColor1Button_customContextMenuRequested(const QPoint &pos);
+    void on_fontColor2Button_customContextMenuRequested(const QPoint &pos);
+    void on_fontColor3Button_customContextMenuRequested(const QPoint &pos);
+    void on_fontColor4Button_customContextMenuRequested(const QPoint &pos);
+    void on_fontColor5Button_customContextMenuRequested(const QPoint &pos);
+    void on_fontColor6Button_customContextMenuRequested(const QPoint &pos);
     void on_fontItalicButton_toggled(bool checked);
-
     void on_fontUnderlinedButton_toggled(bool checked);
-
     void on_fontIdComboBox_currentFontChanged(const QFont &f);
-
-    void on_fontColorOtherButton_clicked();
-
     void on_firstNumSpinBox_customContextMenuRequested(const QPoint &pos);
-
     void on_lastNumSpinBox_customContextMenuRequested(const QPoint &pos);
-
     void on_syncApplyPushButton_clicked();
-
     void on_firstNewStartTimeEdit_customContextMenuRequested(const QPoint &pos);
-
     void on_lastNewStartTimeEdit_customContextMenuRequested(const QPoint &pos);
-
     void on_applyPosSelButton_clicked();
-
     void on_applyFontSelButton_clicked();
-
     void on_subTable_customContextMenuRequested(const QPoint &pos);
-
     void on_durationAutoCheckBox_clicked(bool checked);
-
     void on_fontBorderCheckBox_toggled(bool checked);
-
     void on_fontShadowCheckBox_toggled(bool checked);
-
     void on_fontBorderColor_clicked();
-
     void on_fontShadowColor_clicked();
-
     void on_fontBackgroundCheckBox_toggled(bool checked);
-
     void on_fontBackgroundColor_clicked();
 
 private:
@@ -150,6 +128,13 @@ private:
     QColor mTextBorderColor;
     QColor mTextShadowColor;
     QColor mTextBackgroundColor;
+    QColor mColor1;
+    QColor mColor2;
+    QColor mColor3;
+    QColor mColor4;
+    QColor mColor5;
+    QColor mColor6;
+    QColor mColor7;
 
     // History (undo/redo) varaiables
     QList<QString> mHistoryReasons;

@@ -94,6 +94,7 @@ MainWindow::MainWindow(QWidget *parent) :
         qApp->setProperty("prop_FontBackGround", "no");
     }
 
+    // Effects colors
     mTextBorderColor = MyAttributesConverter::stringToColor("FF000000");
     mTextShadowColor = MyAttributesConverter::stringToColor("FF000000");
     mTextBackgroundColor = MyAttributesConverter::stringToColor("FF000000");
@@ -106,35 +107,55 @@ MainWindow::MainWindow(QWidget *parent) :
     qApp->setProperty("prop_FontShadowColor", "FF000000");
     qApp->setProperty("prop_FontBackgroundColor", "FF000000");
 
-    MyAttributesConverter::setColorToButton(ui->fontColorRButton, MyAttributesConverter::stringToColor("FFFF0000") );
-    MyAttributesConverter::setColorToButton(ui->fontColorGButton, MyAttributesConverter::stringToColor("FF00FF00") );
-    MyAttributesConverter::setColorToButton(ui->fontColorBButton, MyAttributesConverter::stringToColor("FF0000FF") );
-    MyAttributesConverter::setColorToButton(ui->fontColorYButton, MyAttributesConverter::stringToColor("FFFFFF00") );
-    MyAttributesConverter::setColorToButton(ui->fontColorBlButton, MyAttributesConverter::stringToColor("FF000000") );
-    MyAttributesConverter::setColorToButton(ui->fontColorWButton, MyAttributesConverter::stringToColor("FFFFFFFF") );
+    // Colors
+    mColor1 = MyAttributesConverter::stringToColor("FFFFFFFF");
+    mColor2 = MyAttributesConverter::stringToColor("FFFFFF00");
+    mColor3 = MyAttributesConverter::stringToColor("FFFF0000");
+    mColor4 = MyAttributesConverter::stringToColor("FFFF00FF");
+    mColor5 = MyAttributesConverter::stringToColor("FF00FFFF");
+    mColor6 = MyAttributesConverter::stringToColor("FF00FF00");
+    mColor7 = MyAttributesConverter::stringToColor("FF0000FF");
 
-    if ( ui->fontColorRButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
-    }
-    else if ( ui->fontColorGButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba", "FF00FF00");
-    }
-    else if ( ui->fontColorBButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
-    }
-    else if ( ui->fontColorYButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba", "FFFFFF00");
-    }
-    else if ( ui->fontColorBlButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba", "FF000000");
-    }
-    else if ( ui->fontColorWButton->isChecked() ) {
+    MyAttributesConverter::setColorToButton(ui->fontColor1Button, mColor1 );
+    MyAttributesConverter::setColorToButton(ui->fontColor2Button, mColor2 );
+    MyAttributesConverter::setColorToButton(ui->fontColor3Button, mColor3 );
+    MyAttributesConverter::setColorToButton(ui->fontColor4Button, mColor4 );
+    MyAttributesConverter::setColorToButton(ui->fontColor5Button, mColor5 );
+    MyAttributesConverter::setColorToButton(ui->fontColor6Button, mColor6 );
+    MyAttributesConverter::setColorToButton(ui->fontColor7Button, mColor7 );
+
+    qApp->setProperty("prop_Color1","FFFFFFFF");
+    qApp->setProperty("prop_Color2","FFFFFF00");
+    qApp->setProperty("prop_Color3","FFFF0000");
+    qApp->setProperty("prop_Color4","FFFF00FF");
+    qApp->setProperty("prop_Color5","FF00FFFF");
+    qApp->setProperty("prop_Color6","FF00FF00");
+    qApp->setProperty("prop_Color7","FF0000FF");
+
+
+    if ( ui->fontColor1Button->isChecked() ) {
         qApp->setProperty("prop_FontColor_rgba", "FFFFFFFF");
     }
-    else if ( ui->fontColorOtherButton->isChecked() ) {
-        qApp->setProperty("prop_FontColor_rgba",  ui->fontColorOtherText->text());
+    else if ( ui->fontColor2Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFFFF00");
+    }
+    else if ( ui->fontColor3Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFF0000");
+    }
+    else if ( ui->fontColor4Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FFFF00FF");
+    }
+    else if ( ui->fontColor5Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF00FFFF");
+    }
+    else if ( ui->fontColor6Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF00FF00");
+    }
+    else if ( ui->fontColor7Button->isChecked() ) {
+        qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
     }
 
+    // Vertical position
     qApp->setProperty("prop_Valign", ui->vAlignBox->currentText());
     qApp->setProperty("prop_Halign", ui->hAlignBox->currentText());
     qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
@@ -148,7 +169,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Init text edit parameter from tool boxes
     this->updateTextPosition();
-    this->updateTextFont(false);
+    this->updateTextFont();
 
     // Init display infos timer
     mpDisplayInfoTimer = new QTimer(this);
@@ -478,7 +499,7 @@ void MainWindow::updateSubTableText() {
 
         new_line.setLine(ui->stEditDisplay->text().first().Line());
 
-        new_subtitle.setText(new_line, this->getFontToolBox(false));
+        new_subtitle.setText(new_line, this->getFontToolBox());
 
         new_subtitle.setDurationAuto(true);
 
@@ -507,7 +528,7 @@ void MainWindow::updateSubTableText() {
 
         if ( ui->stEditDisplay->text().count() == 1 ) {
 
-            ui->stEditDisplay->updateTextFont(this->getFontToolBox(false), this->getPosToolBox());
+            ui->stEditDisplay->updateTextFont(this->getFontToolBox(), this->getPosToolBox());
         }
         ui->subTable->updateText( ui->stEditDisplay->text());
     }
@@ -1748,34 +1769,33 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
         ui->fontIdComboBox->setCurrentFont(font);
         ui->fontSizeSpinBox->setValue(textFont.fontSize().toInt());
 
-        QString font_color = textFont.fontColor();
+        QString font_color_str = textFont.fontColor();
 
-        qApp->setProperty("prop_FontColor_rgba", font_color);
+        qApp->setProperty("prop_FontColor_rgba", font_color_str);
 
-        ui->fontColorOtherText->setEnabled(false);
-
-        if ( font_color == "FFFF0000" ) {
-            ui->fontColorRButton->setChecked(true);
+        if ( font_color_str == qApp->property("prop_Color1") ) {
+            ui->fontColor1Button->setChecked(true);
         }
-        else if ( font_color == "FF00FF00" ) {
-            ui->fontColorGButton->setChecked(true);
+        else if ( font_color_str == qApp->property("prop_Color2") ) {
+            ui->fontColor2Button->setChecked(true);
         }
-        else if ( font_color == "FF0000FF" ) {
-            ui->fontColorBButton->setChecked(true);
+        else if ( font_color_str == qApp->property("prop_Color3") ) {
+            ui->fontColor3Button->setChecked(true);
         }
-        else if ( font_color == "FFFFFF00" ) {
-            ui->fontColorYButton->setChecked(true);
+        else if ( font_color_str == qApp->property("prop_Color4") ) {
+            ui->fontColor4Button->setChecked(true);
         }
-        else if ( font_color == "FF000000" ) {
-            ui->fontColorBlButton->setChecked(true);
+        else if ( font_color_str == qApp->property("prop_Color5") ) {
+            ui->fontColor5Button->setChecked(true);
         }
-        else if ( font_color == "FFFFFFFF") {
-            ui->fontColorWButton->setChecked(true);
+        else if ( font_color_str == qApp->property("prop_Color6") ) {
+            ui->fontColor6Button->setChecked(true);
         }
         else {
-            ui->fontColorOtherButton->setChecked(true);
-            ui->fontColorOtherText->setEnabled(true);
-            ui->fontColorOtherText->setText(textFont.fontColor());
+            ui->fontColor7Button->setChecked(true);
+            qApp->setProperty("prop_Color7", font_color_str);
+            mColor7 = MyAttributesConverter::stringToColor(font_color_str);
+            MyAttributesConverter::setColorToButton(ui->fontColor7Button, mColor7);
         }
 
         if ( textFont.fontItalic().contains("yes", Qt::CaseInsensitive) == true ) {
@@ -1827,7 +1847,7 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
 }
 
 // Get the font parameters from the tool boxes
-TextFont MainWindow::getFontToolBox(bool customColorClicked) {
+TextFont MainWindow::getFontToolBox() {
 
     TextFont text_font;
     QString font_color_str;
@@ -1839,39 +1859,26 @@ TextFont MainWindow::getFontToolBox(bool customColorClicked) {
 
         text_font.setFontSize(ui->fontSizeSpinBox->cleanText());
 
-        ui->fontColorOtherText->setEnabled(false);
-
-        if ( ui->fontColorRButton->isChecked() ) {
-            font_color_str = "FFFF0000";
+        if ( ui->fontColor1Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor1);
         }
-        else if ( ui->fontColorGButton->isChecked() ) {
-            font_color_str = "FF00FF00";
+        else if ( ui->fontColor2Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor2);
         }
-        else if ( ui->fontColorBButton->isChecked() ) {
-            font_color_str = "FF0000FF";
+        else if ( ui->fontColor3Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor3);
         }
-        else if ( ui->fontColorYButton->isChecked() ) {
-            font_color_str = "FFFFFF00";
+        else if ( ui->fontColor4Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor4);
         }
-        else if ( ui->fontColorBlButton->isChecked() ) {
-            font_color_str = "FF000000";
+        else if ( ui->fontColor5Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor5);
         }
-        else if ( ui->fontColorWButton->isChecked() ) {
-            font_color_str = "FFFFFFFF";
+        else if ( ui->fontColor6Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor6);
         }
-        else if ( ui->fontColorOtherButton->isChecked() ) {
-
-            if ( customColorClicked == true ) {
-
-                QColor init_color = MyAttributesConverter::stringToColor( ui->fontColorOtherText->text() );
-                QColor font_color = QColorDialog::getColor(init_color, this, tr("Select text color"), QColorDialog::ShowAlphaChannel);
-                font_color_str = MyAttributesConverter::colorToString(font_color);
-                ui->fontColorOtherText->setText(font_color_str);
-            }
-            else {
-                font_color_str = ui->fontColorOtherText->text();
-            }
-            ui->fontColorOtherText->setEnabled(true);
+        else if ( ui->fontColor7Button->isChecked() ) {
+            font_color_str = MyAttributesConverter::colorToString(mColor7);
         }
 
         text_font.setFontColor(font_color_str);
@@ -1925,12 +1932,12 @@ TextFont MainWindow::getFontToolBox(bool customColorClicked) {
 }
 
 // Change the "font" of the current "edit line" from the font toolboxes parameters
-void MainWindow::updateTextFont(bool customColorClicked) {
+void MainWindow::updateTextFont() {
 
     mTextFontChangedByUser = true;
 
     // Retrieve font parameters from tool boxes
-    TextFont new_font = this->getFontToolBox(customColorClicked);
+    TextFont new_font = this->getFontToolBox();
 
     // Change the text edit zone font
     ui->stEditDisplay->updateTextFont(new_font, this->getPosToolBox() );
@@ -1977,59 +1984,284 @@ void MainWindow::on_fontSizeSpinBox_valueChanged(const QString &value) {
         }
 
         // Update the text edit font
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
 // Font color selected (the 7 colors boxes are exclusive, if one is checked, the others are unchecked)
-void MainWindow::on_fontColorRButton_toggled(bool checked) {
+void MainWindow::on_fontColor1Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor1Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorGButton_toggled(bool checked) {
+void MainWindow::on_fontColor2Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor2Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorBButton_toggled(bool checked) {
+void MainWindow::on_fontColor3Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor3Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorYButton_toggled(bool checked) {
+void MainWindow::on_fontColor4Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor4Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorBlButton_toggled(bool checked) {
+void MainWindow::on_fontColor5Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor5Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorWButton_toggled(bool checked) {
+void MainWindow::on_fontColor6Button_toggled(bool checked) {
 
     if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
-        updateTextFont(false);
+        updateTextFont();
+        ui->fontColor6Button->clearFocus();
     }
 }
 
-void MainWindow::on_fontColorOtherButton_clicked() {
+void MainWindow::on_fontColor7Button_toggled(bool checked) {
 
-    if ( mTextFontChangedBySoft == false ) {
-        updateTextFont(true);
+    if ( ( mTextFontChangedBySoft == false ) && ( checked == true ) ) {
+        updateTextFont();
+        ui->fontColor7Button->clearFocus();
     }
 }
+
+// Font color custom menu : change the color
+void MainWindow::on_fontColor1Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor1Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor1;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor1 = font_color;
+                qApp->setProperty("prop_Color1", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor1Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor1Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor1Button->clearFocus();
+}
+
+void MainWindow::on_fontColor2Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor2Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor2;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor2 = font_color;
+                qApp->setProperty("prop_Color2", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor2Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor2Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor2Button->clearFocus();
+}
+
+void MainWindow::on_fontColor3Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor3Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor3;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor3 = font_color;
+                qApp->setProperty("prop_Color3", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor3Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor3Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor3Button->clearFocus();
+}
+
+void MainWindow::on_fontColor4Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor4Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor4;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor4 = font_color;
+                qApp->setProperty("prop_Color4", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor4Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor4Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor4Button->clearFocus();
+}
+
+void MainWindow::on_fontColor5Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor5Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor5;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor5 = font_color;
+                qApp->setProperty("prop_Color5", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor5Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor5Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor5Button->clearFocus();
+}
+
+void MainWindow::on_fontColor6Button_customContextMenuRequested(const QPoint &pos) {
+
+    // Set context menu position
+    QPoint global_pos = ui->fontColor6Button->mapToGlobal(pos);
+
+    QMenu custom_menu;
+    custom_menu.addAction("Change color ...");
+
+    QAction* selected_item = custom_menu.exec(global_pos);
+
+    if ( selected_item ) {
+        if ( selected_item->text() == "Change color ..." ) {
+
+            // Open a dialog abling user to chose a color
+            QColor init_color = mColor6;
+            QColor font_color = QColorDialog::getColor(init_color, this, tr("Select color"), QColorDialog::ShowAlphaChannel);
+
+            if ( font_color.isValid() ) {
+
+                // Save the color
+                mColor6 = font_color;
+                qApp->setProperty("prop_Color6", MyAttributesConverter::colorToString(font_color));
+
+                // Change the color of the PushButton
+                MyAttributesConverter::setColorToButton(ui->fontColor6Button, font_color);
+
+                // Update the text font in the database and in the text edit
+                if ( ui->fontColor6Button->isChecked() ) {
+                    updateTextFont();
+                }
+            }
+        }
+    }
+    ui->fontColor6Button->clearFocus();
+}
+
 
 // On font border on/off
 void MainWindow::on_fontBorderCheckBox_toggled(bool checked) {
@@ -2051,7 +2283,7 @@ void MainWindow::on_fontBorderCheckBox_toggled(bool checked) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
@@ -2075,7 +2307,7 @@ void MainWindow::on_fontShadowCheckBox_toggled(bool checked) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 
 }
@@ -2100,7 +2332,7 @@ void MainWindow::on_fontBackgroundCheckBox_toggled(bool checked) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
@@ -2129,7 +2361,7 @@ void MainWindow::on_fontBorderColor_clicked() {
             MyAttributesConverter::setColorToButton(ui->fontBorderColor, font_border_color);
 
             // Update the text font in the database and in the text edit
-            updateTextFont(false);
+            updateTextFont();
         }
     }
 }
@@ -2159,7 +2391,7 @@ void MainWindow::on_fontShadowColor_clicked() {
             MyAttributesConverter::setColorToButton(ui->fontShadowColor, font_shadow_color);
 
             // Update the text font in the database and in the text edit
-            updateTextFont(false);
+            updateTextFont();
         }
     }
 }
@@ -2189,7 +2421,7 @@ void MainWindow::on_fontBackgroundColor_clicked() {
             MyAttributesConverter::setColorToButton(ui->fontBackgroundColor, font_background_color);
 
             // Update the text font in the database and in the text edit
-            updateTextFont(false);
+            updateTextFont();
         }
     }
 }
@@ -2214,7 +2446,7 @@ void MainWindow::on_fontItalicButton_toggled(bool checked) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
@@ -2238,7 +2470,7 @@ void MainWindow::on_fontUnderlinedButton_toggled(bool checked) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
@@ -2256,7 +2488,7 @@ void MainWindow::on_fontIdComboBox_currentFontChanged(const QFont &f) {
         }
 
         // Update the text font in the database and in the text edit
-        updateTextFont(false);
+        updateTextFont();
     }
 }
 
@@ -2567,7 +2799,7 @@ void MainWindow::on_applyFontSelButton_clicked() {
         if ( nbr_of_lines > line_focussed ) {
 
             // Replace the font for "line_nbr" in current subtitle
-            current_sub.text()[line_focussed].setFont( this->getFontToolBox(false) );
+            current_sub.text()[line_focussed].setFont( this->getFontToolBox() );
 
             // Push the new datas in the table
             ui->subTable->updateDatas(current_sub, index);
