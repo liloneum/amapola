@@ -525,9 +525,9 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
     QFont font = textEdit->font();
 
-    if ( textFont.fontBorderEffect() == "yes" ) {
-        font.setStyleStrategy(QFont::ForceOutline);
-    }
+//    if ( textFont.fontBorderEffect() == "yes" ) {
+//        font.setStyleStrategy(QFont::ForceOutline);
+//    }
 
     // Set font name
     font.setFamily( textFont.fontId() );

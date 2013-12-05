@@ -128,7 +128,7 @@ QString MyAttributesConverter::toTimeHMSms(QString time) {
         else if ( tenth_sec >= 10 ) { millisecond = tenth_sec * 10;}
         else { millisecond = tenth_sec * 100; }
 
-        qBound(0, millisecond, 999);
+        millisecond = qBound(0, millisecond, 999);
 
         time.replace(time.indexOf("."),
                      3,
@@ -142,7 +142,7 @@ QString MyAttributesConverter::toTimeHMSms(QString time) {
         qint32 ticks = time.section(":", -1).toInt();
         qint32 millisecond;
         millisecond = ticks * 4;
-        qBound(0, millisecond, 999);
+        millisecond = qBound(0, millisecond, 999);
 
         QString str_ms;
         if ( millisecond >= 100 ) { str_ms = QString::number(millisecond);}
@@ -191,7 +191,7 @@ QString MyAttributesConverter::framesToTimeHMSms(QString time, qint16 timeCodeRa
     }
 
     qint32 millisecond = qint32( ( (qreal)1000 / (qreal)timeCodeRate ) * (qreal)time_frames );
-    qBound(0, millisecond, 999);
+    millisecond = qBound(0, millisecond, 999);
 
     QString str_ms;
     if ( millisecond >= 100 ) { str_ms = QString::number(millisecond);}
@@ -209,7 +209,7 @@ QString MyAttributesConverter::timeHMSmsToFrames(QString time, qint16 timeCodeRa
 
     qint32 millisecond = time.section(".", -1).toInt();
     qint32 frames = qint16( (qreal)millisecond / ( (qreal)1000 / (qreal)timeCodeRate ) );
-    qBound(0, frames, (timeCodeRate - 1));
+    frames = qBound(0, frames, (timeCodeRate - 1));
 
     QString str_frames;
     if ( frames >= 10 ) { str_frames = QString::number(frames);}

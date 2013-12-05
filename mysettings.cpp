@@ -17,6 +17,11 @@ MySettings::MySettings(QWidget *parent) :
     qApp->setProperty("prop_MaxCharPerLine", ui->maxCharPerLineSpinBox->value());
     qApp->setProperty("prop_MaxCharPerSec", ui->maxCharPerSecDoubleSpinBox->value());
 
+    qApp->setProperty("prop_LeftMargin_percent", ui->leftMarginSpinBox->value());
+    qApp->setProperty("prop_RightMargin_percent", ui->rightMarginSpinBox->value());
+    qApp->setProperty("prop_TopMargin_percent", ui->topMarginSpinBox->value());
+    qApp->setProperty("prop_BottomMargin_percent", ui->bottomMarginSpinBox->value());
+
     mCurrentProperties.setFrameRate(ui->frameRateComboBox->currentText().toDouble());
 
     mSettingsChangedBySoft = false;
@@ -34,6 +39,11 @@ void MySettings::updateDisplayAll() {
     this->setFrameRate(qApp->property("prop_FrameRate_fps").toDouble());
     ui->maxCharPerLineSpinBox->setValue(qApp->property("prop_MaxCharPerLine").toInt());
     ui->maxCharPerSecDoubleSpinBox->setValue(qApp->property("prop_MaxCharPerSec").toDouble());
+
+    ui->leftMarginSpinBox->setValue( qApp->property("prop_LeftMargin_percent").toDouble());
+    ui->rightMarginSpinBox->setValue( qApp->property("prop_RightMargin_percent").toDouble());
+    ui->topMarginSpinBox->setValue( qApp->property("prop_TopMargin_percent").toDouble());
+    ui->bottomMarginSpinBox->setValue( qApp->property("prop_BottomMargin_percent").toDouble());
 }
 
 void MySettings::on_displayTimeMinSpinBox_valueChanged(int value) {
@@ -54,6 +64,26 @@ void MySettings::on_maxCharPerLineSpinBox_valueChanged(int value) {
 void MySettings::on_maxCharPerSecDoubleSpinBox_valueChanged(double value) {
 
     qApp->setProperty("prop_MaxCharPerSec", value);
+}
+
+void MySettings::on_leftMarginSpinBox_valueChanged(double arg1) {
+
+    qApp->setProperty("prop_LeftMargin_percent", arg1);
+}
+
+void MySettings::on_rightMarginSpinBox_valueChanged(double arg1) {
+
+    qApp->setProperty("prop_RightMargin_percent", arg1);
+}
+
+void MySettings::on_topMarginSpinBox_valueChanged(double arg1) {
+
+    qApp->setProperty("prop_TopMargin_percent", arg1);
+}
+
+void MySettings::on_bottomMarginSpinBox_valueChanged(double arg1) {
+
+    qApp->setProperty("prop_BottomMargin_percent", arg1);
 }
 
 

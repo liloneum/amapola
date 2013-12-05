@@ -296,7 +296,9 @@ QList<MySubtitles> DcSubInteropParser::open(MyFileReader file) {
 
     // Retrieve the font Id
     QDomElement xml_load_font = xml_root.firstChildElement("LoadFont");
-    mFontList.first().setFontId( xml_load_font.attribute("Id") );
+    QString font_id = xml_load_font.attribute("URI");
+    font_id = font_id.remove(font_id.lastIndexOf('.'), 4);
+    mFontList.first().setFontId( font_id );
 
     QDomElement xml_element = xml_load_font.nextSibling().toElement();
 
@@ -795,12 +797,12 @@ void DcSubInteropParser::changeFont(QDomElement xmlElement) {
     TextFont new_font;
 
     // attribute Id
-    if ( !xmlElement.attribute("Id").isNull() ) {
-        new_font.setFontId( xmlElement.attribute("Id") );
-    }
-    else {
+//    if ( !xmlElement.attribute("Id").isNull() ) {
+//        new_font.setFontId( xmlElement.attribute("Id") );
+//    }
+//    else {
         new_font.setFontId( mFontList.last().fontId() );
-    }
+//    }
 
     // attribute Color
     if ( !xmlElement.attribute("Color").isNull() ) {

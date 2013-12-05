@@ -408,6 +408,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
     bool has_color_tag_open = false;
     bool has_italic_tag_open = false;
     bool has_underlined_tag_open = false;
+    quint16 spacing_count = 0;
 
     // For each tti block
     for ( qint32 i = TTI_ADD; i < datas->count(); i = i + TTI_BLOCK_LENGTH ) {
@@ -471,14 +472,14 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
             // Compute the vertical position step
             first_row_v_pos = sub_text_data.at(VERTICAL_POSITION_ADD);
-            qBound((quint16)0,first_row_v_pos, row_nbr_max);
+            first_row_v_pos = qBound((quint16)1,first_row_v_pos, row_nbr_max);
             v_pos_step = ( font_size_pt / ( 72.0 * (qreal)REF_HEIGHT_INCH ) ) * 100.0;
 
             // Retrieive the horizontal alignment
             justification_code = sub_text_data.at(JUSTIFICATION_CODE_ADD);
 
-            if ( justification_code == 0x00 ) {
-                new_text_line.setTextHAlign("left");
+            if ( justification_code == JC_UNCHANGED ) {
+                new_text_line.setTextHAlign("center");
                 new_text_line.setTextHPosition("0.0");
 
                 if ( teletext == false ) {
@@ -490,20 +491,22 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     font_for_metrics.setPointSizeF(relative_font_size);
 
                     QFontMetrics font_metric(font_for_metrics);
-                    char_per_row_open = (qint16)( (qreal)edit_widget_width / (qreal)font_metric.width(QChar(' ') ) );
+                    char_per_row_open = (qint16)( (qreal)edit_widget_width / (qreal)font_metric.averageCharWidth() );
                 }
             }
-            else if ( justification_code == 0x01 ) {
+            else if ( justification_code == JC_LEFT ) {
                 new_text_line.setTextHAlign("left");
-                new_text_line.setTextHPosition("0.0");
+                QString left_margin_str = QString::number(qApp->property("prop_LeftMargin_percent").toDouble(),'f', 1);
+                new_text_line.setTextHPosition(left_margin_str);
             }
-            else if ( justification_code == 0x02 ) {
+            else if ( justification_code == JC_CENTER ) {
                 new_text_line.setTextHAlign("center");
                 new_text_line.setTextHPosition("0.0");
             }
-            else if ( justification_code == 0x03 ) {
+            else if ( justification_code == JC_RIGHT ) {
                 new_text_line.setTextHAlign("right");
-                new_text_line.setTextHPosition("0.0");
+                QString right_margin_str = QString::number(qApp->property("prop_RightMargin_percent").toDouble(),'f', 1);
+                new_text_line.setTextHPosition(right_margin_str);
             }
 
             // Add a new line to the current sub
@@ -605,20 +608,9 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     if ( current_line == "" ) {
 
                         // Free positionning - replace space by offset in percent
-                        if ( justification_code == 0x00 ) {
+                        if ( justification_code == JC_UNCHANGED ) {
 
-                            qreal current_h_pos = current_sub->text().last().textHPosition().toDouble();
-
-                            if ( teletext == true ) {
-                                // For teletext the number max of character per row is defined in the file
-                                current_h_pos = current_h_pos + (100.0 / (qreal)char_per_row_max);
-                            }
-                            else {
-                                // For "Open" the number is computed in function of the current Amapola configuration
-                                current_h_pos = current_h_pos + (100.0 / (qreal)char_per_row_open);
-                            }
-
-                            current_sub->text().last().setTextHPosition( QString::number(current_h_pos, 'f', 1));
+                            spacing_count++;
                         }
                     }
                     else {
@@ -633,6 +625,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     }
                     else {
                         current_line.append(current_char);
+
                     }
                 }
                 else {
@@ -689,6 +682,30 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         has_italic_tag_open = false;
                     }
 
+                    if ( justification_code == JC_UNCHANGED ) {
+
+                        // Set horizontal position - free position
+                        qreal current_h_pos = 0.0;
+                        quint16 char_count = MyAttributesConverter::htmlToPlainText(current_line).count();
+                        qreal side_margin = qApp->property("prop_LeftMargin_percent").toDouble();
+
+                        if ( teletext == true ) {
+
+                            // For teletext the number max of character per row is defined in the file
+                            current_h_pos = ( ( ( (qreal)spacing_count + ( (qreal)char_count / 2.0 ) ) * ( 100.0 - ( 2.0 * side_margin ) ) ) / (qreal) char_per_row_max ) + side_margin - 50.0;
+                        }
+                        else {
+
+                            // For "Open" the number is computed in function of the current Amapola configuration
+                            current_h_pos = ( ( ( (qreal)spacing_count + ( (qreal)char_count / 2.0 ) ) * 100.0 ) / (qreal)char_per_row_open ) + side_margin - 50.0;
+                        }
+
+                        current_sub->text().last().setTextHPosition( QString::number(current_h_pos, 'f', 1));
+
+                        spacing_count = 0;
+                    }
+
+                    // Set text
                     current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
                     current_line = "";
 
@@ -742,8 +759,9 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
                 // Set vertical positions
                 quint16 line_count = current_sub->text().count();
+                qreal top_margin = qApp->property("prop_BottomMargin_percent").toDouble();
 
-                // The first row is bottom aligned and compute position of the rows above it
+                // The first row is "bottom" aligned and compute position of the rows above it
                 if ( first_row_v_pos >= (row_nbr_max / 2) ) {
 
                     // Retrieve last row position and compute
@@ -758,9 +776,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         last_row_v_pos = first_row_v_pos + line_count - 1;
                     }
 
-                    if ( last_row_v_pos > row_nbr_max ) {
-                        last_row_v_pos = row_nbr_max;
-                    }
+                    last_row_v_pos = qBound((quint16)1, last_row_v_pos, row_nbr_max);
 
                     qreal line_v_pos_percent = 0.0;
 
@@ -769,8 +785,8 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         // The lowest row is positioned on a "row_nbr_max" grid
                         if ( line_nbr == 0 ) {
 
-                            quint16 row_v_pos = row_nbr_max - last_row_v_pos;
-                            line_v_pos_percent = (qreal)row_v_pos * ( 100.0 / (qreal)row_nbr_max );
+                            quint16 row_v_pos = row_nbr_max - last_row_v_pos + 1;
+                            line_v_pos_percent = ( ( ( (qreal)row_v_pos - 1.0 ) * ( 100.0 - ( 2.0 * top_margin ) ) ) / (qreal)row_nbr_max ) + top_margin;
                         }
                         // The rows above are positionned with gap depending of the font size
                         else {
@@ -782,7 +798,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         current_sub->text()[line_count - line_nbr - 1].setTextVPosition(QString::number(line_v_pos_percent, 'f', 1));
                     }
                 }
-                // The first row is top aligned
+                // The first row is "top" aligned
                 else {
 
                     qreal line_v_pos_percent = 0.0;
@@ -793,8 +809,8 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                         // The highest row is positioned on a "row_nbr_max" grid
                         if ( line_nbr == 0 ) {
 
-                            quint16 row_v_pos = first_row_v_pos - 1;
-                            line_v_pos_percent = (qreal)row_v_pos * ( 100.0 / (qreal)row_nbr_max );
+                            quint16 row_v_pos = first_row_v_pos;
+                            line_v_pos_percent = ( ( ( (qreal)row_v_pos - 1.0 ) * ( 100.0 - ( 2.0 * top_margin ) ) ) / (qreal)row_nbr_max ) + top_margin;
                         }
                         // The rows bellow are positionned with gap depending of the font size
                         else {
@@ -807,22 +823,48 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     }
                 }
 
-                // Close the calor tag, if anyone is open
-                if ( has_color_tag_open ) {
-                    current_line.append("</font>");
-                    has_color_tag_open = false;
-                }
-                if ( has_italic_tag_open ) {
-                    current_line.append("</i>");
-                    has_italic_tag_open = false;
-                }
-                if ( has_underlined_tag_open ) {
-                    current_line.append("</u>");
-                    has_underlined_tag_open = false;
-                }
+                if ( current_line != "" ) {
 
-                // Set the new line to current sub (html formated)
-                current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
+                    // Close the calor tag, if anyone is open
+                    if ( has_color_tag_open ) {
+                        current_line.append("</font>");
+                        has_color_tag_open = false;
+                    }
+                    if ( has_italic_tag_open ) {
+                        current_line.append("</i>");
+                        has_italic_tag_open = false;
+                    }
+                    if ( has_underlined_tag_open ) {
+                        current_line.append("</u>");
+                        has_underlined_tag_open = false;
+                    }
+
+                    if ( justification_code == JC_UNCHANGED ) {
+
+                        // Set horizontal position - free position
+                        qreal current_h_pos = 0.0;
+                        quint16 char_count = MyAttributesConverter::htmlToPlainText(current_line).count();
+                        qreal side_margin = qApp->property("prop_LeftMargin_percent").toDouble();
+
+                        if ( teletext == true ) {
+
+                            // For teletext the number max of character per row is defined in the file
+                            current_h_pos = ( ( ( (qreal)spacing_count + ( (qreal)char_count / 2.0 ) ) * ( 100.0 - ( 2.0 * side_margin ) ) ) / (qreal) char_per_row_max ) + side_margin - 50.0;
+                        }
+                        else {
+
+                            // For "Open" the number is computed in function of the current Amapola configuration
+                            current_h_pos = ( ( ( (qreal)spacing_count + ( (qreal)char_count / 2.0 ) ) * 100.0 ) / (qreal)char_per_row_open ) + side_margin - 50.0;
+                        }
+
+                        current_sub->text().last().setTextHPosition( QString::number(current_h_pos, 'f', 1));
+
+                        spacing_count = 0;
+                    }
+
+                    // Set the new line to current sub (html formated)
+                    current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
+                }
                 break;
             }
         }
@@ -1298,15 +1340,16 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         quint16 last_line_row;
         QString v_align = current_subtitle.text().first().textVAlign();
 
-
-        qreal row_step = 100.0 / (qreal)max_row;
+        qreal top_margin = qApp->property("prop_BottomMargin_percent").toDouble();
+        qreal row_step = (qreal)max_row / ( 100.0 - ( 2.0 * top_margin ) );
 
         if ( v_align == "top" ) {
 
-            qreal first_line_v_pos_percent = current_subtitle.text().first().textVPosition().toDouble();
-            first_line_row = qRound(first_line_v_pos_percent / row_step) + 1;
+            qreal first_line_v_pos_percent = current_subtitle.text().first().textVPosition().toDouble() - top_margin;
+            first_line_row = qRound(first_line_v_pos_percent * row_step) + 1;
+            first_line_row = qBound((quint16)1, first_line_row, max_row);
 
-            // Display characters on two rows - "pair" rows and last row can't be used
+            // Display characters on two rows - last row can't be used
             if ( is_chars_double_height == true ) {
 
                 // If the first line is the last
@@ -1317,8 +1360,9 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         }
         else {
 
-            qreal last_line_v_pos_percent = current_subtitle.text().last().textVPosition().toDouble();
-            last_line_row = max_row - qRound(last_line_v_pos_percent / row_step);
+            qreal last_line_v_pos_percent = current_subtitle.text().last().textVPosition().toDouble() - top_margin;
+            last_line_row = max_row - qRound(last_line_v_pos_percent * row_step);
+            last_line_row = qBound((quint16)1, last_line_row, max_row);
 
             // Display characters on two rows - last row can't be used
             if ( is_chars_double_height == true ) {
@@ -1346,21 +1390,18 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         for ( quint16 line_nbr = 0; line_nbr < current_subtitle.text().count(); line_nbr++ ) {
 
             QString current_h_align = current_subtitle.text()[line_nbr].textHAlign();
-            if ( current_h_align == h_align ) {
 
-                qint16 current_h_pos = (qint16)current_subtitle.text()[line_nbr].textHPosition().toDouble();
+            if ( current_h_align != h_align ) {
+                h_align = "free";
+                break;
+            }
 
-                if ( current_h_pos == 0 ) {
-                    continue;
-                }
-                else {
-                    h_align = "none";
+            if ( current_h_align == "center" ) {
+                qreal current_h_pos = current_subtitle.text()[line_nbr].textHPosition().toDouble();
+                if ( qFuzzyCompare(1 + 0.0, 1 + current_h_pos) == false ) {
+                    h_align = "free";
                     break;
                 }
-            }
-            else {
-                h_align = "none";
-                break;
             }
         }
 
@@ -1390,13 +1431,13 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             font_for_metrics.setPointSizeF(relative_font_size);
 
             if ( teletext ) {
-                column_step = 100.0 / (qreal)char_per_row_max;
+                column_step = (qreal)char_per_row_max / ( 100.0 - ( 2.0 * qApp->property("prop_LeftMargin_percent").toDouble() ) );
             }
             else {
 
                 QFontMetrics font_metric(font_for_metrics);
 
-                column_step = 100.0 / ( (qreal)edit_widget_width / (qreal)font_metric.width(QChar(' ') ) );
+                column_step = ( (qreal)edit_widget_width / (qreal)font_metric.width(QChar(' ') ) ) / 100.0;
             }
         }
 
@@ -1452,7 +1493,7 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             // Set horizontal pasition
             if ( justification_code == JC_UNCHANGED ) {
 
-                qreal h_pos = current_line.textHPosition().toDouble();
+                qreal h_pos = current_line.textHPosition().toDouble() - qApp->property("prop_LeftMargin_percent").toDouble();
                 QString cur_h_align = current_line.textHAlign();
                 QString cur_plain_text = MyAttributesConverter::htmlToPlainText(current_line.Line());
                 quint16 nbr_of_char = cur_plain_text.count();
@@ -1460,32 +1501,50 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 
                 if ( cur_h_align == "center" ) {
 
-                    QFontMetrics font_metrics(font_for_metrics);
-                    qreal vertical_offset_percent = ( ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / 2.0 ) / (qreal)edit_widget_width ) * 100.0 );
+                    if ( teletext ) {
 
-                    h_pos = 50.0 + h_pos - vertical_offset_percent;
+                        h_pos = 50.0 + h_pos;
+                        nbr_of_spacing = (quint16)(h_pos * column_step) - ( nbr_of_char / 2 );
+                    }
+                    else {
 
-                    nbr_of_spacing = (quint16)(h_pos / column_step);
+                        QFontMetrics font_metrics(font_for_metrics);
+                        qreal vertical_offset_percent = ( ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / 2.0 ) / (qreal)edit_widget_width ) * 100.0 );
+
+                        h_pos = 50.0 + h_pos - vertical_offset_percent;
+
+                        nbr_of_spacing = (quint16)(h_pos * column_step);
+                    }
                 }
                 else if ( cur_h_align == "right" ) {
 
-                    QFontMetrics font_metrics(font_for_metrics);
-                    qreal vertical_offset_percent = ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / (qreal)edit_widget_width ) * 100.0 );
+                    if ( teletext ) {
 
-                    h_pos = 100.0 - h_pos - vertical_offset_percent;
+                        nbr_of_spacing = char_per_row_max - nbr_of_char;
+                    }
+                    else {
 
-                    nbr_of_spacing = (quint16)(h_pos / column_step);
+                        QFontMetrics font_metrics(font_for_metrics);
+                        qreal vertical_offset_percent = ( ( (qreal)font_metrics.width(cur_plain_text, nbr_of_char) / (qreal)edit_widget_width ) * 100.0 );
+
+                        h_pos = 100.0 - qApp->property("prop_LeftMargin_percent").toDouble() - vertical_offset_percent;
+
+                        nbr_of_spacing = (quint16)(h_pos * column_step);
+                    }
                 }
-                else {
-                    nbr_of_spacing = (quint16)(h_pos / column_step);
+                else  {
+
+                    nbr_of_spacing = 0;
                 }
 
                 // Bound the number of spacing
-                if ( nbr_of_char < char_per_row_max ) {
-                    qBound((qint16)0, nbr_of_spacing, (qint16)(char_per_row_max - nbr_of_char));
-                }
-                else {
-                    nbr_of_spacing = 0;
+                if ( teletext == true ) {
+                    if ( nbr_of_char < char_per_row_max ) {
+                        nbr_of_spacing = qBound((qint16)0, nbr_of_spacing, (qint16)(char_per_row_max - nbr_of_char));
+                    }
+                    else {
+                        nbr_of_spacing = 0;
+                    }
                 }
 
                 for ( qint16 spacing_it = 0; spacing_it < nbr_of_spacing; spacing_it++ ) {

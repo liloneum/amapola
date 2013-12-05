@@ -36,6 +36,14 @@ private slots:
     void on_maxCharPerLineSpinBox_valueChanged(int value);
     void on_maxCharPerSecDoubleSpinBox_valueChanged(double value);
 
+    void on_leftMarginSpinBox_valueChanged(double arg1);
+
+    void on_rightMarginSpinBox_valueChanged(double arg1);
+
+    void on_topMarginSpinBox_valueChanged(double arg1);
+
+    void on_bottomMarginSpinBox_valueChanged(double arg1);
+
 public slots:
     void setFrameRate(qreal frameRate);
     MyProperties getCurrentProp();
