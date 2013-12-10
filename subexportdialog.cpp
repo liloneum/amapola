@@ -5,6 +5,7 @@
 #include "SubtitlesParsers/DcSubtitle/interop/dcsubinteropparser.h"
 #include "SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h"
 #include "SubtitlesParsers/EBU/ebuparser.h"
+#include "SubtitlesParsers/ScenaristSub/scenaristsubparser.h"
 #include "mysubtitles.h"
 #include <QMessageBox>
 #include <QFileDialog>
@@ -21,19 +22,7 @@ SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>select
     mSubList = subList;
     mSelectedIndex = selectedSub;
 
-    on_versionLineEdit_editingFinished();
-    on_subIDLineEdit_editingFinished();
-    on_movieTitleLineEdit_editingFinished();
-    on_commentLineEdit_editingFinished();
-    on_reelNumSpinBox_editingFinished();
-    on_languageLineEdit_editingFinished();
-    on_fontLineEdit_editingFinished();
-    on_editRateSpinBox_editingFinished();
-    on_timeCodeRateSpinBox_editingFinished();
-    on_startTimeEdit_editingFinished();
-    on_borderRadioButton_toggled(ui->borderRadioButton->isChecked());
-    on_htmlYesRadioButton_toggled(ui->htmlYesRadioButton->isChecked());
-
+    // Init EBu parameters
     mStlFileName = "";
     mProgTitleVO = "";
     mProgTitleTR = "";
@@ -49,11 +38,6 @@ SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>select
     mPublisher = "";
     mEditorName = "";
     mEditorContact = "";
-    on_dfcSpinBox_editingFinished();
-    on_mnrSpinBox_editingFinished();
-    on_dscComboBox_currentTextChanged(ui->dscComboBox->currentText());
-    on_cctComboBox_currentTextChanged(ui->cctComboBox->currentText());
-    on_doubleHeightcheckBox_toggled(ui->doubleHeightcheckBox->isChecked());
 
     for ( quint16 i = 0; i < 128; i++ ) {
 
@@ -67,6 +51,7 @@ SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>select
     ui->languageComboBox->model()->sort(0);
     ui->languageComboBox->setCurrentIndex(ui->languageComboBox->findText("French"));
     on_languageComboBox_currentIndexChanged(ui->languageComboBox->currentIndex());
+
 
     connect(ui->exportPushButton, SIGNAL(clicked()), this, SLOT(exportDatas()), Qt::QueuedConnection);
 
@@ -84,6 +69,12 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
 
         ui->versionLabel->setEnabled(false);
         ui->versionLineEdit->setEnabled(false);
+        ui->movieTilteLabel->setEnabled(false);
+        ui->movieTitleLineEdit->setEnabled(false);
+        ui->commentLabel->setEnabled(false);
+        ui->commentLineEdit->setEnabled(false);
+        ui->languageLabel->setEnabled(false);
+        ui->languageLineEdit->setEnabled(false);
         ui->subIDLabel->setEnabled(false);
         ui->subIDLineEdit->setEnabled(false);
         ui->genIDPushButton->setEnabled(false);
@@ -100,14 +91,9 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         ui->startTimeEdit->setEnabled(false);
         ui->effectGroupBox->setEnabled(false);
 
-
-        ui->movieTilteLabel->setEnabled(true);
-        ui->movieTitleLineEdit->setEnabled(true);
-        ui->commentLabel->setEnabled(true);
-        ui->commentLineEdit->setEnabled(true);
-        ui->languageLabel->setEnabled(true);
-        ui->languageLineEdit->setEnabled(true);
         ui->effectGroupBox_2->setEnabled(true);
+        on_htmlYesRadioButton_toggled(ui->htmlYesRadioButton->isChecked());
+
         ui->exportedLabel->setEnabled(true);
         ui->exportedGroupBox->setEnabled(true);
 
@@ -135,24 +121,30 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         ui->subIDLabel->setEnabled(true);
         ui->subIDLineEdit->setEnabled(true);
         ui->genIDPushButton->setEnabled(true);
+        on_subIDLineEdit_editingFinished();
 
         ui->reelNumLabel->setEnabled(true);
         ui->reelNumSpinBox->setEnabled(true);
+        on_reelNumSpinBox_editingFinished();
 
         ui->fontLabel->setEnabled(true);
         ui->fontLineEdit->setEnabled(true);
         ui->fontPushButton->setEnabled(true);
+        on_fontLineEdit_editingFinished();
 
         ui->movieTilteLabel->setEnabled(true);
         ui->movieTitleLineEdit->setEnabled(true);
+        on_movieTitleLineEdit_editingFinished();
 
         ui->languageLabel->setEnabled(true);
         ui->languageLineEdit->setEnabled(true);
+        on_languageLineEdit_editingFinished();
 
         ui->effectGroupBox->setEnabled(true);
+        on_borderRadioButton_toggled(ui->borderRadioButton->isChecked());
+
         ui->exportedLabel->setEnabled(true);
         ui->exportedGroupBox->setEnabled(true);
-
     }
     else if ( currentText == "DCSub smpte (*.xml)") {
 
@@ -165,25 +157,45 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
 
         ui->commentLabel->setEnabled(true);
         ui->commentLineEdit->setEnabled(true);
+        on_commentLineEdit_editingFinished();
+
         ui->editRateLabel->setEnabled(true);
         ui->editRateSpinBox->setEnabled(true);
+        on_editRateSpinBox_editingFinished();
+
         ui->timeCodeRateLabel->setEnabled(true);
         ui->timeCodeRateSpinBox->setEnabled(true);
+        on_timeCodeRateSpinBox_editingFinished();
+
         ui->subIDLabel->setEnabled(true);
         ui->subIDLineEdit->setEnabled(true);
         ui->genIDPushButton->setEnabled(true);
+        on_subIDLineEdit_editingFinished();
+
         ui->reelNumLabel->setEnabled(true);
         ui->reelNumSpinBox->setEnabled(true);
+        on_reelNumSpinBox_editingFinished();
+
         ui->fontLabel->setEnabled(true);
         ui->fontLineEdit->setEnabled(true);
         ui->fontPushButton->setEnabled(true);
+        on_fontLineEdit_editingFinished();
+
         ui->movieTilteLabel->setEnabled(true);
         ui->movieTitleLineEdit->setEnabled(true);
+        on_movieTitleLineEdit_editingFinished();
+
         ui->languageLabel->setEnabled(true);
         ui->languageLineEdit->setEnabled(true);
+        on_languageLineEdit_editingFinished();
+
         ui->startTimeLabel->setEnabled(true);
         ui->startTimeEdit->setEnabled(true);
+        on_startTimeEdit_editingFinished();
+
         ui->effectGroupBox->setEnabled(true);
+        on_borderRadioButton_toggled(ui->borderRadioButton->isChecked());
+
         ui->exportedLabel->setEnabled(true);
         ui->exportedGroupBox->setEnabled(true);
 
@@ -191,6 +203,23 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
     else if ( currentText == "EBU-N19 (*.stl)" ) {
 
         ui->stackedWidget->setCurrentIndex(1);
+
+        on_dfcSpinBox_editingFinished();
+        on_mnrSpinBox_editingFinished();
+        on_dscComboBox_currentTextChanged(ui->dscComboBox->currentText());
+        on_cctComboBox_currentTextChanged(ui->cctComboBox->currentText());
+        on_doubleHeightcheckBox_toggled(ui->doubleHeightcheckBox->isChecked());
+        on_languageComboBox_currentIndexChanged(ui->languageComboBox->currentIndex());
+
+    }
+    else if ( currentText == "Scenarist Sub (*.sst)" ) {
+
+        ui->stackedWidget->setCurrentIndex(2);
+
+        on_imageSizeComboBox_currentTextChanged(ui->imageSizeComboBox->currentText());
+        on_tapeTypeComboBox_currentIndexChanged(ui->tapeTypeComboBox->currentText());
+        on_baseTimeEdit_editingFinished();
+        on_languageLineEdit2_editingFinished() ;
     }
 }
 
@@ -237,12 +266,21 @@ void SubExportDialog::exportDatas() {
         parser = new EbuParser();
         file_extension = ".stl";
     }
+    else if ( sub_norm == "Scenarist Sub (*.sst)") {
+        parser = new ScenaristSubParser();
+        file_extension = ".sst";
+    }
     else {
         // Nothing to do
     }
 
     // Add the extension if it miss
     if ( !file_name.contains(file_extension) ) {
+
+        if ( file_name.lastIndexOf('.') >= 0 ) {
+            file_name.remove(file_name.lastIndexOf('.', file_name.size()));
+        }
+
         file_name.append(file_extension);
     }
 
@@ -460,6 +498,32 @@ void SubExportDialog::on_slrLineEdit_editingFinished() {
     mSubListRef = ui->slrLineEdit->text();
 }
 
+// Scenarist
+void SubExportDialog::on_imageSizeComboBox_currentTextChanged(const QString &arg1) {
+
+    mImageSize = arg1;
+}
+
+void SubExportDialog::on_tapeTypeComboBox_currentIndexChanged(const QString &arg1) {
+
+    if ( arg1 == "drop") {
+        mTapeTypeDrop = true;
+    }
+    else {
+        mTapeTypeDrop = false;
+    }
+}
+
+void SubExportDialog::on_baseTimeEdit_editingFinished() {
+
+    mStartTime = ui->baseTimeEdit->text();
+}
+
+void SubExportDialog::on_languageLineEdit2_editingFinished() {
+
+    mLanguage = ui->languageLineEdit2->text();
+}
+
 
 // ACESSORS
 QString SubExportDialog::version() {
@@ -627,6 +691,21 @@ QString SubExportDialog::diskFormatCode() {
     return mDiskFormatCode;
 }
 
+//Scenarist
+QString SubExportDialog::imageSize() {
+
+    return mImageSize;
+}
+
+bool SubExportDialog::tapeTypeDrope() {
+
+    return mTapeTypeDrop;
+}
+
+
+// MUTATOR
+
+// Ebu
 void SubExportDialog::setDiskFormatCode(QString diskFormatCode) {
 
     mDiskFormatCode = diskFormatCode;

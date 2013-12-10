@@ -337,7 +337,7 @@ QString DcSubInteropParser::convertVposToAmapolaRef(QString fontId, QString font
 
         return QString::number(( vPos.toDouble() - font_ascent_percent ), 'f', 1 );
     }
-    else if ( vAlign == "bottom" ) {
+    else  { // bottom
 
         quint16 font_descent_px = font_metrics.descent();
         qreal font_descent_percent = ( (qreal)font_descent_px / (qreal)ref_height_px ) * 100.0;
@@ -369,7 +369,7 @@ QString DcSubInteropParser::convertVposFromAmapolaRef(QString fontId, QString fo
 
         return QString::number(( vPos.toDouble() + font_ascent_percent ), 'f', 1 );
     }
-    else if ( vAlign == "bottom" ) {
+    else {  //bottom
 
         quint16 font_descent_px = font_metrics.descent();
         qreal font_descent_percent = ( (qreal)font_descent_px / (qreal)ref_height_px ) * 100.0;

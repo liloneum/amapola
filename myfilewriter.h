@@ -13,6 +13,7 @@ public:
     void writeRawData(QList<quint8> buffer);
     bool toFile(bool rawData = false);
     QString errorMsg();
+    QString fileName();
 
 private:
     // The string data buffer

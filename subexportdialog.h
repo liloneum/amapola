@@ -15,6 +15,8 @@ class SubExportDialog : public QDialog
 public:
     explicit SubExportDialog(QList<MySubtitles> subList, QList<qint32>selectedSub, QWidget *parent = 0);
     ~SubExportDialog();
+
+    // SubRip, DcSub
     QString version();
     QString subId();
     QString movieTitle();
@@ -28,6 +30,7 @@ public:
     QString preferredEffect();
     bool hasHtmlTags();
 
+    // Ebu
     QString maxRow();
     bool isDoubleHeight();
     QString diskFormatCode();
@@ -49,6 +52,10 @@ public:
     QString publisher();
     QString editorName();
     QString editorContact();
+
+    // Scenarist
+    QString imageSize();
+    bool tapeTypeDrope();
 
     // Ebu
     void setDiskFormatCode(QString diskFormatCode);
@@ -72,6 +79,8 @@ public:
     void setEditorsContact(QString editorContact);
 
 private slots:
+
+    // SubRip, DCSub
     void on_subNormList_currentTextChanged(const QString &currentText);
     void exportDatas();
     void on_closePushButton_clicked();
@@ -106,9 +115,16 @@ private slots:
     void on_filePushButton_clicked();
     void on_doubleHeightcheckBox_toggled(bool checked);
 
+    // Scenarist
+    void on_imageSizeComboBox_currentTextChanged(const QString &arg1);
+    void on_baseTimeEdit_editingFinished();
+    void on_languageLineEdit2_editingFinished();
+    void on_tapeTypeComboBox_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::SubExportDialog *ui;
 
+    // SubRip, DCSub
     QList<MySubtitles> mSubList;
     QList<qint32> mSelectedIndex;
     QString mVersion;
@@ -147,6 +163,9 @@ private:
     QString mEditorName;
     QString mEditorContact;
 
+    // Scenarist
+    QString mImageSize;
+    bool mTapeTypeDrop;
 };
 
 #endif // SUBEXPORTDIALOG_H

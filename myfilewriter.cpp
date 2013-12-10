@@ -74,3 +74,7 @@ bool MyFileWriter::toFile(bool rawData) {
 QString MyFileWriter::errorMsg() {
     return mErrorMsg;
 }
+
+QString MyFileWriter::fileName() {
+    return mFileName;
+}

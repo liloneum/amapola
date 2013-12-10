@@ -25,7 +25,9 @@ SOURCES += main.cpp\
     SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.cpp \
     subexportdialog.cpp \
     subimportmanager.cpp \
-    SubtitlesParsers/EBU/ebuparser.cpp
+    SubtitlesParsers/EBU/ebuparser.cpp \
+    imagesexporter.cpp \
+    SubtitlesParsers/ScenaristSub/scenaristsubparser.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -45,7 +47,9 @@ HEADERS  += mainwindow.h \
     SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h \
     subexportdialog.h \
     subimportmanager.h \
-    SubtitlesParsers/EBU/ebuparser.h
+    SubtitlesParsers/EBU/ebuparser.h \
+    imagesexporter.h \
+    SubtitlesParsers/ScenaristSub/scenaristsubparser.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \
