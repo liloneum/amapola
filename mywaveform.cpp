@@ -248,8 +248,8 @@ void MyWaveForm::initWaveForm() {
 
     time_accuracy_ms = (qreal)SEC_TO_MSEC / (qreal)SAMPLES_PER_SEC;
 
-    mAmplitudeVector.resize(14400000*time_accuracy_ms);
-    mTimeVectorMs.resize(14400000*time_accuracy_ms);
+    mAmplitudeVector.resize(72000000 * time_accuracy_ms);
+    mTimeVectorMs.resize(72000000 * time_accuracy_ms);
 
     mAmplitudeVector.fill(0);
 
