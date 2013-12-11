@@ -69,6 +69,8 @@ void MySettings::on_maxCharPerSecDoubleSpinBox_valueChanged(double value) {
 void MySettings::on_leftMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_LeftMargin_percent", arg1);
+
+    emit marginChanged();
 }
 
 void MySettings::on_rightMarginSpinBox_valueChanged(double arg1) {
@@ -79,6 +81,8 @@ void MySettings::on_rightMarginSpinBox_valueChanged(double arg1) {
 void MySettings::on_topMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_TopMargin_percent", arg1);
+
+    emit marginChanged();
 }
 
 void MySettings::on_bottomMarginSpinBox_valueChanged(double arg1) {

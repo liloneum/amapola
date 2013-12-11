@@ -40,6 +40,8 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
 
     connect(ui->timeSlider, SIGNAL(sliderPositionChanged(qint64)), this, SLOT(sliderMoved(qint64)));
 
+    connect(mpVideoItem, SIGNAL(nativeSizeChanged(QSizeF)), this, SLOT(checkVideoNativeSize(QSizeF)));
+
     // Init the Play / Pause button
     ui->playButton->setEnabled(false);
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -223,10 +225,17 @@ void MyVideoPlayer::updateTime(qint64 positionMs) {
     ui->durationTimeHMS->setTime( time_base.addMSecs(mVideoDuration) );
 }
 
+void MyVideoPlayer::checkVideoNativeSize(QSizeF videoNativeSize) {
+
+    if ( ( videoNativeSize.isValid() ) && ( videoNativeSize.toSize() != QSize(0,0) ) ) {
+        emit nativeSizeChanged(videoNativeSize);
+    }
+}
+
 void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
 
     mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height() );
-    mpVideoItem->setSize(QSizeF(ui->videoView->size()));
+    mpVideoItem->setSize( QSizeF(ui->videoView->size()) - ( QSizeF(ui->videoView->frameWidth(), ui->videoView->frameWidth()) * 2 ) );
     QWidget::resizeEvent(event);
 }
 

@@ -54,6 +54,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
+    // Init the toolbar
+    QLabel* ratioLabel = new QLabel();
+    ratioLabel->setText("Ratio : ");
+    mResolutionComboBox = new QComboBox();
+    mResolutionComboBox->addItem("NTSC 720x480", QSize(720,480));
+    mResolutionComboBox->addItem("PAL 720x576", QSize(720,576));
+    mResolutionComboBox->addItem("HD 720p 1280x720", QSize(1280,720));
+    mResolutionComboBox->addItem("HD 1080p 1920x1080", QSize(1920,1080));
+    mResolutionComboBox->addItem("2k 2048x1080", QSize(2048,1080));
+    mResolutionComboBox->addItem("UHD 3840x2160", QSize(3840,2160));
+    mResolutionComboBox->addItem("4k 4096x2160", QSize(4096,2160));
+    mResolutionComboBox->addItem(tr("Other..."));
+
+    ui->mainToolBar->addWidget(ratioLabel)->setVisible(true);
+    ui->mainToolBar->addWidget(mResolutionComboBox)->setVisible(true);
+    connect(mResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(resolutionComboBox_currentIndexChanged(int)));
+    resolutionComboBox_currentIndexChanged(mResolutionComboBox->currentIndex());
 
     // Init default properties
     qApp->setProperty("prop_FontSize_pt", ui->fontSizeSpinBox->cleanText());
@@ -179,6 +196,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->videoPlayer, SIGNAL(durationChanged(qint64)),this, SLOT(updateStEditSize()));
     connect(ui->videoPlayer, SIGNAL(positionChanged(qint64)), this, SLOT(videoPositionChanged(qint64)));
     connect(ui->videoPlayer, SIGNAL(playerStateInfos(QString)), this, SLOT(displayInfo(QString)));
+    connect(ui->videoPlayer, SIGNAL(nativeSizeChanged(QSizeF)), this, SLOT(updateResoltionBox(QSizeF)));
 
     connect(ui->waveForm, SIGNAL(markerPositionChanged(qint64)), this, SLOT(waveformMarerkPosChanged(qint64)));
     connect(ui->waveForm, SIGNAL(ctrlLeftClickEvent(qint64)), this, SLOT(onCtrlLeftClickEvent(qint64)));
@@ -197,6 +215,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this->mpDisplayInfoTimer, SIGNAL(timeout()), this, SLOT(eraseInfo()));
 
     connect(ui->settings, SIGNAL(frameRateChanged(qreal)), this, SLOT(updateFrameRate(qreal)));
+    connect(ui->settings, SIGNAL(marginChanged()), this, SLOT(updateMarginsDraw()));
 }
 
 MainWindow::~MainWindow() {
@@ -1336,42 +1355,30 @@ void MainWindow::updateStEditSize() {
     qreal video_item_ratio;
     qint32 video_x_pos;
     qint32 video_y_pos;
+    qreal ratio;
 
     // Video item size is the size of the zone where is displayed the video
     video_item_size = ui->videoPlayer->videoItemSize();
     video_item_ratio = video_item_size.width() / video_item_size.height();
 
-    // Video native size is the real full size of the media
-    video_native_size = ui->videoPlayer->videoItemNativeSize();
-
     // Video current size is the displayed size of the video,
     // scaled on the video item with its ratio kept
+    video_native_size = qApp->property("prop_resolution_px").toSizeF();
+    video_current_size = video_native_size.scaled(video_item_size, Qt::KeepAspectRatio);
 
-    // When no video loaded, the subtitles edit zone should be mapped on the video item
-    // 9 is the margins value of the mediaplayer;
-    video_current_size = video_item_size;
-    video_x_pos = 9;
-    video_y_pos = 9;
+    ratio = video_native_size.width() / video_native_size.height();
 
-    // If a video is loaded
-    if ( video_native_size.isValid() ) {
-
-        // Retrieve the video current size (native size scaled in item size)
-        video_current_size = video_native_size.scaled(video_item_size, Qt::KeepAspectRatio);
-
-        qreal video_native_ratio = video_native_size.width() / video_native_size.height();
-
-        // Compare the ratio of native video and video item
-        // to knwon if the video is full scale on width or on height of the item
-        if ( video_native_ratio > video_item_ratio ) {
-            video_x_pos = 9;
-            video_y_pos = (qint32)( qRound( video_item_size.height() - video_current_size.height() ) / 2.0 ) + 9;
-        }
-        else if ( video_native_ratio < video_item_ratio ) {
-            video_x_pos = (qint32)( qRound( video_item_size.width() - video_current_size.width() ) / 2.0 ) + 9;
-            video_y_pos = 9;
-        }
+    // Compare the ratio of native video and video item
+    // to knwon if the video is full scale on width or on height of the item
+    if ( ratio > video_item_ratio ) {
+        video_x_pos = 10;
+        video_y_pos = (qint32)( qRound( video_item_size.height() - video_current_size.height() ) / 2.0 ) + 10;
     }
+    else if ( ratio < video_item_ratio ) {
+        video_x_pos = (qint32)( qRound( video_item_size.width() - video_current_size.width() ) / 2.0 ) + 10;
+        video_y_pos = 10;
+    }
+
 
     qApp->setProperty("prop_editWidgetSize_px", video_current_size.toSize());
 
@@ -1381,6 +1388,11 @@ void MainWindow::updateStEditSize() {
 
     ui->playerInfoLabel->move(video_x_pos, video_y_pos);
 
+}
+
+void MainWindow::updateMarginsDraw() {
+
+    ui->stEditDisplay->repaint();
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -1584,6 +1596,39 @@ void MainWindow::displayInfo(QString info) {
 
 void MainWindow::eraseInfo() {
     ui->playerInfoLabel->setText("");
+}
+
+// Toll bar
+
+// Ratio
+void MainWindow::resolutionComboBox_currentIndexChanged(int index) {
+
+    if ( mResolutionComboBox->currentText() == "Other...") {
+
+    }
+    else {
+
+        qApp->setProperty("prop_resolution_px", mResolutionComboBox->itemData(index));
+        this->updateStEditSize();
+    }
+}
+
+void MainWindow::updateResoltionBox(QSizeF videoResolution) {
+
+    videoResolution = videoResolution.toSize();
+
+    for ( qint16 i = 0; i < mResolutionComboBox->count(); i++ ) {
+
+        if ( mResolutionComboBox->itemData(i) == videoResolution ) {
+
+            mResolutionComboBox->setCurrentIndex(i);
+            return;
+        }
+    }
+
+    QString resolution_str = QString::number(videoResolution.width()) +"x" +QString::number(videoResolution.height());
+    mResolutionComboBox->insertItem(mResolutionComboBox->count() - 1, resolution_str, videoResolution);
+    mResolutionComboBox->setCurrentIndex(mResolutionComboBox->count() - 2);
 }
 
 // ******************************** Tool Box ***************************************************************//

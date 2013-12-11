@@ -29,6 +29,7 @@ signals:
     void positionChanged(qint64);
     void durationChanged(qint64);
     void playerStateInfos(QString);
+    void nativeSizeChanged(QSizeF);
 
 public slots:
     QString openFile(QString fileName);
@@ -47,6 +48,7 @@ private slots:
     void updateDuration();
     void resizeEvent(QResizeEvent* event);
     void sliderMoved(qint64 positionMs);
+    void checkVideoNativeSize(QSizeF videoNativeSize);
 
     
 private:

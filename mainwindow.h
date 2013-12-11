@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QComboBox>
 #include <myvideoplayer.h>
 #include "mysubtitles.h"
 #include "mysettings.h"
@@ -40,6 +41,7 @@ private slots:
     bool eventFilter(QObject* watched, QEvent* event);
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
+    void updateMarginsDraw();
     void displayErrorMsg(QString);
     void displayInfo(QString info);
     void eraseInfo();
@@ -52,12 +54,13 @@ private slots:
     void clearHistory();
     bool undo();
     bool redo();
-
     void on_actionImport_Subtitles_triggered();
-
     void on_settingsButton_clicked();
-
     void on_actionExport_Subtitles_triggered();
+
+    // Tool bar
+    void resolutionComboBox_currentIndexChanged(int index);
+    void updateResoltionBox(QSizeF videoResolution);
 
 
     //***************************Tool Box ***************************//
@@ -111,6 +114,7 @@ private slots:
     void on_fontBackgroundCheckBox_toggled(bool checked);
     void on_fontBackgroundColor_clicked();
 
+
 private:
     Ui::MainWindow* ui;
 
@@ -120,6 +124,9 @@ private:
     bool mTextPosChangedByUser;
     bool mTextFontChangedBySoft;
     bool mTextFontChangedByUser;
+
+    // Tool Bar
+    QComboBox* mResolutionComboBox;
 
     // Flag to avoid infinite inter call between video-player and waveform
     bool mVideoPositionChanged;

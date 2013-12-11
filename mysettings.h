@@ -26,7 +26,13 @@ public:
     ~MySettings();
     
 signals:
+    void marginChanged();
     void frameRateChanged(qreal);
+
+public slots:
+    void setFrameRate(qreal frameRate);
+    MyProperties getCurrentProp();
+    void updateDisplayAll();
 
 private slots:
     void on_displayTimeMinSpinBox_valueChanged(int value);
@@ -35,19 +41,10 @@ private slots:
     void on_frameRateSpinBox_editingFinished();
     void on_maxCharPerLineSpinBox_valueChanged(int value);
     void on_maxCharPerSecDoubleSpinBox_valueChanged(double value);
-
     void on_leftMarginSpinBox_valueChanged(double arg1);
-
     void on_rightMarginSpinBox_valueChanged(double arg1);
-
     void on_topMarginSpinBox_valueChanged(double arg1);
-
     void on_bottomMarginSpinBox_valueChanged(double arg1);
-
-public slots:
-    void setFrameRate(qreal frameRate);
-    MyProperties getCurrentProp();
-    void updateDisplayAll();
 
 private:
     Ui::MySettings *ui;

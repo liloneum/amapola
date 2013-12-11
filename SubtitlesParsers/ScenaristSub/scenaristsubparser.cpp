@@ -161,7 +161,8 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
     bool e1_changed = false;
     bool pa_changed = false;
 
-    ImagesExporter image_exporter(image_size);
+    QSize video_native_size = qApp->property("prop_resolution_px").toSize();
+    ImagesExporter image_exporter(video_native_size);
 
     for ( qint16 i = 0; i < subtitlesList.size(); i++ ) {
 
@@ -302,7 +303,7 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
 
         QString number_str;
         QString image_file_name = image_path_name_prefix +number_str.sprintf("%04d", (i+1)) +image_extension;
-        image_exporter.createImage(current_sub, image_file_name, "TIF", Qt::white, 0);
+        image_exporter.createImage(current_sub, image_file_name, image_size, "TIF", Qt::white, 0);
 
         if ( ( e2_changed ) || ( e1_changed ) || ( pa_changed ) ) {
 

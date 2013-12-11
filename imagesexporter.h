@@ -10,7 +10,7 @@ class ImagesExporter : public QWidget
     Q_OBJECT
 public:
     explicit ImagesExporter(QSize widgetSize, QWidget *parent = 0);
-    void createImage(MySubtitles subtitle, QString fileName, QString format, QColor backgroundColor, quint16 colorDepth);
+    void createImage(MySubtitles subtitle, QString fileName, QSize imageSize, QString format, QColor backgroundColor, quint16 colorDepth);
 
 signals:
     

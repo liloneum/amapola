@@ -275,7 +275,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
 
 // Create an image of the "subtitle" at the given "format" and with the given "backgroundColor" and "colorDepth"
 // Color depth = 0 -> 4 colors (white, black, red, blue). Else it's the number of byte used for colors code (1-4)
-void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QString format, QColor backgroundColor, quint16 colorDepth) {
+void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize imageSize, QString format, QColor backgroundColor, quint16 colorDepth) {
 
     QImage image;
 
@@ -363,6 +363,9 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QString
 
             image = image.convertToFormat(QImage::Format_Indexed8, Qt::ThresholdDither);
         }
+
+        // Rescale the image to the given size
+        image = image.scaled(imageSize);
     }
     // 4 colors only
     else {
@@ -379,6 +382,9 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QString
         this->setText(temp_sub);
         pixmap_layer0 = this->grab();
         image = pixmap_layer0.toImage();
+
+        // Rescale the image to the given size
+        image = image.scaled(imageSize);
 
         QVector<QRgb> color_table;
         color_table.append(QRgb(0xFFFFFFFF));

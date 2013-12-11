@@ -8,6 +8,7 @@
 #include <QTextCharFormat>
 #include <QMenu>
 #include <QColorDialog>
+#include <QPainter>
 
 // Maximum number of character by line
 #define MAX_CHAR_BY_LINE 40
@@ -683,6 +684,26 @@ void MyTextEdit::resizeEvent(QResizeEvent *event) {
     }
 
     QWidget::resizeEvent(event);
+}
+
+void MyTextEdit::paintEvent(QPaintEvent *event) {
+
+    qreal margin_left = this->width() * qApp->property("prop_LeftMargin_percent").toDouble() / 100.0;
+    qreal margin_top = this->height() * qApp->property("prop_TopMargin_percent").toDouble() / 100.0;
+    qreal margin_right = this->width() * qApp->property("prop_RightMargin_percent").toDouble() / 100.0;
+    qreal margin_bottom = this->height() * qApp->property("prop_BottomMargin_percent").toDouble() / 100.0;
+    qreal margin_width = this->width() - margin_left - margin_right;
+    qreal margin_height = this->height() - margin_top  - margin_bottom;
+    QRectF rectangle_margin(margin_left, margin_top, margin_width, margin_height);
+    QPainter painter(this);
+
+    QRectF rectangle_widget(0.0, 0.0, this->width() - 1, this->height() - 1);
+    painter.drawRect(rectangle_widget);
+
+    painter.setPen(Qt::green);
+    painter.drawRect(rectangle_margin);
+
+    QWidget::paintEvent(event);
 }
 
 // Add a newline

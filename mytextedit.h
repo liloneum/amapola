@@ -37,6 +37,7 @@ public slots :
 private slots:
      bool eventFilter(QObject* watched, QEvent* event);
      void resizeEvent(QResizeEvent* event);
+     void paintEvent(QPaintEvent *event);
      void newCursorPosition();
      void setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize widgetSize);
      void textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize);
