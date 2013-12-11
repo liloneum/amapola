@@ -61,6 +61,8 @@ private slots:
     // Tool bar
     void resolutionComboBox_currentIndexChanged(int index);
     void updateResoltionBox(QSizeF videoResolution);
+    void frameRateComboBox_currentIndexChanged(int index);
+    void updateFrameRateBox(qreal frameRate);
 
 
     //***************************Tool Box ***************************//
@@ -126,6 +128,8 @@ private:
     bool mTextFontChangedByUser;
 
     // Tool Bar
+    QComboBox* mFrameRateComboBox;
+    bool mFrameRateChangedBySoft;
     QComboBox* mResolutionComboBox;
 
     // Flag to avoid infinite inter call between video-player and waveform

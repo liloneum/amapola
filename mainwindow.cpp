@@ -55,8 +55,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->stEditDisplay->setStyleSheet("background: transparent; color: yellow");
 
     // Init the toolbar
-    QLabel* ratioLabel = new QLabel();
-    ratioLabel->setText("Ratio : ");
+    // Resolution
+    QLabel* resolution_label = new QLabel();
+    resolution_label->setText("Resolution : ");
     mResolutionComboBox = new QComboBox();
     mResolutionComboBox->addItem("NTSC 720x480", QSize(720,480));
     mResolutionComboBox->addItem("PAL 720x576", QSize(720,576));
@@ -67,10 +68,25 @@ MainWindow::MainWindow(QWidget *parent) :
     mResolutionComboBox->addItem("4k 4096x2160", QSize(4096,2160));
     mResolutionComboBox->addItem(tr("Other..."));
 
-    ui->mainToolBar->addWidget(ratioLabel)->setVisible(true);
+    ui->mainToolBar->addWidget(resolution_label)->setVisible(true);
     ui->mainToolBar->addWidget(mResolutionComboBox)->setVisible(true);
     connect(mResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(resolutionComboBox_currentIndexChanged(int)));
     resolutionComboBox_currentIndexChanged(mResolutionComboBox->currentIndex());
+
+    // Frame rate
+    QLabel* frame_rate_label = new QLabel;
+    frame_rate_label->setText("Frame rate : ");
+    mFrameRateComboBox = new QComboBox();
+    mFrameRateComboBox->addItem("23.976", 23.976);
+    mFrameRateComboBox->addItem("24", 24);
+    mFrameRateComboBox->addItem("25", 25);
+    mFrameRateComboBox->addItem("29.97", 29.97);
+    mFrameRateComboBox->addItem("30", 30);
+
+    ui->mainToolBar->addWidget(frame_rate_label)->setVisible(true);
+    ui->mainToolBar->addWidget(mFrameRateComboBox)->setVisible(true);
+    connect(mFrameRateComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(frameRateComboBox_currentIndexChanged(int)));
+    mFrameRateChangedBySoft = false;
 
     // Init default properties
     qApp->setProperty("prop_FontSize_pt", ui->fontSizeSpinBox->cleanText());
@@ -1168,6 +1184,8 @@ void MainWindow::removeSubtitles() {
 // Frame rate change managment
 void MainWindow::updateFrameRate(qreal frameRate) {
 
+    this->updateFrameRateBox(frameRate);
+
     QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
 
     MyAttributesConverter::roundSubListToFrame(frameRate, sub_list);
@@ -1535,7 +1553,9 @@ bool MainWindow::undo() {
         // If the action to undo is "Change frame rate" update the frame rate combo box
         if ( mHistoryReasons.at(mHistoryCurrentIndex) == "Change frame rate") {
 
-            ui->settings->setFrameRate( mPropertyHistory[mHistoryCurrentIndex - 1].frameRate() );
+            qreal frame_rate = mPropertyHistory[mHistoryCurrentIndex - 1].frameRate();
+            ui->settings->setFrameRate(frame_rate);
+            this->updateFrameRateBox(frame_rate);
         }
 
         // Reload the subtitles in database
@@ -1557,7 +1577,9 @@ bool MainWindow::redo() {
         // If the action to redo is "Change frame rate" update the frame rate combo box
         if ( mHistoryReasons.at(mHistoryCurrentIndex + 1) == "Change frame rate") {
 
-            ui->settings->setFrameRate( mPropertyHistory[mHistoryCurrentIndex + 1].frameRate() );
+            qreal frame_rate = mPropertyHistory[mHistoryCurrentIndex + 1].frameRate();
+            ui->settings->setFrameRate(frame_rate);
+            this->updateFrameRateBox(frame_rate);
         }
 
         // Reload the subtitles in database
@@ -1600,7 +1622,7 @@ void MainWindow::eraseInfo() {
 
 // Toll bar
 
-// Ratio
+// Resolution
 void MainWindow::resolutionComboBox_currentIndexChanged(int index) {
 
     if ( mResolutionComboBox->currentText() == "Other...") {
@@ -1615,20 +1637,48 @@ void MainWindow::resolutionComboBox_currentIndexChanged(int index) {
 
 void MainWindow::updateResoltionBox(QSizeF videoResolution) {
 
-    videoResolution = videoResolution.toSize();
+    QSize video_resolution = videoResolution.toSize();
 
     for ( qint16 i = 0; i < mResolutionComboBox->count(); i++ ) {
 
-        if ( mResolutionComboBox->itemData(i) == videoResolution ) {
+        if ( mResolutionComboBox->itemData(i).toSizeF() == video_resolution ) {
 
             mResolutionComboBox->setCurrentIndex(i);
             return;
         }
     }
 
-    QString resolution_str = QString::number(videoResolution.width()) +"x" +QString::number(videoResolution.height());
-    mResolutionComboBox->insertItem(mResolutionComboBox->count() - 1, resolution_str, videoResolution);
+    QString resolution_str = QString::number(video_resolution.width()) +"x" +QString::number(video_resolution.height());
+    mResolutionComboBox->insertItem(mResolutionComboBox->count() - 1, resolution_str, video_resolution);
     mResolutionComboBox->setCurrentIndex(mResolutionComboBox->count() - 2);
+}
+
+void MainWindow::frameRateComboBox_currentIndexChanged(int index) {
+
+    if ( mFrameRateChangedBySoft == false ) {
+
+        ui->settings->setFrameRate(mFrameRateComboBox->itemData(index).toDouble());
+    }
+
+    mFrameRateChangedBySoft = false;
+}
+
+void MainWindow::updateFrameRateBox(qreal frameRate) {
+
+    for ( qint16 i = 0; i < mFrameRateComboBox->count(); i++ ) {
+
+        if ( qFuzzyCompare(mFrameRateComboBox->itemData(i).toDouble(), frameRate ) ) {
+
+            mFrameRateChangedBySoft = true;
+            mFrameRateComboBox->setCurrentIndex(i);
+            return;
+        }
+    }
+
+    QString frame_rate_str = QString::number(frameRate,'f', 3);
+    mFrameRateComboBox->insertItem(mFrameRateComboBox->count(), frame_rate_str, frameRate);
+    mFrameRateChangedBySoft = true;
+    mFrameRateComboBox->setCurrentIndex(mFrameRateComboBox->count() - 1);
 }
 
 // ******************************** Tool Box ***************************************************************//

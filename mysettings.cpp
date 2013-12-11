@@ -127,20 +127,26 @@ void MySettings::on_frameRateComboBox_currentIndexChanged(int index) {
         break;
     }
 
-    qApp->setProperty("prop_FrameRate_fps", frame_rate);
+    if ( index != 5 ) {
 
-    mCurrentProperties.setFrameRate(frame_rate);
+        qApp->setProperty("prop_FrameRate_fps", frame_rate);
 
-    emit frameRateChanged(frame_rate);
+        mCurrentProperties.setFrameRate(frame_rate);
+
+        emit frameRateChanged(frame_rate);
+    }
 }
 
 void MySettings::on_frameRateSpinBox_editingFinished() {
 
     qreal frame_rate = ui->frameRateSpinBox->value();
 
-    qApp->setProperty("prop_FrameRate_fps", frame_rate);
-    mCurrentProperties.setFrameRate(frame_rate);
-    emit frameRateChanged(frame_rate);
+    if ( qFuzzyCompare(frame_rate, qApp->property("prop_FrameRate_fps").toDouble())  == false ) {
+
+        qApp->setProperty("prop_FrameRate_fps", frame_rate);
+        mCurrentProperties.setFrameRate(frame_rate);
+        emit frameRateChanged(frame_rate);
+    }
 }
 
 void MySettings::setFrameRate(qreal frameRate) {
