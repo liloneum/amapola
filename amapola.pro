@@ -27,7 +27,8 @@ SOURCES += main.cpp\
     subimportmanager.cpp \
     SubtitlesParsers/EBU/ebuparser.cpp \
     imagesexporter.cpp \
-    SubtitlesParsers/ScenaristSub/scenaristsubparser.cpp
+    SubtitlesParsers/ScenaristSub/scenaristsubparser.cpp \
+    inputsizedialog.cpp
 
 HEADERS  += mainwindow.h \
     myvideoplayer.h \
@@ -49,7 +50,8 @@ HEADERS  += mainwindow.h \
     subimportmanager.h \
     SubtitlesParsers/EBU/ebuparser.h \
     imagesexporter.h \
-    SubtitlesParsers/ScenaristSub/scenaristsubparser.h
+    SubtitlesParsers/ScenaristSub/scenaristsubparser.h \
+    inputsizedialog.h
 
 FORMS    += mainwindow.ui \
     mywaveform.ui \

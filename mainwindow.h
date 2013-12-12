@@ -131,6 +131,7 @@ private:
     QComboBox* mFrameRateComboBox;
     bool mFrameRateChangedBySoft;
     QComboBox* mResolutionComboBox;
+    bool mResolutionChangedNySoft;
 
     // Flag to avoid infinite inter call between video-player and waveform
     bool mVideoPositionChanged;

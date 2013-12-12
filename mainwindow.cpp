@@ -20,6 +20,7 @@
 #include "amapolaprojfileparser.h"
 #include "subexportdialog.h"
 #include "subimportmanager.h"
+#include "inputsizedialog.h"
 
 
 #define SEC_TO_MSEC 1000
@@ -71,6 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->mainToolBar->addWidget(resolution_label)->setVisible(true);
     ui->mainToolBar->addWidget(mResolutionComboBox)->setVisible(true);
     connect(mResolutionComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(resolutionComboBox_currentIndexChanged(int)));
+    mResolutionChangedNySoft = false;
     resolutionComboBox_currentIndexChanged(mResolutionComboBox->currentIndex());
 
     // Frame rate
@@ -124,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
         qApp->setProperty("prop_FontBackground", "yes");
     }
     else {
-        qApp->setProperty("prop_FontBackGround", "no");
+        qApp->setProperty("prop_FontBackground", "no");
     }
 
     // Effects colors
@@ -1237,6 +1239,8 @@ void MainWindow::on_actionOpen_triggered() {
     ui->stEditDisplay->updateDefaultSub();
     // Update the settings
     ui->settings->updateDisplayAll();
+    updateResoltionBox(qApp->property("prop_resolution_px").toSizeF());
+    updateFrameRateBox(qApp->property("prop_FrameRate_fps").toDouble());
 
     // Load the subtitles list in the database
     ui->subTable->loadSubtitles(subtitles_list, false);
@@ -1625,14 +1629,21 @@ void MainWindow::eraseInfo() {
 // Resolution
 void MainWindow::resolutionComboBox_currentIndexChanged(int index) {
 
-    if ( mResolutionComboBox->currentText() == "Other...") {
+    if ( mResolutionChangedNySoft == false ) {
 
-    }
-    else {
+        if ( mResolutionComboBox->currentText() == "Other...") {
 
-        qApp->setProperty("prop_resolution_px", mResolutionComboBox->itemData(index));
-        this->updateStEditSize();
+            QSize resolution_size = InputSizeDialog::getSize(this, tr("Set resolution"));
+            updateResoltionBox(resolution_size);
+        }
+        else {
+
+            qApp->setProperty("prop_resolution_px", mResolutionComboBox->itemData(index));
+            this->updateStEditSize();
+        }
     }
+
+    mResolutionChangedNySoft = false;
 }
 
 void MainWindow::updateResoltionBox(QSizeF videoResolution) {
@@ -1649,7 +1660,9 @@ void MainWindow::updateResoltionBox(QSizeF videoResolution) {
     }
 
     QString resolution_str = QString::number(video_resolution.width()) +"x" +QString::number(video_resolution.height());
+    mResolutionChangedNySoft = true;
     mResolutionComboBox->insertItem(mResolutionComboBox->count() - 1, resolution_str, video_resolution);
+    mResolutionChangedNySoft = false;
     mResolutionComboBox->setCurrentIndex(mResolutionComboBox->count() - 2);
 }
 
@@ -2417,10 +2430,10 @@ void MainWindow::on_fontBackgroundCheckBox_toggled(bool checked) {
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
 
             if ( checked ) {
-                qApp->setProperty("prop_FontBackGround", "yes");
+                qApp->setProperty("prop_FontBackground", "yes");
             }
             else {
-                qApp->setProperty("prop_FontBackGround", "no");
+                qApp->setProperty("prop_FontBackground", "no");
             }
 
             ui->stEditDisplay->updateDefaultSub();

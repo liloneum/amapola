@@ -114,6 +114,16 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
                 QString font_shadow_effect_color = current_line.section("->",1,1);
                 subtitles_list[sub_count - 1].text()[text_lines_count - 1].Font().setFontShadowEffectColor(font_shadow_effect_color);
             }
+            else if ( current_line.contains("FontBackgroundEffect") ) {
+
+                QString font_background_effect = current_line.section("->",1,1);
+                subtitles_list[sub_count - 1].text()[text_lines_count - 1].Font().setFontBackgroundEffect(font_background_effect);
+            }
+            else if ( current_line.contains("FontBackgroundColor") ) {
+
+                QString font_background_effect_color = current_line.section("->",1,1);
+                subtitles_list[sub_count - 1].text()[text_lines_count - 1].Font().setFontBackgroundEffectColor(font_background_effect_color);
+            }
             else if ( current_line.contains("FontColor") ) {
 
                 QString font_color = current_line.section("->",1,1);
@@ -168,6 +178,34 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
                 QString max_char_per_sec = current_line.section("->",1,1);
                 qApp->setProperty("prop_MaxCharPerSec", max_char_per_sec.toDouble());
             }
+            else if ( current_line.contains("LeftMargin") ) {
+
+                QString left_margin = current_line.section("->",1,1);
+                qApp->setProperty("prop_LeftMargin_percent", left_margin.toDouble());
+            }
+            else if ( current_line.contains("RightMargin") ) {
+
+                QString right_margin = current_line.section("->",1,1);
+                qApp->setProperty("prop_RightMargin_percent", right_margin.toDouble());
+            }
+            else if ( current_line.contains("TopMargin") ) {
+
+                QString top_margin = current_line.section("->",1,1);
+                qApp->setProperty("prop_TopMargin_percent", top_margin.toDouble());
+            }
+            else if ( current_line.contains("BottomMargin") ) {
+
+                QString bottom_margin = current_line.section("->",1,1);
+                qApp->setProperty("prop_BottomMargin_percent", bottom_margin.toDouble());
+            }
+            else if ( current_line.contains("VideoResolution") ) {
+
+                QString video_resolution_str = current_line.section("->",1,1);
+                QSize video_resolution;
+                video_resolution.setWidth(video_resolution_str.section('x', 0, 0).toInt());
+                video_resolution.setHeight(video_resolution_str.section('x', 1, 1).toInt());
+                qApp->setProperty("prop_resolution_px", video_resolution);
+            }
             else if ( current_line.contains("DefaultFontSize") ) {
 
                 QString default_font_size = current_line.section("->",1,1);
@@ -198,6 +236,11 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
                 QString default_font_shadow = current_line.section("->",1,1);
                 qApp->setProperty("prop_FontShadow", default_font_shadow);
             }
+            else if ( current_line.contains("DefaultFontBackground") ) {
+
+                QString default_font_background = current_line.section("->",1,1);
+                qApp->setProperty("prop_FontBackground", default_font_background);
+            }
             else if ( current_line.contains("DefaultBorderColor") ) {
 
                 QString default_font_border_color = current_line.section("->",1,1);
@@ -207,6 +250,11 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
 
                 QString default_font_shadow_color = current_line.section("->",1,1);
                 qApp->setProperty("prop_FontShadowColor", default_font_shadow_color);
+            }
+            else if ( current_line.contains("DefaultBackgroundColor") ) {
+
+                QString default_font_background_color = current_line.section("->",1,1);
+                qApp->setProperty("prop_FontBackgroundColor", default_font_background_color);
             }
             else if ( current_line.contains("DefaultFontColor") ) {
 
@@ -281,6 +329,8 @@ void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitle
             sub_to_write += "FontSize->" +current_line_font.fontSize() +"\n";
             sub_to_write += "FontBorderEffect->" +current_line_font.fontBorderEffect() +"\n";
             sub_to_write += "FontBorderColor->" +current_line_font.fontBorderEffectColor() +"\n";
+            sub_to_write += "FontBackgroundEffect->" +current_line_font.fontBackgroundEffect() +"\n";
+            sub_to_write += "FontBackgroundrColor->" +current_line_font.fontBackgroundEffectColor() +"\n";
             sub_to_write += "FontShadowEffect->" +current_line_font.fontShadowEffect() +"\n";
             sub_to_write += "FontShadowColor->" +current_line_font.fontShadowEffectColor() +"\n";
             sub_to_write += "FontColor->" +current_line_font.fontColor() +"\n";
@@ -307,7 +357,12 @@ void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitle
     properties += "FrameRate->" +qApp->property("prop_FrameRate_fps").toString() +"\n";
     properties += "MaxCharPerLine->" +qApp->property("prop_MaxCharPerLine").toString() +"\n";
     properties += "MaxCharPerSec->" +qApp->property("prop_MaxCharPerSec").toString() +"\n";
-
+    properties += "LeftMargin->" +qApp->property("prop_LeftMargin_percent").toString() +"\n";
+    properties += "RightMargin->" +qApp->property("prop_RightMargin_percent").toString() +"\n";
+    properties += "TopMargin->" +qApp->property("prop_TopMargin_percent").toString() +"\n";
+    properties += "BottomMargin->" +qApp->property("prop_BottomMargin_percent").toString() +"\n";
+    QSize video_resolution = qApp->property("prop_resolution_px").toSize();
+    properties += "VideoResolution->" +QString::number(video_resolution.width()) +"x" +QString::number(video_resolution.height()) +"\n";
 
     // Save the default parameters
     properties += "DefaultFontSize->" +qApp->property("prop_FontSize_pt").toString() +"\n";
@@ -316,8 +371,10 @@ void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitle
     properties += "DefaultFontUnderlined->" +qApp->property("prop_FontUnderlined").toString() +"\n";
     properties += "DefaultFontBorder->" +qApp->property("prop_FontBorder").toString() +"\n";
     properties += "DefaultFontShadow->" +qApp->property("prop_FontShadow").toString() +"\n";
+    properties += "DefaultFontBackground->" +qApp->property("prop_FontBackground").toString() +"\n";
     properties += "DefaultBorderColor->" +qApp->property("prop_FontBorderColor").toString() +"\n";
     properties += "DefaultShadowColor->" +qApp->property("prop_FontShadowColor").toString() +"\n";
+    properties += "DefaultBackgroundColor->" +qApp->property("prop_FontBackgroundColor").toString() +"\n";
     properties += "DefaultFontColor->" +qApp->property("prop_FontColor_rgba").toString() +"\n";
     properties += "DefaultValign->" +qApp->property("prop_Valign").toString() +"\n";
     properties += "DefaultHalign->" +qApp->property("prop_Halign").toString() +"\n";
