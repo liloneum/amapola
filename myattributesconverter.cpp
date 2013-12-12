@@ -182,12 +182,12 @@ QString MyAttributesConverter::toTimeHMSticks(QString time) {
 
 // Convert time given in frame to time with millisecond,
 // with HH:MM:SS.zzz format.
-QString MyAttributesConverter::framesToTimeHMSms(QString time, qint16 timeCodeRate) {
+QString MyAttributesConverter::framesToTimeHMSms(QString time, qreal timeCodeRate) {
 
     qint16 time_frames = time.section(":", -1).toInt();
 
-    if ( time_frames >= timeCodeRate ) {
-        time_frames = timeCodeRate - 1;
+    if ( time_frames >= qRound(timeCodeRate)) {
+        time_frames = qRound(timeCodeRate - 1.0);
     }
 
     qint32 millisecond = qint32( ( (qreal)1000 / (qreal)timeCodeRate ) * (qreal)time_frames );
@@ -205,11 +205,11 @@ QString MyAttributesConverter::framesToTimeHMSms(QString time, qint16 timeCodeRa
     return time;
 }
 
-QString MyAttributesConverter::timeHMSmsToFrames(QString time, qint16 timeCodeRate) {
+QString MyAttributesConverter::timeHMSmsToFrames(QString time, qreal timeCodeRate) {
 
     qint32 millisecond = time.section(".", -1).toInt();
-    qint32 frames = qint16( (qreal)millisecond / ( (qreal)1000 / (qreal)timeCodeRate ) );
-    frames = qBound(0, frames, (timeCodeRate - 1));
+    qint32 frames = qint16( (qreal)millisecond / ( (qreal)1000 / timeCodeRate ) );
+    frames = qBound(0, frames, qRound(timeCodeRate - 1.0));
 
     QString str_frames;
     if ( frames >= 10 ) { str_frames = QString::number(frames);}

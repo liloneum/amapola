@@ -20,6 +20,7 @@
 #include "amapolaprojfileparser.h"
 #include "subexportdialog.h"
 #include "subimportmanager.h"
+#include "imagesexporter.h"
 #include "inputsizedialog.h"
 
 
@@ -1670,7 +1671,9 @@ void MainWindow::frameRateComboBox_currentIndexChanged(int index) {
 
     if ( mFrameRateChangedBySoft == false ) {
 
-        ui->settings->setFrameRate(mFrameRateComboBox->itemData(index).toDouble());
+        qreal frame_rate = mFrameRateComboBox->itemData(index).toDouble();
+        ui->settings->setFrameRate(frame_rate);
+        this->updateFrameRate(frame_rate);
     }
 
     mFrameRateChangedBySoft = false;

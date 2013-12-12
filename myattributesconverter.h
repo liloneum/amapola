@@ -22,8 +22,8 @@ public:
     static qint16 fontSizeToHeight(QString fontName, QString fontSize);
     static QString toTimeHMSms(QString time);
     static QString toTimeHMSticks(QString time);
-    static QString framesToTimeHMSms(QString time, qint16 timeCodeRate);
-    static QString timeHMSmsToFrames(QString time, qint16 timeCodeRate);
+    static QString framesToTimeHMSms(QString time, qreal timeCodeRate);
+    static QString timeHMSmsToFrames(QString time, qreal timeCodeRate);
     static qint64 timeStrHMStoMs(QString time);
     static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
     static void roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList);
