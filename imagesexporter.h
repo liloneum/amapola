@@ -10,7 +10,8 @@ class ImagesExporter : public QWidget
     Q_OBJECT
 public:
     explicit ImagesExporter(QSize widgetSize, QWidget *parent = 0);
-    void createImage(MySubtitles subtitle, QString fileName, QSize imageSize, QString format, QColor backgroundColor, quint16 colorDepth);
+    void createImage(MySubtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth);
+    QRect imageRect();
 
 signals:
     
@@ -26,6 +27,7 @@ private:
     // Number of pixels per inch for the current hardware
     qint32 mPxPerInch;
     QList<QTextEdit*> mTextLinesList;
+    QRect* mpImageRect;
     
 };
 

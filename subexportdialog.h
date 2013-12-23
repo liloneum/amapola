@@ -57,6 +57,9 @@ public:
     QString imageSize();
     bool tapeTypeDrope();
 
+    // BDN
+    qreal frameRate();
+
     // Ebu
     void setDiskFormatCode(QString diskFormatCode);
     void setDisplayMode(QString displayMode);
@@ -121,6 +124,18 @@ private slots:
     void on_languageLineEdit2_editingFinished();
     void on_tapeTypeComboBox_currentIndexChanged(const QString &arg1);
 
+    void on_movieTitleLineEdit2_editingFinished();
+
+    void on_languageLineEdit3_editingFinished();
+
+    void on_frameRateComboBox_currentIndexChanged(int index);
+
+    void on_dropFrameComboBox_currentIndexChanged(const QString &arg1);
+
+    void on_contentInTimeEdit_editingFinished();
+
+    void on_sizeFormatcomboBox_currentIndexChanged(const QString &arg1);
+
 private:
     Ui::SubExportDialog *ui;
 
@@ -166,6 +181,10 @@ private:
     // Scenarist
     QString mImageSize;
     bool mTapeTypeDrop;
+
+    // BDN
+    qreal mFrameRate;
+    bool mFrameDrop;
 };
 
 #endif // SUBEXPORTDIALOG_H

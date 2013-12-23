@@ -400,9 +400,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_1 ) ) ||
-         ( key_event->key() == Qt::Key_F11 ) ) {
+         ( key_event->key() == Qt::Key_F8 ) ) {
 
-            // "[NUM]1" or "F11" key : move current position 1 second before
+            // "[NUM]1" or "F8" key : move current position 1 second before
             current_position_ms = ui->waveForm->currentPositonMs();
             qint64 new_position_ms = current_position_ms - 1000;
             if ( new_position_ms < 0 ) {
@@ -412,9 +412,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_8 ) ) ||
-            ( key_event->key() == Qt::Key_F10 ) ) {
+            ( key_event->key() == Qt::Key_F11 ) ) {
 
-            // "[NUM]8" or "F10" key : move current position 1 frame after
+            // "[NUM]8" or "F11" key : move current position 1 frame after
             current_position_ms = ui->waveForm->currentPositonMs();
             qint16 frame_duration_ms = (qint16)( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() );
             ui->waveForm->updatePostionMarker(current_position_ms + frame_duration_ms);
@@ -435,9 +435,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Minus ) ) ||
-         ( key_event->key() == Qt::Key_F7 ) ) {
+         ( key_event->key() == Qt::Key_F6 ) ) {
 
-            // "[NUM]-" or "F7" key : slow down video (min x1)
+            // "[NUM]-" or "F6" key : slow down video (min x1)
 
             current_position_ms = ui->waveForm->currentPositonMs();
             mMarkerPosChanged = true;
@@ -454,9 +454,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_Plus ) ) ||
-         ( key_event->key() == Qt::Key_F8 ) ) {
+         ( key_event->key() == Qt::Key_F7 ) ) {
 
-            // "[NUM]+" or "F8" key : speed up video (max x4)
+            // "[NUM]+" or "F7" key : speed up video (max x4)
 
             current_position_ms = ui->waveForm->currentPositonMs();
             mMarkerPosChanged = true;
@@ -472,9 +472,9 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             return true;
         }
         else if ( ( ( key_event->modifiers() == Qt::KeypadModifier ) && ( key_event->key() == Qt::Key_4 ) ) ||
-         ( ( key_event->modifiers() == Qt::ControlModifier ) && ( key_event->key() == Qt::Key_P ) ) ) {
+         ( key_event->key() == Qt::Key_F10 ) ) {
 
-            //"[NUM]4" or "Ctrl + P" key : switch play / pause video player
+            //"[NUM]4" or "F10" key : switch play / pause video player
 
             mMarkerPosChanged = true;
             ui->videoPlayer->on_playButton_clicked();

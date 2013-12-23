@@ -6,6 +6,7 @@
 #include "SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h"
 #include "SubtitlesParsers/EBU/ebuparser.h"
 #include "SubtitlesParsers/ScenaristSub/scenaristsubparser.h"
+#include "SubtitlesParsers/BDN/bdnparser.h"
 #include "mysubtitles.h"
 #include <QMessageBox>
 #include <QFileDialog>
@@ -52,6 +53,20 @@ SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>select
     ui->languageComboBox->setCurrentIndex(ui->languageComboBox->findText("French"));
     on_languageComboBox_currentIndexChanged(ui->languageComboBox->currentIndex());
 
+    // Init BDN parameters
+    ui->frameRateComboBox->setItemData(0, 23.976);
+    ui->frameRateComboBox->setItemData(1, 24);
+    ui->frameRateComboBox->setItemData(2, 25);
+    ui->frameRateComboBox->setItemData(3, 29.97);
+    ui->frameRateComboBox->setItemData(4, 50);
+    ui->frameRateComboBox->setItemData(5, 59.94);
+
+    ui->sizeFormatcomboBox->setItemData(0, QSize(720,480));
+    ui->sizeFormatcomboBox->setItemData(1, QSize(720,480));
+    ui->sizeFormatcomboBox->setItemData(2, QSize(720,576));
+    ui->sizeFormatcomboBox->setItemData(3, QSize(1280,720));
+    ui->sizeFormatcomboBox->setItemData(4, QSize(1920,1080));
+    ui->sizeFormatcomboBox->setItemData(5, QSize(1920,1080));
 
     connect(ui->exportPushButton, SIGNAL(clicked()), this, SLOT(exportDatas()), Qt::QueuedConnection);
 
@@ -221,6 +236,17 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         on_baseTimeEdit_editingFinished();
         on_languageLineEdit2_editingFinished() ;
     }
+    else if ( currentText == "BDN (*.xml)" ) {
+
+        ui->stackedWidget->setCurrentIndex(3);
+
+        on_movieTitleLineEdit2_editingFinished();
+        on_languageLineEdit3_editingFinished();
+        on_sizeFormatcomboBox_currentIndexChanged(ui->sizeFormatcomboBox->currentText());
+        on_frameRateComboBox_currentIndexChanged(ui->frameRateComboBox->currentIndex());
+        on_dropFrameComboBox_currentIndexChanged(ui->dropFrameComboBox->currentText());
+        on_contentInTimeEdit_editingFinished();
+    }
 }
 
 void SubExportDialog::exportDatas() {
@@ -269,6 +295,10 @@ void SubExportDialog::exportDatas() {
     else if ( sub_norm == "Scenarist Sub (*.sst)") {
         parser = new ScenaristSubParser();
         file_extension = ".sst";
+    }
+    else if ( sub_norm == "BDN (*.xml)") {
+        parser = new BDNparser();
+        file_extension = ".xml";
     }
     else {
         // Nothing to do
@@ -524,6 +554,43 @@ void SubExportDialog::on_languageLineEdit2_editingFinished() {
     mLanguage = ui->languageLineEdit2->text();
 }
 
+// BDN
+void SubExportDialog::on_movieTitleLineEdit2_editingFinished() {
+
+    mMovieTitle = ui->movieTitleLineEdit2->text();
+}
+
+void SubExportDialog::on_languageLineEdit3_editingFinished() {
+
+    mLanguage = ui->languageLineEdit3->text();
+}
+
+void SubExportDialog::on_sizeFormatcomboBox_currentIndexChanged(const QString &arg1) {
+
+    mImageSize = arg1;
+}
+
+void SubExportDialog::on_frameRateComboBox_currentIndexChanged(int index) {
+
+    mFrameRate = ui->frameRateComboBox->itemData(index).toDouble();
+}
+
+void SubExportDialog::on_dropFrameComboBox_currentIndexChanged(const QString &arg1) {
+
+    if ( arg1 == "drop") {
+        mTapeTypeDrop = true;
+    }
+    else {
+        mTapeTypeDrop = false;
+    }
+}
+
+void SubExportDialog::on_contentInTimeEdit_editingFinished() {
+
+    mStartTime = ui->contentInTimeEdit->text();
+}
+
+
 
 // ACESSORS
 QString SubExportDialog::version() {
@@ -702,6 +769,12 @@ bool SubExportDialog::tapeTypeDrope() {
     return mTapeTypeDrop;
 }
 
+// BDN
+
+qreal SubExportDialog::frameRate() {
+
+    return mFrameRate;
+}
 
 // MUTATOR
 

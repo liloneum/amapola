@@ -1,6 +1,7 @@
 #include "scenaristsubparser.h"
 #include <QApplication>
 #include <QDateTime>
+#include <QProgressDialog>
 #include "myattributesconverter.h"
 #include "mysubtitles.h"
 #include "imagesexporter.h"
@@ -164,6 +165,9 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
     QSize video_native_size = qApp->property("prop_resolution_px").toSize();
     ImagesExporter image_exporter(video_native_size);
 
+    QProgressDialog progress_dialog("Exporting images...", "Cancel...", 0, subtitlesList.size(), exportDialog);
+    progress_dialog.setWindowModality(Qt::WindowModal);
+
     for ( qint16 i = 0; i < subtitlesList.size(); i++ ) {
 
         MySubtitles current_sub = subtitlesList.at(i);
@@ -301,9 +305,11 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
             current_sub.text()[j].Font().setFontShadowEffect("no");
         }
 
+        progress_dialog.setValue(i);
+
         QString number_str;
         QString image_file_name = image_path_name_prefix +number_str.sprintf("%04d", (i+1)) +image_extension;
-        image_exporter.createImage(current_sub, image_file_name, image_size, "TIF", Qt::white, 0);
+        image_exporter.createImage(current_sub, image_file_name, image_size, true, "TIF", Qt::white, 0);
 
         if ( ( e2_changed ) || ( e1_changed ) || ( pa_changed ) ) {
 
@@ -351,6 +357,8 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
                    +header
                    +"\n"
                    +sub_data);
+
+    progress_dialog.setValue(subtitlesList.size());
 }
 
 QList<MySubtitles> ScenaristSubParser::open(MyFileReader file) {

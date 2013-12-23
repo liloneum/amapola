@@ -29,6 +29,8 @@ ImagesExporter::ImagesExporter(QSize widgetSize, QWidget *parent) :
     QPalette widget_palette = this->palette();
     widget_palette.setColor(QPalette::Window, Qt::white);
     this->setPalette(widget_palette);
+
+    mpImageRect = new QRect(0, 0, widgetSize.width(), widgetSize.height());
 }
 
 QTextEdit* ImagesExporter::createNewTextEdit() {
@@ -37,9 +39,6 @@ QTextEdit* ImagesExporter::createNewTextEdit() {
 
     // Set text zones colors
     text_edit->setStyleSheet("background-color: transparent");
-//    QPalette text_edit_palette = text_edit->palette();
-//    text_edit_palette.setColor(QPalette::Window, Qt::transparent);
-//    text_edit->setPalette(text_edit_palette);
     text_edit->setFrameShape(QFrame::NoFrame);
 
     // Install a shadow effect on the text edit widget
@@ -199,7 +198,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
     relative_font_size = ( font_size_pt * ( ( (qreal)widget_height_px / ( (qreal)mPxPerInch  * (qreal)REF_HEIGHT_INCH ) ) ) );
 
 //    outline_width = relative_font_size / 60.0;
-    outline_width = relative_font_size / 10.0;
+    outline_width = relative_font_size / 10;
 
     font.setPointSizeF(relative_font_size);
 
@@ -275,14 +274,15 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
 
 // Create an image of the "subtitle" at the given "format" and with the given "backgroundColor" and "colorDepth"
 // Color depth = 0 -> 4 colors (white, black, red, blue). Else it's the number of byte used for colors code (1-4)
-void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize imageSize, QString format, QColor backgroundColor, quint16 colorDepth) {
+void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth) {
 
     QImage image;
+    quint16 x1 = imageSize.width() - 1;;
+    quint16 y1 = imageSize.height() - 1;
+    quint16 x2 = 0;
+    quint16 y2 = 0;
 
-    // Generate image with white background and text bordered
-    QPalette widget_palette = this->palette();
-    widget_palette.setColor(QPalette::Window, backgroundColor);
-    this->setPalette(widget_palette);
+    mpImageRect = new QRect(0, 0, imageSize.width(), imageSize.height());
 
     this->setText(subtitle);
     QPixmap pixmap_layer0;
@@ -291,19 +291,17 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
     // 8 bits or 32 bits colors
     if ( colorDepth != 0 ) {
 
+        // Generate image with transparent background and text background
+        QPalette widget_palette = this->palette();
+        widget_palette.setColor(QPalette::Window, backgroundColor);
+        this->setPalette(widget_palette);
+
         this->setText(subtitle);
         pixmap_layer0 = this->grab();
         image_layer0 = pixmap_layer0.toImage();
 
-        // Generate image with transparent background and text background
-        widget_palette = this->palette();
-        widget_palette.setColor(QPalette::Window, Qt::transparent);
-        this->setPalette(widget_palette);
-
-        MySubtitles temp_sub = subtitle;
-
-        QList<TextLine> text_lines = temp_sub.text();
-        QList<QRgb> background_color_list;
+        QList<TextLine> text_lines = subtitle.text();
+        QColor layer1_background_color = Qt::transparent;
 
         bool ok;
 
@@ -313,49 +311,84 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
 
             if ( text_line.Font().fontBorderEffect() == "yes" ) {
 
-                text_lines[i].Font().setFontBackgroundEffect("yes");
-                text_lines[i].Font().setFontBackgroundEffectColor(text_line.Font().fontBorderEffectColor());
-                background_color_list.append( QRgb( text_line.Font().fontBorderEffectColor().toUInt(&ok, 16) ) );
+                layer1_background_color.setRgba(QRgb( text_line.Font().fontBorderEffectColor().toUInt(&ok, 16) ));
             }
-            else if ( text_line.Font().fontBackgroundEffect() == "no") {
-
-                text_lines[i].Font().setFontBackgroundEffect("yes");
-                text_lines[i].Font().setFontBackgroundEffectColor(MyAttributesConverter::colorToString(backgroundColor));
-                background_color_list.append(backgroundColor.value());
+            else {
+                continue;
             }
 
-            text_lines[i].Font().setFontBorderEffect("no");
-            text_lines[i].Font().setFontShadowEffect("no");
-        }
+            text_line.Font().setFontBackgroundEffect("no");
+            text_line.Font().setFontBorderEffect("no");
+            text_line.Font().setFontShadowEffect("no");
 
-        temp_sub.setText(text_lines);
+            MySubtitles temp_sub;
+            QList<TextLine> temp_lines;
+            temp_lines.append(text_line);
+            temp_sub.setText(temp_lines);
 
-        this->setText(temp_sub);
-        QPixmap pixmap_transparent = this->grab();
-        QImage image_transparent = pixmap_transparent.toImage();
-        QImage mask_image;
+            // Generate image with background color and text bordered
+            QPalette widget_palette = this->palette();
+            widget_palette.setColor(QPalette::Window, layer1_background_color);
+            this->setPalette(widget_palette);
 
-        for ( qint16 color_it = 0; color_it < background_color_list.size(); color_it++ ) {
+            this->setText(temp_sub);
+            QPixmap pixmap_layer1 = this->grab();
+            QImage image_layer1 = pixmap_layer1.toImage();
+            QImage mask_image;
 
-            mask_image = image_transparent.createMaskFromColor(background_color_list.at(color_it), Qt::MaskInColor);
-            pixmap_transparent.setMask(QPixmap::fromImage(mask_image));
-        }
+            mask_image = image_layer1.createMaskFromColor(layer1_background_color.rgba(), Qt::MaskInColor);
+            pixmap_layer1.setMask(QPixmap::fromImage(mask_image));
+            image_layer1 = pixmap_layer1.toImage();
 
-        image_transparent = pixmap_transparent.toImage();
+            for ( qint16 x_it = 0; x_it < image_layer0.width(); x_it++ ) {
 
-        image = image_layer0;
+                for ( qint16 y_it = 0; y_it < image_layer0.height(); y_it++ ) {
 
-        for ( qint16 x_it = 0; x_it < image_layer0.width(); x_it++ ) {
+                    QRgb current_color = image_layer1.pixel(x_it, y_it);
 
-            for ( qint16 y_it = 0; y_it < image_layer0.height(); y_it++ ) {
+                    if ( current_color != 0 ) {
 
-                QRgb current_color = image_transparent.pixel(x_it, y_it);
-
-                if ( current_color != 0 ) {
-
-                    image.setPixel(x_it, y_it, current_color);
+                        image_layer0.setPixel(x_it, y_it, current_color);
+                    }
                 }
             }
+        }
+        // Rescale the image to the given size
+        image = image_layer0.scaled(imageSize);
+
+        // Save only the part of the image where the text are displayed
+        if ( fullSize == false ) {
+
+            for ( qint16 x_it = 0; x_it < image.width(); x_it++ ) {
+
+                for ( qint16 y_it = 0; y_it < image.height(); y_it++ ) {
+
+                    QRgb cur_pixel_rgba = image.pixel(x_it, y_it);
+                    QColor cur_pixel_color = QColor::fromRgba(cur_pixel_rgba);
+
+                    if ( cur_pixel_color != backgroundColor ) {
+
+                        if ( x_it < x1 ) {
+                            x1 = x_it;
+                        }
+                        if ( x_it > x2 ) {
+                            x2 = x_it;
+                        }
+                        if ( y_it < y1 ) {
+                            y1 = y_it;
+                        }
+                        if ( y_it > y2 ) {
+                            y2 = y_it;
+                        }
+                    }
+                }
+            }
+
+            mpImageRect = new QRect(QPoint(x1 - 1, y1 - 1), QPoint(x2 + 1, y2 + 1));
+
+            QPixmap image_part = QPixmap::fromImage(image);
+            image_part = image_part.copy(*mpImageRect);
+            image = image_part.toImage();
         }
 
         // Covert to 256 colors
@@ -363,9 +396,6 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
 
             image = image.convertToFormat(QImage::Format_Indexed8, Qt::ThresholdDither);
         }
-
-        // Rescale the image to the given size
-        image = image.scaled(imageSize);
     }
     // 4 colors only
     else {
@@ -445,4 +475,9 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
         image.save(fileName, format.toLatin1() , 100);
         file_write.close();
     }
+}
+
+QRect ImagesExporter::imageRect() {
+
+    return *mpImageRect;
 }

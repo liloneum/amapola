@@ -89,6 +89,14 @@
      <set>AlignHCenter|AlignVCenter|AlignCenter</set>
     </property>
    </item>
+   <item>
+    <property name="text">
+     <string>BDN (*.xml)</string>
+    </property>
+    <property name="textAlignment">
+     <set>AlignHCenter|AlignVCenter|AlignCenter</set>
+    </property>
+   </item>
   </widget>
   <widget class="QPushButton" name="exportPushButton">
    <property name="geometry">
@@ -126,7 +134,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>3</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QWidget" name="gridLayoutWidget">
@@ -949,6 +957,183 @@
          </size>
         </property>
        </spacer>
+      </item>
+     </layout>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="page_4">
+    <widget class="QWidget" name="gridLayoutWidget_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>10</y>
+       <width>511</width>
+       <height>501</height>
+      </rect>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="3" column="0">
+       <widget class="QLabel" name="frameRateLabel">
+        <property name="text">
+         <string>Frame rate : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QComboBox" name="frameRateComboBox">
+        <property name="currentIndex">
+         <number>0</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>23.976</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>24</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>25</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>29.97</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>50</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>59.94</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="sizeFormatcomboBox">
+        <property name="currentIndex">
+         <number>5</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>480i</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>480p</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>576i</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>720p</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>1080i</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>1080p</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="movieTitleLabel2">
+        <property name="text">
+         <string>Movie title : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="dropFrameLabel">
+        <property name="text">
+         <string>Drop frame : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="sizeFormatlabel">
+        <property name="text">
+         <string>Format : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QComboBox" name="dropFrameComboBox">
+        <property name="currentIndex">
+         <number>1</number>
+        </property>
+        <item>
+         <property name="text">
+          <string>drop</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>non drop</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="languageLabel3">
+        <property name="text">
+         <string>Language : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="movieTitleLineEdit2">
+        <property name="text">
+         <string notr="true"/>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="languageLineEdit3">
+        <property name="inputMask">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string notr="true"/>
+        </property>
+        <property name="maxLength">
+         <number>3</number>
+        </property>
+        <property name="frame">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="contentInLabel">
+        <property name="text">
+         <string>Content in : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QTimeEdit" name="contentInTimeEdit">
+        <property name="displayFormat">
+         <string>HH:mm:ss.zzz</string>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
