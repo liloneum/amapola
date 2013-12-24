@@ -191,11 +191,10 @@ MainWindow::MainWindow(QWidget *parent) :
         qApp->setProperty("prop_FontColor_rgba", "FF0000FF");
     }
 
-    // Vertical position
-    qApp->setProperty("prop_Valign", ui->vAlignBox->currentText());
-    qApp->setProperty("prop_Halign", ui->hAlignBox->currentText());
-    qApp->setProperty("prop_Vposition_percent", QString::number(ui->vPosSpinBox->value(), 'f', 1));
-    qApp->setProperty("prop_Hposition_percent", QString::number(ui->hPosSpinBox->value(), 'f', 1));
+    // Init position
+
+    on_hAlignBox_activated("center");
+    on_vAlignBox_activated("bottom");
 
     ui->stEditDisplay->updateDefaultSub();
 
@@ -1812,10 +1811,28 @@ void MainWindow::on_vAlignBox_activated(const QString &value) {
     // Tool box changed by user
     if ( mTextPosChangedBySoft == false ) {
 
+        qreal v_pos;
+
+        if ( value == "top" ) {
+
+            v_pos = qApp->property("prop_TopMargin_percent").toDouble();
+        }
+        else if ( value == "center" ) {
+
+            v_pos = 0.0;
+        }
+        else {
+
+            v_pos = qApp->property("prop_BottomMargin_percent").toDouble();
+        }
+
+        ui->vPosSpinBox->setValue(v_pos);
+
         // If there is not subtitle indexed in the table for the current position
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             // Save the parameter as default parameter
             qApp->setProperty("prop_Valign", value);
+            qApp->setProperty("prop_Vposition_percent", v_pos);
             ui->stEditDisplay->updateDefaultSub();
         }
 
@@ -1843,8 +1860,26 @@ void MainWindow::on_hAlignBox_activated(const QString &value) {
 
     if ( mTextPosChangedBySoft == false ) {
 
+        qreal h_pos;
+
+        if ( value == "left" ) {
+
+            h_pos = qApp->property("prop_LeftMargin_percent").toDouble();
+        }
+        else if ( value == "right" ) {
+
+            h_pos = qApp->property("prop_RightMargin_percent").toDouble();
+        }
+        else {
+
+            h_pos = 0.0;
+        }
+
+        ui->hPosSpinBox->setValue(h_pos);
+
         if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
             qApp->setProperty("prop_Halign", value);
+            qApp->setProperty("prop_Hposition_percent", h_pos);
             ui->stEditDisplay->updateDefaultSub();
         }
 
