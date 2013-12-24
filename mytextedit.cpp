@@ -253,7 +253,7 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
         }
         // If key event is backspace & the text is empty
         else if ( ( key_event->key() == Qt::Key_Backspace ) &&
-                  ( text_edit->toPlainText().isEmpty() ) &&
+                  (text_edit->textCursor().position() == 0 ) &&
                   ( text_edit != mTextLinesList.first() ) ) {
 
             this->removeLine(text_edit);
@@ -800,17 +800,17 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
 // Remove a line
 void MyTextEdit::removeLine(QTextEdit *textEdit) {
 
-    if ( textEdit != mTextLinesList.first() ) {
+    TextLine text_line;
+    QString current_v_align;
+    qint32 lines_sapcing;
+    bool lines_to_move = true;
 
-        TextLine text_line;
-        QString current_v_align;
-        qint32 lines_sapcing;
-        bool lines_to_move = true;
+    qint16 text_line_index = mTextLinesList.indexOf(textEdit);
 
-        qint16 text_line_index = mTextLinesList.indexOf(textEdit);
+    text_line = mCurrentTextProp.text().at(text_line_index);
+    current_v_align = text_line.textVAlign();
 
-        text_line = mCurrentTextProp.text().at(text_line_index);
-        current_v_align = text_line.textVAlign();
+    if ( mTextLinesList.at(text_line_index)->textCursor().position() == 0 ) {
 
         if ( ( current_v_align == "bottom" ) || ( current_v_align == "center" ) ) {
             lines_sapcing =  mTextLinesList[text_line_index]->y() - mTextLinesList[text_line_index - 1]->y();
@@ -824,6 +824,11 @@ void MyTextEdit::removeLine(QTextEdit *textEdit) {
             else {
                 lines_to_move = false;
             }
+        }
+
+        if ( !mTextLinesList.at(text_line_index)->toPlainText().isEmpty() ) {
+            QString html_copied = mTextLinesList.at(text_line_index)->toHtml();
+            mTextLinesList.at(text_line_index - 1)->insertHtml(html_copied);
         }
 
         // Delete the line
