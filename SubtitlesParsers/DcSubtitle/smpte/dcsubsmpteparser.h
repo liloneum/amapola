@@ -14,7 +14,7 @@ class DcSubSmpteParser : public MySubtitleFileParser
 public:
     DcSubSmpteParser();
     QList<MySubtitles> open(MyFileReader file);
-    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
     bool readSample(MyFileReader file);
 
 private:

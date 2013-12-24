@@ -12,7 +12,7 @@ class SubRipParser : public MySubtitleFileParser
 public:
     SubRipParser();
     QList<MySubtitles> open(MyFileReader file);
-    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
     bool readSample(MyFileReader file);
 };
 

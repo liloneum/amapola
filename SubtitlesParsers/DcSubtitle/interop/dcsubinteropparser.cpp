@@ -379,7 +379,7 @@ QString DcSubInteropParser::convertVposFromAmapolaRef(QString fontId, QString fo
 }
 
 // Create an xml DCSub document from the subtitle list
-void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QDomDocument doc("dcsub_interop");
 
@@ -613,6 +613,8 @@ void DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
     // Write the document in file
     QString xml = doc.toString();
     file.writeText( xml );
+
+    return true;
 }
 
 // Compare old and new font attributes, return a font container with only the changed attributes setted

@@ -9,7 +9,7 @@ BDNparser::BDNparser()
 {
 }
 
-void BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QByteArray out;
     QXmlStreamWriter writer(&out);
@@ -119,8 +119,9 @@ void BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             progress_dialog.setValue(i);
 
             if (progress_dialog.wasCanceled()) {
-                // break;
+                return false;
             }
+
             image_exporter.createImage(current_sub, image_file_name, image_size, false, "png", Qt::transparent, 4);
 
 
@@ -151,6 +152,8 @@ void BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
     file.writeText(out);
 
     progress_dialog.setValue(subtitlesList.size());
+
+    return true;
 }
 
 

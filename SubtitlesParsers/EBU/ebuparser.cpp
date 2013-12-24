@@ -890,7 +890,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 }
 
 // Save the given subtitles list in a "stl" file
-void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     // GSI block
     QList<quint8> gsi_block_data;
@@ -1267,7 +1267,7 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
     else {
         // No subtitles to write
         file.writeRawData(gsi_block_data);
-        return;
+        return true;
     }
 
     // Time Code: First in-cue (TCF)
@@ -1729,6 +1729,8 @@ void EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 
     // Write the data in the file
     file.writeRawData(gsi_block_data);
+
+    return true;
 }
 
 // Not used - used readGsiBlock() instead

@@ -98,7 +98,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
 
 // Write the subtitles list in a file (SubRip format)
-void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
@@ -243,4 +243,6 @@ void SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, S
 
         file.writeText(text_to_write);
     }
+
+    return true;
 }

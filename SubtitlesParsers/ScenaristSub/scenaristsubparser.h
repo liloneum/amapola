@@ -9,7 +9,7 @@ class ScenaristSubParser : public MySubtitleFileParser
 {
 public:
     ScenaristSubParser();
-    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
     QList<MySubtitles> open(MyFileReader file);
     bool readSample(MyFileReader file);
 };

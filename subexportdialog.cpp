@@ -333,11 +333,16 @@ void SubExportDialog::exportDatas() {
     // If there are datas, write it to asked format
     if ( !mSubList.isEmpty() ) {
 
-        parser->save(file_writer, mSubList, this);
+        if ( parser->save(file_writer, mSubList, this) ) {
 
-        if ( file_writer.toFile(raw_data_flag) == false ) {
-            QString error_msg = file_writer.errorMsg();
-            QMessageBox::warning(this, tr("Export subtitles"), error_msg);
+            if ( file_writer.toFile(raw_data_flag) == false ) {
+                QString error_msg = file_writer.errorMsg();
+                QMessageBox::warning(this, tr("Export subtitles"), error_msg);
+            }
+        }
+        else {
+            QMessageBox::warning(this, tr("Export subtitles"), tr("Exporting aborded"));
+            return;
         }
     }
     else {

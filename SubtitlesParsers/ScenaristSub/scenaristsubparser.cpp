@@ -11,7 +11,7 @@ ScenaristSubParser::ScenaristSubParser()
 }
 
 
-void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QString file_path = file.fileName();
     file_path = file_path.remove(file_path.lastIndexOf('.'), file_path.size());
@@ -307,6 +307,10 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
 
         progress_dialog.setValue(i);
 
+        if (progress_dialog.wasCanceled()) {
+            return false;
+        }
+
         QString number_str;
         QString image_file_name = image_path_name_prefix +number_str.sprintf("%04d", (i+1)) +image_extension;
         image_exporter.createImage(current_sub, image_file_name, image_size, true, "TIF", Qt::white, 0);
@@ -359,6 +363,8 @@ void ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
                    +sub_data);
 
     progress_dialog.setValue(subtitlesList.size());
+
+    return true;
 }
 
 QList<MySubtitles> ScenaristSubParser::open(MyFileReader file) {
