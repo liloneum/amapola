@@ -59,6 +59,7 @@
        <height>50</height>
       </size>
      </property>
+     <zorder>videoView</zorder>
     </widget>
    </item>
    <item>
