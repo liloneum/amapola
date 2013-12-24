@@ -24,7 +24,6 @@ bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         writer.writeAttribute("Version", "0.93");
         writer.writeAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
         writer.writeAttribute("xsi:noNamespaceSchemaLocation", "BD-03-006-0093b BDN File Format.xsd");
-    writer.writeEndElement();
 
     writer.writeStartElement("Description");
         writer.writeStartElement("Name");
