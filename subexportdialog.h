@@ -27,6 +27,8 @@ public:
     QString editRate();
     QString timeCodeRate();
     QString startTime();
+    QString fadeInTime();
+    QString fadeOutTime();
     QString preferredEffect();
     bool hasHtmlTags();
 
@@ -97,6 +99,8 @@ private slots:
     void on_editRateSpinBox_editingFinished();
     void on_timeCodeRateSpinBox_editingFinished();
     void on_startTimeEdit_editingFinished();
+    void on_fadeInTimeEdit_editingFinished();
+    void on_fadeOutTimeEdit_editingFinished();
     void on_borderRadioButton_toggled(bool checked);
     void on_htmlYesRadioButton_toggled(bool checked);
     void on_genIDPushButton_clicked();
@@ -124,16 +128,12 @@ private slots:
     void on_languageLineEdit2_editingFinished();
     void on_tapeTypeComboBox_currentIndexChanged(const QString &arg1);
 
+    // BDN
     void on_movieTitleLineEdit2_editingFinished();
-
     void on_languageLineEdit3_editingFinished();
-
     void on_frameRateComboBox_currentIndexChanged(int index);
-
     void on_dropFrameComboBox_currentIndexChanged(const QString &arg1);
-
     void on_contentInTimeEdit_editingFinished();
-
     void on_sizeFormatcomboBox_currentIndexChanged(const QString &arg1);
 
 private:
@@ -152,6 +152,8 @@ private:
     QString mEditRate;
     QString mTimeCodeRate;
     QString mStartTime;
+    QString mFadeInTime;
+    QString mFadeOutTime;
     QString mPreferredEffect;
     bool mHtmlTags;
 

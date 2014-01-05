@@ -30,6 +30,8 @@ private:
 
     // TextFont containers list
     QList<TextFont> mFontList;
+    // Font name list
+    QList<QString> mFontIdList;
     // Subtitles container
     MySubtitles mNewSubtitle;
     // MySubtitles containers list

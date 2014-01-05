@@ -104,6 +104,10 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         ui->timeCodeRateSpinBox->setEnabled(false);
         ui->startTimeLabel->setEnabled(false);
         ui->startTimeEdit->setEnabled(false);
+        ui->fadeInLabel->setEnabled(false);
+        ui->fadeInTimeEdit->setEnabled(false);
+        ui->fadeOutLabel->setEnabled(false);
+        ui->fadeOutTimeEdit->setEnabled(false);
         ui->effectGroupBox->setEnabled(false);
 
         ui->effectGroupBox_2->setEnabled(true);
@@ -154,6 +158,11 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         ui->languageLabel->setEnabled(true);
         ui->languageLineEdit->setEnabled(true);
         on_languageLineEdit_editingFinished();
+
+        ui->fadeInLabel->setEnabled(true);
+        ui->fadeInTimeEdit->setEnabled(true);
+        ui->fadeOutLabel->setEnabled(true);
+        ui->fadeOutTimeEdit->setEnabled(true);
 
         ui->effectGroupBox->setEnabled(true);
         on_borderRadioButton_toggled(ui->borderRadioButton->isChecked());
@@ -207,6 +216,13 @@ void SubExportDialog::on_subNormList_currentTextChanged(const QString &currentTe
         ui->startTimeLabel->setEnabled(true);
         ui->startTimeEdit->setEnabled(true);
         on_startTimeEdit_editingFinished();
+
+        ui->fadeInLabel->setEnabled(true);
+        ui->fadeInTimeEdit->setEnabled(true);
+        on_fadeInTimeEdit_editingFinished();
+        ui->fadeOutLabel->setEnabled(true);
+        ui->fadeOutTimeEdit->setEnabled(true);
+        on_fadeOutTimeEdit_editingFinished();
 
         ui->effectGroupBox->setEnabled(true);
         on_borderRadioButton_toggled(ui->borderRadioButton->isChecked());
@@ -425,6 +441,17 @@ void SubExportDialog::on_startTimeEdit_editingFinished() {
 
     mStartTime = ui->startTimeEdit->text();
 }
+
+void SubExportDialog::on_fadeInTimeEdit_editingFinished() {
+
+    mFadeInTime = ui->fadeInTimeEdit->text();
+}
+
+void SubExportDialog::on_fadeOutTimeEdit_editingFinished() {
+
+    mFadeOutTime = ui->fadeOutTimeEdit->text();
+}
+
 
 void SubExportDialog::on_borderRadioButton_toggled(bool checked) {
 
@@ -645,6 +672,16 @@ QString SubExportDialog::timeCodeRate() {
 QString SubExportDialog::startTime() {
 
     return mStartTime;
+}
+
+QString SubExportDialog::fadeInTime() {
+
+    return mFadeInTime;
+}
+
+QString SubExportDialog::fadeOutTime() {
+
+    return mFadeOutTime;
 }
 
 QString SubExportDialog::preferredEffect() {

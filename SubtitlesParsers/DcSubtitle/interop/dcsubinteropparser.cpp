@@ -7,6 +7,7 @@
 #include <QTextEdit>
 #include <QApplication>
 #include <QDesktopWidget>
+#include <QFontDatabase>
 
 
 // See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
@@ -48,6 +49,7 @@ DcSubInteropParser::DcSubInteropParser() {
     font_init.setFontUnderlined( FONT_UNDERLINED_DEFAULT_VALUE );
 
     mFontList.append(font_init);
+    mFontIdList.clear();
 
     mPreferredEffect = "";
     mCurrentEffect = "";
@@ -423,15 +425,16 @@ bool DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
     if ( exportDialog->fontPath() != "" ) {
 
         font_uri = exportDialog->fontPath();
-        font_id = font_uri;
-        font_id = font_id.section('/',-1);
-        font_id = font_id.section('.',0,0);
+        int id = QFontDatabase::addApplicationFont(font_uri);
+        font_id = QFontDatabase::applicationFontFamilies(id).at(0);
     }
     else {
         font_id = subtitlesList.first().text().first().Font().fontId();
         font_uri = font_id +".ttf";
+        font_uri.replace(" ","");
     }
 
+    mFontIdList.append(font_id);
     mFontList.first().setFontId(font_id);
     xml_LoadFont.setAttribute("Id", font_id);
     xml_LoadFont.setAttribute("URI", font_uri);
@@ -465,8 +468,15 @@ bool DcSubInteropParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesL
         // Add "Subtitle" tag with attributes
         QDomElement xml_Subtitle = doc.createElement("Subtitle");
         xml_Subtitle.setAttribute("SpotNumber", QString::number(i+1));
-        xml_Subtitle.setAttribute("FadeUpTime", "TO DO");
-        xml_Subtitle.setAttribute("FadeDownTime", "TO DO");
+
+        if ( exportDialog->fadeInTime() != "00:00:00.000" ) {
+            xml_Subtitle.setAttribute("FadeUpTime", MyAttributesConverter::toTimeHMSticks( exportDialog->fadeInTime() ));
+        }
+
+        if ( exportDialog->fadeOutTime() != "00:00:00.000" ) {
+            xml_Subtitle.setAttribute("FadeDownTime", MyAttributesConverter::toTimeHMSticks( exportDialog->fadeOutTime() ));
+        }
+
         xml_Subtitle.setAttribute("TimeIn", MyAttributesConverter::toTimeHMSticks( current_subtitle.startTime() ));
         xml_Subtitle.setAttribute("TimeOut", MyAttributesConverter::toTimeHMSticks( current_subtitle.endTime() ));
         xml_font0.appendChild(xml_Subtitle);
@@ -623,7 +633,9 @@ void DcSubInteropParser::writeFont(QDomElement* xmlElement, TextFont previousFon
     if ( previousFont.findDiff(newFont) ) {
 
         if ( newFont.fontId() != "" ) {
-            xmlElement->setAttribute("Id", newFont.fontId());
+            if ( mFontIdList.indexOf(newFont.fontId()) >= 0 ) {
+                xmlElement->setAttribute("Id", newFont.fontId());
+            }
         }
 
         if ( newFont.fontColor() != "" ) {

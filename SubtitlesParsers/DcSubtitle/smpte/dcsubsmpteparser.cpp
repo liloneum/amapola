@@ -8,6 +8,8 @@
 #include <QTextEdit>
 #include <QFile>
 #include <QApplication>
+#include <QDateTime>
+#include <QFontDatabase>
 
 // See "Subtitle Specification (XML File Format) for DLP CinemaTM Projection Technology" documentation
 
@@ -49,6 +51,7 @@ DcSubSmpteParser::DcSubSmpteParser() {
     font_init.setFontUnderlined( FONT_UNDERLINED_DEFAULT_VALUE );
 
     mFontList.append(font_init);
+    mFontIdList.clear();
 
     mPreferredEffect = "";
     mCurrentEffect = "";
@@ -356,6 +359,13 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
     QDomText annot_text = doc.createTextNode( exportDialog->comment() );
     xml_Annot.appendChild(annot_text);
 
+    // Add "IssueDate" node
+    QDomElement xml_Date = doc.createElement("IssueDate");
+    xml_root.appendChild(xml_Date);
+    QDateTime current_date = QDateTime::currentDateTime();
+    QDomText date_text = doc.createTextNode(current_date.toString("yyyy-MM-ddThh:mm:ss"));
+    xml_Date.appendChild(date_text);
+
     // Add "ReelNumber" node
     QDomElement xml_RealNum = doc.createElement("ReelNumber");
     xml_root.appendChild(xml_RealNum);
@@ -399,19 +409,26 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
     if ( exportDialog->fontPath() != "" ) {
 
         font_uri = exportDialog->fontPath();
-        font_id = font_uri;
-        font_id = font_id.section('/',-1);
-        font_id = font_id.section('.',0,0);
+        int id = QFontDatabase::addApplicationFont(font_uri);
+        font_id = QFontDatabase::applicationFontFamilies(id).at(0);
     }
     else {
         font_id = subtitlesList.first().text().first().Font().fontId();
         font_uri = font_id +".ttf";
+        font_uri.replace(" ","");
     }
 
+    mFontIdList.append(font_id);
     mFontList.first().setFontId(font_id);
     xml_LoadFont.setAttribute("ID", font_id);
-//    xml_LoadFont.setAttribute("URI", font_uri);
+    QDomText loadfont_text = doc.createTextNode(font_uri);
+    xml_LoadFont.appendChild(loadfont_text);
     xml_root.appendChild(xml_LoadFont);
+
+    // Add "SubtitleList" node
+    QDomElement xml_sublist = doc.createElement("SubtitleList");
+    xml_root.appendChild(xml_sublist);
+
 
     mPreferredEffect = exportDialog->preferredEffect();
 
@@ -431,7 +448,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
     QDomElement xml_font0 = doc.createElement("Font");
     TextFont empty_font;
     this->writeFont(&xml_font0, empty_font, text_font0);
-    xml_root.appendChild(xml_font0);
+    xml_sublist.appendChild(xml_font0);
 
     // For each subtitles
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
@@ -441,8 +458,15 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
         // Add "Subtitle" tag with attributes
         QDomElement xml_Subtitle = doc.createElement("Subtitle");
         xml_Subtitle.setAttribute("SpotNumber", QString::number(i+1));
-        xml_Subtitle.setAttribute("FadeUpTime", "TO DO");
-        xml_Subtitle.setAttribute("FadeDownTime", "TO DO");
+
+        if ( exportDialog->fadeInTime() != "00:00:00.000" ) {
+            xml_Subtitle.setAttribute("FadeUpTime", MyAttributesConverter::timeHMSmsToFrames(exportDialog->fadeInTime(), mTimeCodeRate));
+        }
+
+        if ( exportDialog->fadeOutTime() != "00:00:00.000" ) {
+            xml_Subtitle.setAttribute("FadeDownTime", MyAttributesConverter::timeHMSmsToFrames(exportDialog->fadeOutTime(), mTimeCodeRate));
+        }
+
         xml_Subtitle.setAttribute("TimeIn", MyAttributesConverter::timeHMSmsToFrames(current_subtitle.startTime(), mTimeCodeRate ));
         xml_Subtitle.setAttribute("TimeOut", MyAttributesConverter::timeHMSmsToFrames(current_subtitle.endTime(), mTimeCodeRate ));
         xml_font0.appendChild(xml_Subtitle);
@@ -597,7 +621,9 @@ void DcSubSmpteParser::writeFont(QDomElement* xmlElement, TextFont previousFont,
     if ( previousFont.findDiff(newFont) ) {
 
         if ( newFont.fontId() != "" ) {
-            xmlElement->setAttribute("ID", newFont.fontId());
+            if ( mFontIdList.indexOf(newFont.fontId()) >= 0 ) {
+                xmlElement->setAttribute("ID", newFont.fontId());
+            }
         }
 
         if ( newFont.fontColor() != "" ) {

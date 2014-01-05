@@ -25,6 +25,8 @@ private:
 
     // TextFont containers list
     QList<TextFont> mFontList;
+    // Fond name list
+    QList<QString> mFontIdList;
     // Subtitles container
     MySubtitles mNewSubtitle;
     // MySubtitles containers list

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>720</width>
-    <height>640</height>
+    <height>670</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -25,7 +25,7 @@
      <x>10</x>
      <y>10</y>
      <width>181</width>
-     <height>621</height>
+     <height>651</height>
     </rect>
    </property>
    <property name="editTriggers">
@@ -102,7 +102,7 @@
    <property name="geometry">
     <rect>
      <x>610</x>
-     <y>600</y>
+     <y>630</y>
      <width>99</width>
      <height>27</height>
     </rect>
@@ -115,7 +115,7 @@
    <property name="geometry">
     <rect>
      <x>500</x>
-     <y>600</y>
+     <y>630</y>
      <width>99</width>
      <height>27</height>
     </rect>
@@ -130,11 +130,11 @@
      <x>190</x>
      <y>60</y>
      <width>531</width>
-     <height>541</height>
+     <height>501</height>
     </rect>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QWidget" name="gridLayoutWidget">
@@ -143,7 +143,7 @@
        <x>10</x>
        <y>10</y>
        <width>511</width>
-       <height>501</height>
+       <height>491</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout">
@@ -167,29 +167,10 @@
         </property>
        </widget>
       </item>
-      <item row="7" column="1">
-       <widget class="QSpinBox" name="editRateSpinBox">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>30</number>
-        </property>
-        <property name="value">
-         <number>25</number>
-        </property>
-       </widget>
-      </item>
       <item row="2" column="1">
        <widget class="QLineEdit" name="movieTitleLineEdit"/>
       </item>
-      <item row="11" column="1">
+      <item row="13" column="1">
        <widget class="QGroupBox" name="effectGroupBox_2">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -251,9 +232,6 @@
         </layout>
        </widget>
       </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="commentLineEdit"/>
-      </item>
       <item row="5" column="0">
        <widget class="QLabel" name="languageLabel">
         <property name="text">
@@ -261,24 +239,8 @@
         </property>
        </widget>
       </item>
-      <item row="8" column="1">
-       <widget class="QSpinBox" name="timeCodeRateSpinBox">
-        <property name="maximumSize">
-         <size>
-          <width>50</width>
-          <height>16777215</height>
-         </size>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>30</number>
-        </property>
-        <property name="value">
-         <number>25</number>
-        </property>
-       </widget>
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="commentLineEdit"/>
       </item>
       <item row="5" column="1">
        <widget class="QLineEdit" name="languageLineEdit">
@@ -304,14 +266,14 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="0">
+      <item row="11" column="0">
        <widget class="QLabel" name="startTimeLabel">
         <property name="text">
          <string>Start time : </string>
         </property>
        </widget>
       </item>
-      <item row="10" column="1">
+      <item row="12" column="1">
        <widget class="QGroupBox" name="effectGroupBox">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -387,14 +349,14 @@
         </property>
        </widget>
       </item>
-      <item row="9" column="1">
+      <item row="11" column="1">
        <widget class="QTimeEdit" name="startTimeEdit">
         <property name="displayFormat">
          <string>HH:mm:ss.zzz</string>
         </property>
        </widget>
       </item>
-      <item row="10" column="0">
+      <item row="12" column="0">
        <widget class="QLabel" name="effectLabel">
         <property name="text">
          <string>Effects : </string>
@@ -405,20 +367,6 @@
        <widget class="QLabel" name="versionLabel">
         <property name="text">
          <string>Version : </string>
-        </property>
-       </widget>
-      </item>
-      <item row="7" column="0">
-       <widget class="QLabel" name="editRateLabel">
-        <property name="text">
-         <string>Edit rate : </string>
-        </property>
-       </widget>
-      </item>
-      <item row="8" column="0">
-       <widget class="QLabel" name="timeCodeRateLabel">
-        <property name="text">
-         <string>TimeCode rate : </string>
         </property>
        </widget>
       </item>
@@ -456,52 +404,84 @@
         </property>
        </widget>
       </item>
-      <item row="12" column="0">
-       <widget class="QLabel" name="exportedLabel">
-        <property name="text">
-         <string>Subtitles : </string>
+      <item row="8" column="1">
+       <widget class="QSpinBox" name="timeCodeRateSpinBox">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>30</number>
+        </property>
+        <property name="value">
+         <number>25</number>
         </property>
        </widget>
       </item>
-      <item row="12" column="1">
-       <widget class="QGroupBox" name="exportedGroupBox">
-        <property name="title">
-         <string/>
+      <item row="7" column="0">
+       <widget class="QLabel" name="editRateLabel">
+        <property name="text">
+         <string>Edit rate : </string>
         </property>
-        <layout class="QHBoxLayout" name="horizontalLayout_3">
-         <property name="spacing">
-          <number>0</number>
-         </property>
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="QRadioButton" name="exportedAllRadioButton">
-           <property name="text">
-            <string>All</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QRadioButton" name="exportedSelectedRadioButton">
-           <property name="text">
-            <string>Selected</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       </widget>
+      </item>
+      <item row="8" column="0">
+       <widget class="QLabel" name="timeCodeRateLabel">
+        <property name="text">
+         <string>TimeCode rate : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="0">
+       <widget class="QLabel" name="fadeInLabel">
+        <property name="text">
+         <string>Fade In :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QSpinBox" name="editRateSpinBox">
+        <property name="maximumSize">
+         <size>
+          <width>50</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>30</number>
+        </property>
+        <property name="value">
+         <number>25</number>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="0">
+       <widget class="QLabel" name="fadeOutLabel">
+        <property name="text">
+         <string>Fade Out :</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QTimeEdit" name="fadeInTimeEdit">
+        <property name="displayFormat">
+         <string>HH:mm:ss.zzz</string>
+        </property>
+       </widget>
+      </item>
+      <item row="10" column="1">
+       <widget class="QTimeEdit" name="fadeOutTimeEdit">
+        <property name="displayFormat">
+         <string>HH:mm:ss.zzz</string>
+        </property>
        </widget>
       </item>
      </layout>
@@ -514,7 +494,7 @@
        <x>10</x>
        <y>10</y>
        <width>511</width>
-       <height>531</height>
+       <height>471</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
@@ -831,7 +811,7 @@
        <x>10</x>
        <y>10</y>
        <width>511</width>
-       <height>501</height>
+       <height>411</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
@@ -968,7 +948,7 @@
        <x>10</x>
        <y>10</y>
        <width>511</width>
-       <height>501</height>
+       <height>431</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
@@ -1067,13 +1047,6 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="sizeFormatlabel">
-        <property name="text">
-         <string>Format : </string>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="1">
        <widget class="QComboBox" name="dropFrameComboBox">
         <property name="currentIndex">
@@ -1091,17 +1064,10 @@
         </item>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="languageLabel3">
+      <item row="2" column="0">
+       <widget class="QLabel" name="sizeFormatlabel">
         <property name="text">
-         <string>Language : </string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLineEdit" name="movieTitleLineEdit2">
-        <property name="text">
-         <string notr="true"/>
+         <string>Format : </string>
         </property>
        </widget>
       </item>
@@ -1121,10 +1087,24 @@
         </property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="languageLabel3">
+        <property name="text">
+         <string>Language : </string>
+        </property>
+       </widget>
+      </item>
       <item row="5" column="0">
        <widget class="QLabel" name="contentInLabel">
         <property name="text">
          <string>Content in : </string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="movieTitleLineEdit2">
+        <property name="text">
+         <string notr="true"/>
         </property>
        </widget>
       </item>
@@ -1134,6 +1114,19 @@
          <string>HH:mm:ss.zzz</string>
         </property>
        </widget>
+      </item>
+      <item row="6" column="0">
+       <spacer name="verticalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -1167,6 +1160,66 @@
    <property name="textInteractionFlags">
     <set>Qt::NoTextInteraction</set>
    </property>
+  </widget>
+  <widget class="QWidget" name="gridLayoutWidget_5">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>570</y>
+     <width>511</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <layout class="QGridLayout" name="gridLayout_5">
+    <item row="0" column="1">
+     <widget class="QGroupBox" name="exportedGroupBox">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QRadioButton" name="exportedAllRadioButton">
+         <property name="text">
+          <string>All</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="exportedSelectedRadioButton">
+         <property name="text">
+          <string>Selected</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLabel" name="exportedLabel">
+      <property name="text">
+       <string>Subtitles : </string>
+      </property>
+     </widget>
+    </item>
+   </layout>
   </widget>
  </widget>
  <resources/>
