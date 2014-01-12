@@ -1420,9 +1420,6 @@ void MainWindow::updateMarginsDraw() {
 void MainWindow::resizeEvent(QResizeEvent* event) {
 
     updateStEditSize();
-    if ( ui->subTable->columnWidth(6) < 400 ) {
-        ui->subTable->setColumnWidth(6, 400);
-    }
     QMainWindow::resizeEvent(event);
 }
 
@@ -2976,7 +2973,6 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
 
     // Build the menu
     QMenu custom_menu;
-    custom_menu.addAction("Delete");
     custom_menu.addSeparator();
     custom_menu.addAction("Italic");
     custom_menu.actions().last()->setCheckable(true);
@@ -2993,6 +2989,8 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
     custom_menu.addAction("Shadow color...");
     custom_menu.addAction("Background color...");
     custom_menu.addAction("Font...");
+    custom_menu.addSeparator();
+    custom_menu.addAction("Delete");
     // ...
 
     MySubtitles current_sub;
@@ -3018,27 +3016,27 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
         for ( qint16 i = 0; i < text_lines.count(); i++ ) {
 
             if ( text_lines[i].Font().fontItalic() == "yes" ) {
-                custom_menu.actions().at(2)->setChecked(true);
+                custom_menu.actions().at(1)->setChecked(true);
                 italic_found = true;
             }
 
             if ( text_lines[i].Font().fontUnderlined() == "yes" ) {
-                custom_menu.actions().at(3)->setChecked(true);
+                custom_menu.actions().at(2)->setChecked(true);
                 underlined_found = true;
             }
 
             if ( text_lines[i].Font().fontBorderEffect() == "yes" ) {
-                custom_menu.actions().at(4)->setChecked(true);
+                custom_menu.actions().at(3)->setChecked(true);
                 border_found = true;
             }
 
             if ( text_lines[i].Font().fontShadowEffect() == "yes" ) {
-                custom_menu.actions().at(5)->setChecked(true);
+                custom_menu.actions().at(4)->setChecked(true);
                 shadow_found = true;
             }
 
             if ( text_lines[i].Font().fontBackgroundEffect() == "yes" ) {
-                custom_menu.actions().at(6)->setChecked(true);
+                custom_menu.actions().at(5)->setChecked(true);
                 background_found = true;
             }
 

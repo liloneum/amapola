@@ -1114,7 +1114,7 @@ void MySubtitlesTable::updateSelectedItem() {
 
             mSelectedByUser = true;
 
-            this->scrollToItem( this->item(row_index, SUB_NUM_COL), QAbstractItemView::PositionAtCenter);
+//            this->scrollToItem( this->item(row_index, SUB_NUM_COL), QAbstractItemView::PositionAtCenter);
 
             // If the selected item start time is valid
             QString start_time_str = this->item(row_index, SUB_START_TIME_COL)->text();
