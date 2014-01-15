@@ -346,28 +346,26 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
             Qt::KeyboardModifiers event_keybord_modifier = wheel_event->modifiers();
 
             // Ctrl key + Mouse wheel -> zoom in/out the scope
-            // Shift key + Mouse wheel -> shift the scope
-            if ( event_keybord_modifier & ( Qt::ControlModifier | Qt::ShiftModifier ) ) {
+            // Mouse wheel -> shift the scope
 
-                // See the Qt doc to convert the wheel angle delta to number of steps
-                QPoint num_degrees = wheel_event->angleDelta() / 8;
+            // See the Qt doc to convert the wheel angle delta to number of steps
+            QPoint num_degrees = wheel_event->angleDelta() / 8;
 
-                if( !num_degrees.isNull() ) {
-                    QPoint numSteps = num_degrees / 15;
-                    if ( event_keybord_modifier == Qt::ControlModifier ) {
-                        if ( !computeZoom(numSteps.y(), wheel_event->x()) ) {
-                            return true;
-                        }
+            if( !num_degrees.isNull() ) {
+                QPoint numSteps = num_degrees / 15;
+                if ( event_keybord_modifier == Qt::ControlModifier ) {
+                    if ( !computeZoom(numSteps.y(), wheel_event->x()) ) {
+                        return true;
                     }
-                    else if ( event_keybord_modifier == Qt::ShiftModifier ) {
-                        if ( !timeScaleShift(numSteps.y()) ) {
-                            return true;
-                        }
-                        this->setRtMarkerPos(wheel_event->x());
-                    }
-                    // Replot wave form if the scope was modified
-                    plotWaveForm();
                 }
+                else if ( event_keybord_modifier == Qt::NoModifier ) {
+                    if ( !timeScaleShift(numSteps.y()) ) {
+                        return true;
+                    }
+                    this->setRtMarkerPos(wheel_event->x());
+                }
+                // Replot wave form if the scope was modified
+                plotWaveForm();
             }
             return true;
         }

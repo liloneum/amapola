@@ -857,6 +857,8 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
     QString error_msgs;
     QList<MySubtitles> sub_list;
 
+    quint64 saved_position_ms = positionMs;
+
     // Use the reference subtitle index passed in argument else used the current index as reference
     if ( refIndex == -1 ) {
         ref_subtitle_index = ui->subTable->currentIndex();
@@ -1031,6 +1033,8 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
         ui->waveForm->removeAllSubtitlesZones();
         ui->waveForm->drawSubtitlesZone(sub_list, ui->subTable->currentIndex());
         ui->waveForm->changeZoneColor(ui->subTable->selectedIndex(), ui->subTable->currentIndex());
+
+        ui->waveForm->updatePostionMarker(saved_position_ms);
     }
 
     if ( changed_count > 0 )
