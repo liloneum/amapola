@@ -140,7 +140,7 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
 
                 // attribute Direction
                 if ( !xmlElement.attribute("Direction").isNull() ) {
-                new_text.setTextDirection( xmlElement.attribute("Direction") );
+                    new_text.setTextDirection( xmlElement.attribute("Direction") );
                 }
                 else {
                     new_text.setTextDirection( TEXT_DIRECTION_DEFAULT_VALUE );
@@ -499,7 +499,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
                 xml_text.setAttribute("Direction", TEXT_DIRECTION_DEFAULT_VALUE);
             }
             else {
-                xml_text.setAttribute("Direction", MyAttributesConverter::dirToHorVer( text_line.textDirection() ) );
+                xml_text.setAttribute("Direction", text_line.textDirection());
             }
 
             if ( text_line.textHAlign() == "") {

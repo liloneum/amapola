@@ -62,7 +62,7 @@ QString MyAttributesConverter::dirToHorVer(QString direction) {
         return "vertical";
     }
     else {
-        return "";
+        return "horizontal";
     }
 }
 
@@ -77,7 +77,7 @@ QString MyAttributesConverter::dirToLtrTtb(QString direction) {
         return "ttb";
     }
     else {
-        return "";
+        return "ltr";
     }
 }
 

@@ -141,10 +141,10 @@ void DcSubInteropParser::parseTree(QDomElement xmlElement) {
 
                 // attribute Direction
                 if ( !xmlElement.attribute("Direction").isNull() ) {
-                new_text.setTextDirection( MyAttributesConverter::dirToLtrTtb( xmlElement.attribute("Direction") ) );
+                    new_text.setTextDirection( MyAttributesConverter::dirToLtrTtb( xmlElement.attribute("Direction") ) );
                 }
                 else {
-                    new_text.setTextDirection( TEXT_DIRECTION_DEFAULT_VALUE );
+                    new_text.setTextDirection( MyAttributesConverter::dirToLtrTtb( TEXT_DIRECTION_DEFAULT_VALUE ) );
                 }
 
                 // attribute HAlign
