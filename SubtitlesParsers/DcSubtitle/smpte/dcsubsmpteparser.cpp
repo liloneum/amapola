@@ -554,8 +554,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
                                 color_str.prepend("FF");
                                 color_str = color_str.toUpper();
 
-                                if ( ( color_str != text_font.fontColor() ) &&
-                                     ( color_str != text_font0.fontColor() ) ) {
+                                if ( color_str != text_font.fontColor() ) {
 
                                     xml_current_element = xml_current_element.appendChild( doc.createElement("Font") ).toElement();
                                     xml_current_element.setAttribute("Color", color_str);
@@ -564,8 +563,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
 
                             if ( style_str.contains("italic") ) {
 
-                                if ( ( text_font.fontItalic() == "no" ) &&
-                                     ( text_font0.fontItalic() == "no" ) ) {
+                                if ( text_font.fontItalic() == "no" ) {
 
                                     if ( xml_current_element.tagName() != "Font") {
 
@@ -577,8 +575,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
 
                             if ( style_str.contains("underline") ) {
 
-                                if ( ( text_font.fontUnderlined() == "no" ) &&
-                                     ( text_font0.fontUnderlined() == "no" ) ) {
+                                if ( text_font.fontUnderlined() == "no" ) {
 
                                     if ( xml_current_element.tagName() != "Font") {
 
@@ -594,7 +591,9 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
                 case QXmlStreamReader::EndElement:
 
                     if ( reader.name() == "span" ) {
-                        xml_current_element = xml_current_element.parentNode().toElement();
+                        if ( xml_current_element.tagName() != "Text" ) {
+                            xml_current_element = xml_current_element.parentNode().toElement();
+                        }
                     }
                     break;
                 case QXmlStreamReader::Characters:
