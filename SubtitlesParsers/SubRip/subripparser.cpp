@@ -128,7 +128,7 @@ bool SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, S
                 bool color_tag_open = false;
 
                 if ( text_line.Font().fontColor() != "FFFFFFFF") {
-                    line += "<font color=#" + text_line.Font().fontColor().remove(0, 2);
+                    line += "<font color=#" +text_line.Font().fontColor().remove(0, 2) +">";
                     all_colored = true;
                 }
 
