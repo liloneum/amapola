@@ -13,6 +13,17 @@ class MySubtitlesTable : public QTableWidget
 
 public:
     explicit MySubtitlesTable(QWidget *parent = 0);
+
+    enum columnRole {
+        SUB_NUM_COL = 0,
+        SUB_START_TIME_COL = 1,
+        SUB_END_TIME_COL = 2,
+        SUB_DURATION_COL = 3,
+        SUB_CHARNUM_COL = 4,
+        SUB_CHAR_PER_SEC_COL = 5,
+        SUB_TEXT_COL = 6
+    };
+
     //~MySubtitlesTable();
 
 signals:

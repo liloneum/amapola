@@ -1697,6 +1697,41 @@ void MainWindow::updateFrameRateBox(qreal frameRate) {
     mFrameRateComboBox->setCurrentIndex(mFrameRateComboBox->count() - 1);
 }
 
+QList<MySubtitles> MainWindow::getSubtitlesList() {
+
+    return ui->subTable->saveSubtitles();
+}
+
+void MainWindow::setSubtitlesList(QList<MySubtitles> subList) {
+
+    ui->subTable->loadSubtitles(subList);
+}
+
+quint16 MainWindow::getSubtitlesCount() {
+
+    return ui->subTable->rowCount();
+}
+
+void MainWindow::setTableItemColor(quint16 row, quint16 column, QColor color, QPalette::ColorRole colorRole) {
+
+    if ( colorRole == QPalette::Background ) {
+        ui->subTable->item(row, column)->setBackground(color);
+    }
+    else if ( colorRole == QPalette::Foreground ) {
+        ui->subTable->item(row, column)->setForeground(QBrush(color));
+    }
+}
+
+void MainWindow::selectSubtitle(quint16 subNumber) {
+
+    ui->subTable->selectRow(subNumber);
+}
+
+quint16 MainWindow::getSelectedSub() {
+
+    return ui->subTable->currentIndex();
+}
+
 // ******************************** Tool Box ***************************************************************//
 
 // Update the parameter tool boxes
@@ -2967,6 +3002,7 @@ void MainWindow::on_durationAutoCheckBox_clicked(bool checked) {
     // Set this settings to the current subtitle in the datbase
     ui->subTable->setDurationAuto(ui->subTable->currentIndex(), checked);
 }
+
 
 // Manage the selected subtitles context menu
 void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {

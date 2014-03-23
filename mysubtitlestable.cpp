@@ -27,16 +27,6 @@
 #define TEXT1_VALIGN_DEFAULT_VALUE "bottom"
 #define TEXT1_VPOSITION_DEFAULT_VALUE "8"
 
-// Columns numbers define
-#define SUB_NUM_COL 0
-#define SUB_START_TIME_COL 1
-#define SUB_END_TIME_COL 2
-#define SUB_DURATION_COL 3
-#define SUB_CHARNUM_COL 4
-#define SUB_CHAR_PER_SEC_COL 5
-#define SUB_TEXT_COL 6
-
-
 // Convert second in milliseconds
 #define SEC_TO_MSEC 1000
 
@@ -1083,7 +1073,6 @@ void MySubtitlesTable::updateSelectedItem() {
     QTime start_time_HMS;
     QTime time_base(0, 0, 0, 0);
 
-    // Center scroll area at the selected item line
     QList<QTableWidgetItem*> selected_items = this->selectedItems();
 
     mSelectedIndex.clear();
@@ -1113,8 +1102,6 @@ void MySubtitlesTable::updateSelectedItem() {
         if ( mSelectedBySoft == false ) {
 
             mSelectedByUser = true;
-
-//            this->scrollToItem( this->item(row_index, SUB_NUM_COL), QAbstractItemView::PositionAtCenter);
 
             // If the selected item start time is valid
             QString start_time_str = this->item(row_index, SUB_START_TIME_COL)->text();

@@ -6,6 +6,7 @@
 #include <myvideoplayer.h>
 #include "mysubtitles.h"
 #include "mysettings.h"
+#include "mysubtitlestable.h"
 
 namespace Ui {
 class MainWindow;
@@ -19,6 +20,12 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
+    QList<MySubtitles> getSubtitlesList();
+    void setSubtitlesList(QList<MySubtitles> subList);
+    void setTableItemColor(quint16 row, quint16 column, QColor color, QPalette::ColorRole colorRole);
+    void selectSubtitle(quint16 subNumber);
+    quint16 getSelectedSub();
+    quint16 getSubtitlesCount();
     ~MainWindow();
 
 private slots:
@@ -116,8 +123,8 @@ private slots:
     void on_fontBackgroundCheckBox_toggled(bool checked);
     void on_fontBackgroundColor_clicked();
 
-
 private:
+
     Ui::MainWindow* ui;
 
     // Flag if the toolbox was changed by user or by software
