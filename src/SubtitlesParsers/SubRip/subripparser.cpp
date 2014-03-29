@@ -1,9 +1,9 @@
 #include "subripparser.h"
 #include <QRegExp>
 #include <QStringList>
-#include <mysubtitles.h>
+#include <subtitles.h>
 #include <QXmlStreamReader>
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 
 
 // SubRip format

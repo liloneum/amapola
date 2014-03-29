@@ -1,5 +1,5 @@
-#ifndef MYFILEWRITER_H
-#define MYFILEWRITER_H
+#ifndef FILEWRITER_H
+#define FILEWRITER_H
 
 #include <QString>
 #include <QList>
@@ -28,4 +28,4 @@ private:
     QString mErrorMsg;
 };
 
-#endif // MYFILEWRITER_H
+#endif // FILEWRITER_H

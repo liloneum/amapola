@@ -1,5 +1,5 @@
-#ifndef MYSUBTITLES_H
-#define MYSUBTITLES_H
+#ifndef SUBTITLES_H
+#define SUBTITLES_H
 
 #include <QString>
 #include <QList>
@@ -127,4 +127,4 @@ private:
 
 
 
-#endif // MYSUBTITLES_H
+#endif // SUBTITLES_H

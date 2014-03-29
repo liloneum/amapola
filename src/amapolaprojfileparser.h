@@ -1,9 +1,9 @@
 #ifndef AMAPOLAPROJFILEPARSER_H
 #define AMAPOLAPROJFILEPARSER_H
 
-#include "myfilereader.h"
-#include "myfilewriter.h"
-#include "mysubtitles.h"
+#include "filereader.h"
+#include "filewriter.h"
+#include "subtitles.h"
 #include <QList>
 
 class AmapolaProjFileParser

@@ -1,4 +1,4 @@
-#include "mysubtitles.h"
+#include "subtitles.h"
 
 #include <QColor>
 

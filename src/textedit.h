@@ -1,10 +1,10 @@
-#ifndef MYTEXTEDIT_H
-#define MYTEXTEDIT_H
+#ifndef TEXTEDIT_H
+#define TEXTEDIT_H
 
 #include <QWidget>
 #include <QString>
 #include <QTextEdit>
-#include "mysubtitles.h"
+#include "subtitles.h"
 #include <QGraphicsDropShadowEffect>
 
 // This widget class manage the edit zone.
@@ -71,4 +71,4 @@ private:
     QList<QTextEdit*> mTextLinesList;
 };
 
-#endif // MYTEXTEDIT_H
+#endif // TEXTEDIT_H

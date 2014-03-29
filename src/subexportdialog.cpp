@@ -1,17 +1,17 @@
 #include "subexportdialog.h"
 #include "ui_subexportdialog.h"
-#include "mysubtitlefileparser.h"
+#include "subtitlefileparser.h"
 #include "SubtitlesParsers/SubRip/subripparser.h"
 #include "SubtitlesParsers/DcSubtitle/interop/dcsubinteropparser.h"
 #include "SubtitlesParsers/DcSubtitle/smpte/dcsubsmpteparser.h"
 #include "SubtitlesParsers/EBU/ebuparser.h"
 #include "SubtitlesParsers/ScenaristSub/scenaristsubparser.h"
 #include "SubtitlesParsers/BDN/bdnparser.h"
-#include "mysubtitles.h"
+#include "subtitles.h"
 #include <QMessageBox>
 #include <QFileDialog>
 #include <QUuid>
-#include "myfilereader.h"
+#include "filereader.h"
 #include <QtDebug>
 
 SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>selectedSub, QWidget *parent) :

@@ -1,10 +1,10 @@
-#ifndef MYATTRIBUTESCONVERTER_H
-#define MYATTRIBUTESCONVERTER_H
+#ifndef ATTRIBUTESCONVERTER_H
+#define ATTRIBUTESCONVERTER_H
 
 #include <Qt>
 #include <QColor>
 #include <QPushButton>
-#include <mysubtitles.h>
+#include <subtitles.h>
 
 // Class to define some converters statics methods
 class MyAttributesConverter
@@ -37,4 +37,4 @@ public:
     static QString simplifyRichTextFilter(QString in);
 };
 
-#endif // MYATTRIBUTESCONVERTER_H
+#endif // ATTRIBUTESCONVERTER_H

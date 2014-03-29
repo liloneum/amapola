@@ -1,4 +1,4 @@
-//#include "mysubtitlefileparser.h"
+//#include "subtitlefileparser.h"
 //#include "SubtitlesParsers/SubRip/subripparser.h"
 //#include "SubtitlesParsers/DcSubtitle/dcsubparser.h"
 //#include <QString>

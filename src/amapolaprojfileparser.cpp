@@ -1,6 +1,6 @@
 #include "amapolaprojfileparser.h"
-#include "myattributesconverter.h"
-#include "mysubtitles.h"
+#include "attributesconverter.h"
+#include "subtitles.h"
 #include <QApplication>
 
 AmapolaProjFileParser::AmapolaProjFileParser() {

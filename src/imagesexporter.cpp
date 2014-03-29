@@ -4,8 +4,8 @@
 #include <QTextEdit>
 #include <QGraphicsDropShadowEffect>
 #include <QFile>
-#include <mysubtitles.h>
-#include "myattributesconverter.h"
+#include <subtitles.h>
+#include "attributesconverter.h"
 #include <QBitmap>
 
 

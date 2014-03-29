@@ -1,9 +1,9 @@
-#ifndef MYSUBTITLEFILEPARSER_H
-#define MYSUBTITLEFILEPARSER_H
+#ifndef SUBTITLEFILEPARSER_H
+#define SUBTITLEFILEPARSER_H
 
-#include "myfilereader.h"
-#include "myfilewriter.h"
-#include "mysubtitles.h"
+#include "filereader.h"
+#include "filewriter.h"
+#include "subtitles.h"
 #include "subexportdialog.h"
 
 // Class with virtual methods used to parse subtitles file
@@ -16,4 +16,4 @@ public:
     virtual bool readSample(MyFileReader file) =0;
 };
 
-#endif // MYSUBTITLEFILEPARSER_H
+#endif // SUBTITLEFILEPARSER_H

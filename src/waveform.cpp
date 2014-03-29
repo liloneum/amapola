@@ -1,5 +1,5 @@
-#include "mywaveform.h"
-#include "ui_mywaveform.h"
+#include "waveform.h"
+#include "ui_waveform.h"
 #include <Qt>
 #include <QAudioFormat>
 #include <QAudioDecoder>
@@ -7,8 +7,8 @@
 #include <QWheelEvent>
 #include <QAudioDeviceInfo>
 #include <QTime>
-#include <mysubtitles.h>
-#include <myattributesconverter.h>
+#include <subtitles.h>
+#include <attributesconverter.h>
 #include <qwt_plot_curve.h>
 #include <qwt_scale_engine.h>
 #include <qwt_plot_marker.h>

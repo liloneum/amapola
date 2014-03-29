@@ -1,10 +1,10 @@
 #ifndef DCSUBSMPTEPARSER_H
 #define DCSUBSMPTEPARSER_H
 
-#include "myfilereader.h"
-#include "myfilewriter.h"
-#include "mysubtitles.h"
-#include "mysubtitlefileparser.h"
+#include "filereader.h"
+#include "filewriter.h"
+#include "subtitles.h"
+#include "subtitlefileparser.h"
 #include "subexportdialog.h"
 #include <QDomElement>
 #include <QFile>

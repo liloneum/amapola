@@ -1,5 +1,5 @@
-#ifndef MYAPPLICATION_H
-#define MYAPPLICATION_H
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
 #include <QApplication>
 #include <mainwindow.h>
@@ -15,4 +15,4 @@ protected:
     static MainWindow* mpMainWindow;
 };
 
-#endif // MYAPPLICATION_H
+#endif // APPLICATION_H

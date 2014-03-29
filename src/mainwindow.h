@@ -3,10 +3,10 @@
 
 #include <QMainWindow>
 #include <QComboBox>
-#include <myvideoplayer.h>
-#include "mysubtitles.h"
-#include "mysettings.h"
-#include "mysubtitlestable.h"
+#include <videoplayer.h>
+#include "subtitles.h"
+#include "settings.h"
+#include "subtitlestable.h"
 
 namespace Ui {
 class MainWindow;

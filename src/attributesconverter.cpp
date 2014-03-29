@@ -1,4 +1,4 @@
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 #include <QString>
 #include <QFont>
 #include <QFontMetrics>
@@ -7,7 +7,7 @@
 #include <QTextEdit>
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
-#include <mysubtitles.h>
+#include <subtitles.h>
 
 
 #define SEC_TO_MSEC 1000

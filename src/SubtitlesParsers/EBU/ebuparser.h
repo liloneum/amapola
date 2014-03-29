@@ -1,7 +1,7 @@
 #ifndef EBUPARSER_H
 #define EBUPARSER_H
 
-#include "mysubtitlefileparser.h"
+#include "subtitlefileparser.h"
 
 class EbuParser : public MySubtitleFileParser
 {

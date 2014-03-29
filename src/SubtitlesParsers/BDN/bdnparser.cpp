@@ -2,7 +2,7 @@
 #include <QApplication>
 #include <QProgressDialog>
 #include <QXmlStreamWriter>
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 #include "imagesexporter.h"
 
 BDNparser::BDNparser()

@@ -1,8 +1,8 @@
-#ifndef MYWAVEFORM_H
-#define MYWAVEFORM_H
+#ifndef WAVEFORM_H
+#define WAVEFORM_H
 
 #include <QWidget>
-#include <mysubtitles.h>
+#include <subtitles.h>
 
 namespace Ui {
 class MyWaveForm;
@@ -123,4 +123,4 @@ private:
 
 };
 
-#endif // MYWAVEFORM_H
+#endif // WAVEFORM_H

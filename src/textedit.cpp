@@ -1,5 +1,5 @@
-#include "mytextedit.h"
-#include "myattributesconverter.h"
+#include "textedit.h"
+#include "attributesconverter.h"
 #include <QKeyEvent>
 #include <QTextDocumentFragment>
 #include <QDesktopWidget>
@@ -49,8 +49,8 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
     QWidget(parent)
 {
     // Retrieive the number of pixels per inch for the current hardware
-    QDesktopWidget *mydesk = QApplication::desktop();
-    mPxPerInch = mydesk->logicalDpiY();
+    QDesktopWidget *desk = QApplication::desktop();
+    mPxPerInch = desk->logicalDpiY();
 
     mTextLinesList.clear();
 

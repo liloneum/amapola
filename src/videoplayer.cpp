@@ -1,5 +1,5 @@
-#include "myvideoplayer.h"
-#include "ui_myvideoplayer.h"
+#include "videoplayer.h"
+#include "ui_videoplayer.h"
 #include <QMediaPlayer>
 #include <QGraphicsVideoItem>
 #include <QFileDialog>

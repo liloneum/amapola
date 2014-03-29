@@ -1,4 +1,4 @@
-#include "myapplication.h"
+#include "application.h"
 #include "mainwindow.h"
 
 MainWindow* MyApplication::mpMainWindow = NULL;

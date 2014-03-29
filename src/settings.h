@@ -1,5 +1,5 @@
-#ifndef MYSETTINGS_H
-#define MYSETTINGS_H
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include <QWidget>
 
@@ -52,4 +52,4 @@ private:
     bool mSettingsChangedBySoft;
 };
 
-#endif // MYSETTINGS_H
+#endif // SETTINGS_H

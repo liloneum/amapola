@@ -1,5 +1,5 @@
-#ifndef MYVIDEOPLAYER_H
-#define MYVIDEOPLAYER_H
+#ifndef VIDEOPLAYER_H
+#define VIDEOPLAYER_H
 
 #include <QWidget>
 #include <QMainWindow>
@@ -83,4 +83,4 @@ private:
 
 };
 
-#endif // MYVIDEOPLAYER_H
+#endif // VIDEOPLAYER_H

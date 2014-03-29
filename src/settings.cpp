@@ -1,5 +1,5 @@
-#include "mysettings.h"
-#include "ui_mysettings.h"
+#include "settings.h"
+#include "ui_settings.h"
 
 #define FLOAT_EPSILON 0.001
 

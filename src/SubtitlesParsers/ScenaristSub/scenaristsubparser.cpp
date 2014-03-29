@@ -2,8 +2,8 @@
 #include <QApplication>
 #include <QDateTime>
 #include <QProgressDialog>
-#include "myattributesconverter.h"
-#include "mysubtitles.h"
+#include "attributesconverter.h"
+#include "subtitles.h"
 #include "imagesexporter.h"
 
 ScenaristSubParser::ScenaristSubParser()

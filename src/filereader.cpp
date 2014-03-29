@@ -1,4 +1,4 @@
-#include "myfilereader.h"
+#include "filereader.h"
 #include <QFile>
 #include <QTextStream>
 #include <QTextCodec>

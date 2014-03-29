@@ -1,8 +1,8 @@
 #ifndef SCENARISTSUBPARSER_H
 #define SCENARISTSUBPARSER_H
 
-#include "mysubtitlefileparser.h"
-#include "myfilewriter.h"
+#include "subtitlefileparser.h"
+#include "filewriter.h"
 #include "subexportdialog.h"
 
 class ScenaristSubParser : public MySubtitleFileParser

@@ -1,8 +1,8 @@
-#ifndef MYWAVEFORMSLIDER_H
-#define MYWAVEFORMSLIDER_H
+#ifndef WAVEFORMSLIDER_H
+#define WAVEFORMSLIDER_H
 
 #include <QWidget>
-#include <mywaveform.h>
+#include <waveform.h>
 
 namespace Ui {
 class MyWaveFormSlider;
@@ -78,4 +78,4 @@ private:
     qint64 mCurrentPositonMs;
 };
 
-#endif // MYWAVEFORMSLIDER_H
+#endif // WAVEFORMSLIDER_H

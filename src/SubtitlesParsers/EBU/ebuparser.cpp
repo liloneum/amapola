@@ -1,5 +1,5 @@
 #include "ebuparser.h"
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 #include <QApplication>
 #include <QDate>
 #include <QXmlStreamReader>

@@ -2,7 +2,7 @@
 #include <QDomDocument>
 #include <QMessageBox>
 #include <QUuid>
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 #include <QXmlStreamReader>
 #include <QXmlStreamWriter>
 #include <QTextEdit>

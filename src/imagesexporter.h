@@ -2,7 +2,7 @@
 #define IMAGESEXPORTER_H
 
 #include <QWidget>
-#include "mysubtitles.h"
+#include "subtitles.h"
 #include <QTextEdit>
 
 class ImagesExporter : public QWidget

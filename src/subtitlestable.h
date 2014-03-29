@@ -1,8 +1,8 @@
-#ifndef MYSUBTITLESTABLE_H
-#define MYSUBTITLESTABLE_H
+#ifndef SUBTITLESTABLE_H
+#define SUBTITLESTABLE_H
 
 #include <QTableWidget>
-#include "mysubtitles.h"
+#include "subtitles.h"
 
 // This widget manage a subtitles table.
 // It's a database to stock text, timecode, position, font.
@@ -93,4 +93,4 @@ private:
     QString mErrorMsg;
 };
 
-#endif // MYSUBTITLESTABLE_H
+#endif // SUBTITLESTABLE_H

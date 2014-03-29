@@ -1,10 +1,10 @@
-#include "mysubtitlestable.h"
-#include "mysubtitles.h"
+#include "subtitlestable.h"
+#include "subtitles.h"
 #include <QTime>
 #include <QTextDocumentFragment>
-#include "mysettings.h"
+#include "settings.h"
 #include <QCoreApplication>
-#include "myattributesconverter.h"
+#include "attributesconverter.h"
 
 // Temp : Default font
 #define FONT_ID_DEFAULT_VALUE "Arial"

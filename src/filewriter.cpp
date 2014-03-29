@@ -1,4 +1,4 @@
-#include "myfilewriter.h"
+#include "filewriter.h"
 #include <QFile>
 #include <QTextStream>
 #include <QDataStream>

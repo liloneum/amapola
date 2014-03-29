@@ -1795,30 +1795,30 @@
   <customwidget>
    <class>MyVideoPlayer</class>
    <extends>QWidget</extends>
-   <header location="global">myvideoplayer.h</header>
+   <header location="global">videoplayer.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>MyWaveForm</class>
    <extends>QWidget</extends>
-   <header location="global">mywaveform.h</header>
+   <header location="global">waveform.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>MySubtitlesTable</class>
    <extends>QTableWidget</extends>
-   <header location="global">mysubtitlestable.h</header>
+   <header location="global">subtitlestable.h</header>
   </customwidget>
   <customwidget>
    <class>MySettings</class>
    <extends>QWidget</extends>
-   <header location="global">mysettings.h</header>
+   <header location="global">settings.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
    <class>MyTextEdit</class>
    <extends>QWidget</extends>
-   <header location="global">mytextedit.h</header>
+   <header location="global">textedit.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>

@@ -2,7 +2,7 @@
 #define SUBEXPORTDIALOG_H
 
 #include <QDialog>
-#include "mysubtitles.h"
+#include "subtitles.h"
 
 namespace Ui {
 class SubExportDialog;

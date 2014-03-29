@@ -1,8 +1,8 @@
 #ifndef SUBIMPORTMANAGER_H
 #define SUBIMPORTMANAGER_H
 
-#include "mysubtitlefileparser.h"
-#include "myfilereader.h"
+#include "subtitlefileparser.h"
+#include "filereader.h"
 
 class SubImportManager
 {

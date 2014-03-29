@@ -1,7 +1,7 @@
 #include "findtool.h"
 #include "ui_findtool.h"
-#include "myapplication.h"
-#include "myattributesconverter.h"
+#include "application.h"
+#include "attributesconverter.h"
 
 FindTool::FindTool(QWidget *parent) :
     QWidget(parent),

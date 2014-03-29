@@ -1,5 +1,5 @@
-#ifndef MYFILEREADER_H
-#define MYFILEREADER_H
+#ifndef FILEREADER_H
+#define FILEREADER_H
 
 #include <QtGlobal>
 #include <QVector>
@@ -35,4 +35,4 @@ private:
 };
 
 
-#endif // MYFILEREADER_H
+#endif // FILEREADER_H
