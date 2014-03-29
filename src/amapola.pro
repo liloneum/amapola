@@ -66,12 +66,11 @@ FORMS += mainwindow.ui \
     subexportdialog.ui \
     Tools/findtool.ui
 
-#CONFIG += qwt
+CONFIG += qwt
 
+QWT_DIR = $$PWD/../lib/qwt
+INCLUDEPATH +=  $${QWT_DIR}/src/
+LIBS += -L$${QWT_DIR}/lib -lqwt
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../../../usr/local/qwt-6.1.0-rc3/lib/release/ -lqwt
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../../../usr/local/qwt-6.1.0-rc3/lib/debug/ -lqwt
-else:unix: LIBS += -L$$PWD/../../../../../../../usr/local/qwt-6.1.0-rc3/lib/ -lqwt
-
-INCLUDEPATH += $$PWD/../../../../../../../usr/local/qwt-6.1.0-rc3/include
-DEPENDPATH += $$PWD/../../../../../../../usr/local/qwt-6.1.0-rc3/include
+OTHER_FILES += \
+    ../lib/README.md
