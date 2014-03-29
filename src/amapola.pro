@@ -7,7 +7,7 @@ TARGET = amapola
 TEMPLATE = app
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     myvideoplayer.cpp \
     mywaveform.cpp \
     mysubtitlestable.cpp \
@@ -33,7 +33,7 @@ SOURCES += main.cpp\
     SubtitlesParsers/BDN/bdnparser.cpp \
     Tools/findtool.cpp
 
-HEADERS  += mainwindow.h \
+HEADERS += mainwindow.h \
     myvideoplayer.h \
     mywaveform.h \
     mysubtitlestable.h \
@@ -59,7 +59,7 @@ HEADERS  += mainwindow.h \
     SubtitlesParsers/BDN/bdnparser.h \
     Tools/findtool.h
 
-FORMS    += mainwindow.ui \
+FORMS += mainwindow.ui \
     mywaveform.ui \
     myvideoplayer.ui \
     mysettings.ui \
