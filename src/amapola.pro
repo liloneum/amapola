@@ -62,3 +62,32 @@ LIBS += -L$${QWT_DIR}/lib -lqwt
 
 OTHER_FILES += \
     ../lib/README.md
+
+
+TRANSLATIONS = ../locale/fr_FR.ts \
+    ../locale/es_ES.ts
+
+
+unix {
+    isEmpty(PREFIX) {
+        PREFIX = /usr
+    }
+    DATADIR =$${PREFIX}/share
+    SHAREDIR = $${DATADIR}/$${TARGET}
+    TRANSLATIONS_PATH = $${SHAREDIR}/translations
+
+    INSTALLS += target translations
+
+    translations.path = $${TRANSLATIONS_PATH}
+    translations.files = ../locale/*.qm
+}
+
+win32 {
+    TRANSLATIONS_PATH = locale
+}
+
+mac {
+}
+
+TRANSLATIONS_PATH_STR = '\\"$${TRANSLATIONS_PATH}\\"'
+DEFINES += TRANSLATIONS_PATH=\"$${TRANSLATIONS_PATH_STR}\"
