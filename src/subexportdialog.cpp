@@ -14,7 +14,7 @@
 #include "filereader.h"
 #include <QtDebug>
 
-SubExportDialog::SubExportDialog(QList<MySubtitles> subList, QList<qint32>selectedSub, QWidget *parent) :
+SubExportDialog::SubExportDialog(QList<Subtitles> subList, QList<qint32>selectedSub, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SubExportDialog)
 {
@@ -289,7 +289,7 @@ void SubExportDialog::exportDatas() {
     }
 
     // Choose the good parser
-    MySubtitleFileParser* parser;
+    SubtitleFileParser* parser;
     QString file_extension = "";
 
     if ( sub_norm ==  "SubRip (*.srt)" ) {
@@ -333,7 +333,7 @@ void SubExportDialog::exportDatas() {
 
     if ( ui->exportedSelectedRadioButton->isChecked() ) {
 
-        QList<MySubtitles> temp_list;
+        QList<Subtitles> temp_list;
 
         QList<qint32>::iterator it;
         for ( it = mSelectedIndex.begin(); it != mSelectedIndex.end(); ++it ) {
@@ -344,7 +344,7 @@ void SubExportDialog::exportDatas() {
         mSubList = temp_list;
     }
 
-    MyFileWriter file_writer(file_name, "UTF-8");
+    FileWriter file_writer(file_name, "UTF-8");
 
     // If there are datas, write it to asked format
     if ( !mSubList.isEmpty() ) {
@@ -479,7 +479,7 @@ void SubExportDialog::on_filePushButton_clicked() {
 
     if ( !mStlFileName.isEmpty() ) {
 
-        MyFileReader file_reader(mStlFileName,"");
+        FileReader file_reader(mStlFileName,"");
 
         if ( file_reader.readRawData(mStlFileName) == false ) {
             QString error_msg = file_reader.errorMsg();

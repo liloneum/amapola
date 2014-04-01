@@ -9,7 +9,7 @@ BDNparser::BDNparser()
 {
 }
 
-bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool BDNparser::save(FileWriter &file, QList<Subtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QByteArray out;
     QXmlStreamWriter writer(&out);
@@ -71,9 +71,9 @@ bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         writer.writeEndElement();
 
 
-        QString content_in = MyAttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), frame_rate);
-        QString content_out = MyAttributesConverter::timeHMSmsToFrames(subtitlesList.last().endTime(), frame_rate);
-        QString first_event_in = MyAttributesConverter::timeHMSmsToFrames(subtitlesList.first().startTime(), frame_rate);
+        QString content_in = AttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), frame_rate);
+        QString content_out = AttributesConverter::timeHMSmsToFrames(subtitlesList.last().endTime(), frame_rate);
+        QString first_event_in = AttributesConverter::timeHMSmsToFrames(subtitlesList.first().startTime(), frame_rate);
         quint16 number_of_sub = subtitlesList.size();
         writer.writeStartElement("Events");
             writer.writeAttribute("ContentInTC", content_in);
@@ -102,13 +102,13 @@ bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 
     for ( qint16 i = 0; i < subtitlesList.size(); i++ ) {
 
-        MySubtitles current_sub = subtitlesList.at(i);
+        Subtitles current_sub = subtitlesList.at(i);
 
         writer.writeStartElement("Event");
 
             writer.writeAttribute("Forced", "false");
-            writer.writeAttribute("InTC", MyAttributesConverter::timeHMSmsToFrames(current_sub.startTime(), frame_rate));
-            writer.writeAttribute("OutTC", MyAttributesConverter::timeHMSmsToFrames(current_sub.endTime(), frame_rate));
+            writer.writeAttribute("InTC", AttributesConverter::timeHMSmsToFrames(current_sub.startTime(), frame_rate));
+            writer.writeAttribute("OutTC", AttributesConverter::timeHMSmsToFrames(current_sub.endTime(), frame_rate));
 
             writer.writeStartElement("Graphic");
 
@@ -156,11 +156,11 @@ bool BDNparser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 }
 
 
-QList<MySubtitles> BDNparser::open(MyFileReader file) {
-    QList<MySubtitles> sub_list;
+QList<Subtitles> BDNparser::open(FileReader file) {
+    QList<Subtitles> sub_list;
     return sub_list;
 }
 
-bool BDNparser::readSample(MyFileReader file) {
+bool BDNparser::readSample(FileReader file) {
     return false;
 }

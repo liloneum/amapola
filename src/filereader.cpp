@@ -4,7 +4,7 @@
 #include <QTextCodec>
 
 // Class to read text datas in a specified file "fileName" with specified format "textCodec"
-MyFileReader::MyFileReader(const QString fileName, QString textCodec)
+FileReader::FileReader(const QString fileName, QString textCodec)
 {
     mFileName = fileName;
     mNumberOfLines = 0;
@@ -12,7 +12,7 @@ MyFileReader::MyFileReader(const QString fileName, QString textCodec)
 }
 
 // Read the lines of the specified file "fileName" with specified encoding "textCodec"
-bool MyFileReader::readFile(const QString fileName, QString textCodec) {
+bool FileReader::readFile(const QString fileName, QString textCodec) {
 
     if(!fileName.isEmpty()) {
         QFile file_read(fileName);
@@ -39,7 +39,7 @@ bool MyFileReader::readFile(const QString fileName, QString textCodec) {
     return false;
 }
 
-bool MyFileReader::readRawData(const QString fileName) {
+bool FileReader::readRawData(const QString fileName) {
 
     if(!fileName.isEmpty()) {
         QFile file_read(fileName);
@@ -65,23 +65,23 @@ bool MyFileReader::readRawData(const QString fileName) {
     return false;
 }
 
-QList<quint8>* MyFileReader::data() {
+QList<quint8>* FileReader::data() {
 
     return &mData;
 }
 
 // Get the list of string lines
-QStringList MyFileReader::lines() {
+QStringList FileReader::lines() {
 
     return mLines;
 }
 
 // Get the file name
-QString MyFileReader::getFileName() {
+QString FileReader::getFileName() {
     return mFileName;
 }
 
 // Get the error message
-QString MyFileReader::errorMsg() {
+QString FileReader::errorMsg() {
     return mErrorMsg;
 }

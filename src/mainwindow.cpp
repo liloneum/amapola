@@ -131,34 +131,34 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // Effects colors
-    mTextBorderColor = MyAttributesConverter::stringToColor("FF000000");
-    mTextShadowColor = MyAttributesConverter::stringToColor("FF000000");
-    mTextBackgroundColor = MyAttributesConverter::stringToColor("FF000000");
+    mTextBorderColor = AttributesConverter::stringToColor("FF000000");
+    mTextShadowColor = AttributesConverter::stringToColor("FF000000");
+    mTextBackgroundColor = AttributesConverter::stringToColor("FF000000");
 
-    MyAttributesConverter::setColorToButton(ui->fontBorderColor, MyAttributesConverter::stringToColor("FF000000") );
-    MyAttributesConverter::setColorToButton(ui->fontShadowColor, MyAttributesConverter::stringToColor("FF000000") );
-    MyAttributesConverter::setColorToButton(ui->fontBackgroundColor, MyAttributesConverter::stringToColor("FF000000") );
+    AttributesConverter::setColorToButton(ui->fontBorderColor, AttributesConverter::stringToColor("FF000000") );
+    AttributesConverter::setColorToButton(ui->fontShadowColor, AttributesConverter::stringToColor("FF000000") );
+    AttributesConverter::setColorToButton(ui->fontBackgroundColor, AttributesConverter::stringToColor("FF000000") );
 
     qApp->setProperty("prop_FontBorderColor", "FF000000");
     qApp->setProperty("prop_FontShadowColor", "FF000000");
     qApp->setProperty("prop_FontBackgroundColor", "FF000000");
 
     // Colors
-    mColor1 = MyAttributesConverter::stringToColor("FFFFFFFF");
-    mColor2 = MyAttributesConverter::stringToColor("FFFFFF00");
-    mColor3 = MyAttributesConverter::stringToColor("FFFF0000");
-    mColor4 = MyAttributesConverter::stringToColor("FFFF00FF");
-    mColor5 = MyAttributesConverter::stringToColor("FF00FFFF");
-    mColor6 = MyAttributesConverter::stringToColor("FF00FF00");
-    mColor7 = MyAttributesConverter::stringToColor("FF0000FF");
+    mColor1 = AttributesConverter::stringToColor("FFFFFFFF");
+    mColor2 = AttributesConverter::stringToColor("FFFFFF00");
+    mColor3 = AttributesConverter::stringToColor("FFFF0000");
+    mColor4 = AttributesConverter::stringToColor("FFFF00FF");
+    mColor5 = AttributesConverter::stringToColor("FF00FFFF");
+    mColor6 = AttributesConverter::stringToColor("FF00FF00");
+    mColor7 = AttributesConverter::stringToColor("FF0000FF");
 
-    MyAttributesConverter::setColorToButton(ui->fontColor1Button, mColor1 );
-    MyAttributesConverter::setColorToButton(ui->fontColor2Button, mColor2 );
-    MyAttributesConverter::setColorToButton(ui->fontColor3Button, mColor3 );
-    MyAttributesConverter::setColorToButton(ui->fontColor4Button, mColor4 );
-    MyAttributesConverter::setColorToButton(ui->fontColor5Button, mColor5 );
-    MyAttributesConverter::setColorToButton(ui->fontColor6Button, mColor6 );
-    MyAttributesConverter::setColorToButton(ui->fontColor7Button, mColor7 );
+    AttributesConverter::setColorToButton(ui->fontColor1Button, mColor1 );
+    AttributesConverter::setColorToButton(ui->fontColor2Button, mColor2 );
+    AttributesConverter::setColorToButton(ui->fontColor3Button, mColor3 );
+    AttributesConverter::setColorToButton(ui->fontColor4Button, mColor4 );
+    AttributesConverter::setColorToButton(ui->fontColor5Button, mColor5 );
+    AttributesConverter::setColorToButton(ui->fontColor6Button, mColor6 );
+    AttributesConverter::setColorToButton(ui->fontColor7Button, mColor7 );
 
     qApp->setProperty("prop_Color1","FFFFFFFF");
     qApp->setProperty("prop_Color2","FFFFFF00");
@@ -223,11 +223,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->waveForm, SIGNAL(waveFormFileReady(QString)), ui->videoPlayer, SLOT(loadWaveForm(QString)));
 
     connect(ui->stEditDisplay, SIGNAL(cursorPositionChanged()), this, SLOT(updateSubTableText()));
-    connect(ui->stEditDisplay, SIGNAL(subDatasChanged(MySubtitles)), this, SLOT(updateSubTableDatas(MySubtitles)));
+    connect(ui->stEditDisplay, SIGNAL(subDatasChanged(Subtitles)), this, SLOT(updateSubTableDatas(Subtitles)));
     connect(ui->stEditDisplay, SIGNAL(textLineFocusChanged()), this, SLOT(updateToolBox()));
 
     connect(ui->subTable, SIGNAL(itemSelectionChanged(qint64)), this, SLOT(currentSelectionChanged(qint64)));
-    connect(ui->subTable, SIGNAL(newTextToDisplay(MySubtitles)), this, SLOT(currentSubChanged(MySubtitles)));
+    connect(ui->subTable, SIGNAL(newTextToDisplay(Subtitles)), this, SLOT(currentSubChanged(Subtitles)));
     connect(ui->subTable, SIGNAL(endTimeCodeChanged(qint32,qint64)), ui->waveForm, SLOT(changeZoneEndTime(qint32,qint64)));
 
     connect(this->mpDisplayInfoTimer, SIGNAL(timeout()), this, SLOT(eraseInfo()));
@@ -246,8 +246,8 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
     // Catch shortcut key events
     if ( event->type() == QEvent::KeyPress ) {
 
-        MySubtitles new_subtitle;
-        QList<MySubtitles> subtitle_list;
+        Subtitles new_subtitle;
+        QList<Subtitles> subtitle_list;
         qint32 current_subtitle_index;
         qint64 current_position_ms;
 
@@ -282,7 +282,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
             // F3 set current subtitle end time + ( add new subtitle entry or move the next subtitle start time)
 
             // Change the current subtitle "end time", continue if ok
-            if ( this->changeSubEndTime(end_time_ms, current_subtitle_index, QList<MySubtitles>(), false) == true ) {
+            if ( this->changeSubEndTime(end_time_ms, current_subtitle_index, QList<Subtitles>(), false) == true ) {
 
                 qint64 start_time_ms = end_time_ms + ( ( (qreal)SEC_TO_MSEC / qApp->property("prop_FrameRate_fps").toReal() ) * qApp->property("prop_SubMinInterval_frame").toReal() );
 
@@ -354,7 +354,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             if ( current_subtitle_index >= 0 ) {
 
-                qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).endTime() );
+                qint64 current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).endTime() );
 
                 if ( ui->waveForm->currentPositonMs() > current_sub_end_time_ms ) {
 
@@ -375,7 +375,7 @@ bool MainWindow::eventFilter(QObject *watched, QEvent *event) {
 
             if ( current_subtitle_index < ui->subTable->subtitlesCount() ) {
 
-                qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).startTime() );
+                qint64 current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs(ui->subTable->getSubInfos(current_subtitle_index).startTime() );
 
                 if ( ui->waveForm->currentPositonMs() < current_sub_start_time_ms ) {
 
@@ -531,7 +531,7 @@ void MainWindow::updateSubTableText() {
     // There are no subtitle for the current time. Try to add new subtitle entry
     if ( ui->subTable->isNewEntry( current_position_ms ) ) {
 
-        MySubtitles new_subtitle;
+        Subtitles new_subtitle;
         TextLine new_line = this->getPosToolBox();
 
         new_line.setLine(ui->stEditDisplay->text().first().Line());
@@ -544,7 +544,7 @@ void MainWindow::updateSubTableText() {
 
             QString error_msg = ui->subTable->errorMsg();
             QMessageBox::warning(this, "Insert subtitle", error_msg);
-            MySubtitles empty_subtitle;
+            Subtitles empty_subtitle;
             ui->stEditDisplay->setText(empty_subtitle);
         }
         else {
@@ -553,7 +553,7 @@ void MainWindow::updateSubTableText() {
             this->saveToHistory("Insert new subtitle");
 
             // Draw subtitle zone in the waveform
-            QList<MySubtitles> subtitle_list;
+            QList<Subtitles> subtitle_list;
             subtitle_list.append(new_subtitle);
             qint32 current_subtitle_index = ui->subTable->currentIndex();
             ui->waveForm->drawSubtitlesZone(subtitle_list, current_subtitle_index);
@@ -572,7 +572,7 @@ void MainWindow::updateSubTableText() {
 }
 
 // Update the subtitle datas in the database
-void MainWindow::updateSubTableDatas(MySubtitles subtitleDatas) {
+void MainWindow::updateSubTableDatas(Subtitles subtitleDatas) {
 
     qint64 current_position_ms = ui->waveForm->currentPositonMs();
 
@@ -629,7 +629,7 @@ void MainWindow::waveformMarerkPosChanged(qint64 positionMs) {
 }
 
 // Interface to manage current sub changing
-void MainWindow::currentSubChanged(MySubtitles subtitle) {
+void MainWindow::currentSubChanged(Subtitles subtitle) {
 
     // Display current subtitle text
     ui->stEditDisplay->setText(subtitle);
@@ -645,7 +645,7 @@ void MainWindow::currentSubChanged(MySubtitles subtitle) {
 }
 
 // Change the current subtitle "start time"
-bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<MySubtitles> subList, bool multiChange,bool applyChange, bool movePrevious) {
+bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<Subtitles> subList, bool multiChange,bool applyChange, bool movePrevious) {
 
     qint32 current_subtitle_index;
     qint32 ref_subtitle_index;
@@ -656,7 +656,7 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
     qint32 prev_changed_count = 0;
     qint32 failed_count = 0;
     QString error_msgs;
-    QList<MySubtitles> sub_list;
+    QList<Subtitles> sub_list;
 
     // Use the reference subtitle index passed in argument else used the current index as reference
     if ( refIndex == -1 ) {
@@ -682,8 +682,8 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
     }
 
     // Get the current subtitle start time and compute the time shift
-    MySubtitles current_subtitle = sub_list[ref_subtitle_index];
-    qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+    Subtitles current_subtitle = sub_list[ref_subtitle_index];
+    qint64 current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
 
     delta_ms = positionMs - current_sub_start_time_ms;
 
@@ -708,7 +708,7 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
 
             current_subtitle = sub_list[current_subtitle_index];
 
-            current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+            current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
 
             // Deactivate the duration auto for the reference subtitle
             if ( current_subtitle_index == ref_subtitle_index ) {
@@ -721,9 +721,9 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
             // Check if there are a subtitle before
             if ( ( current_subtitle_index - 1 ) >= 0) {
 
-                MySubtitles previous_subtitle = sub_list[current_subtitle_index - 1];
-                qint64 previous_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( previous_subtitle.startTime() );
-                qint64 previous_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( previous_subtitle.endTime() );
+                Subtitles previous_subtitle = sub_list[current_subtitle_index - 1];
+                qint64 previous_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( previous_subtitle.startTime() );
+                qint64 previous_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( previous_subtitle.endTime() );
 
                 // Check time validity
                 if ( previous_sub_start_time_ms >= 0 ) {
@@ -749,7 +749,7 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
 
                                 qint64 new_end_time_ms = positionMs - sub_min_interval_ms;
 
-                                if ( new_end_time_ms <=  MyAttributesConverter::timeStrHMStoMs( previous_subtitle.startTime() ) ) {
+                                if ( new_end_time_ms <=  AttributesConverter::timeStrHMStoMs( previous_subtitle.startTime() ) ) {
                                     error_msgs.append("Subtitle n° " +QString::number(current_subtitle_index + 1) +" : start time < previous start time \n");
                                     failed_count++;
                                     continue;
@@ -786,7 +786,7 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
             }
 
             // Check if the new start time is not after its end time
-            if ( positionMs >= MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() ) ) {
+            if ( positionMs >= AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() ) ) {
                 error_msgs.append("Subtitle n° " +QString::number(current_subtitle_index + 1) +" : new start time code > end time code \n");
                 failed_count++;
                 continue;
@@ -844,7 +844,7 @@ bool MainWindow::changeSubStartTime(qint64 &positionMs, qint32 refIndex, QList<M
 }
 
 // Change the current subtitle "start time"
-bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MySubtitles> subList, bool multiChange, bool applyChange, bool moveNext) {
+bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<Subtitles> subList, bool multiChange, bool applyChange, bool moveNext) {
 
     qint32 current_subtitle_index;
     qint32 ref_subtitle_index;
@@ -855,7 +855,7 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
     qint32 next_changed_count = 0;
     qint32 failed_count = 0;
     QString error_msgs;
-    QList<MySubtitles> sub_list;
+    QList<Subtitles> sub_list;
 
     quint64 saved_position_ms = positionMs;
 
@@ -883,9 +883,9 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
     }
 
     // Get the current subtitle start time and compute the time shift
-    MySubtitles current_subtitle = sub_list[ref_subtitle_index];
+    Subtitles current_subtitle = sub_list[ref_subtitle_index];
 
-    qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+    qint64 current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
     delta_ms = positionMs - current_sub_end_time_ms;
 
@@ -907,7 +907,7 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
 
         current_subtitle = sub_list[current_subtitle_index];
 
-        current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+        current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
         // Deactivate the duration auto for the reference subtitle
         if ( current_subtitle_index == ref_subtitle_index ) {
@@ -923,10 +923,10 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
             // Check if there are a subtitle after
             if ( ( current_subtitle_index + 1 ) < ui->subTable->subtitlesCount() ) {
 
-                MySubtitles next_subtitle = sub_list[current_subtitle_index + 1];
+                Subtitles next_subtitle = sub_list[current_subtitle_index + 1];
 
-                qint64 next_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( next_subtitle.endTime() );
-                qint64 next_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( next_subtitle.startTime() );
+                qint64 next_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( next_subtitle.endTime() );
+                qint64 next_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( next_subtitle.startTime() );
 
                 // Check time validity
                 if ( next_sub_end_time_ms >= 0 ) {
@@ -953,7 +953,7 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
 
                                 qint64 new_start_time_ms = positionMs + sub_min_interval_ms;
 
-                                if ( new_start_time_ms >=  MyAttributesConverter::timeStrHMStoMs( next_subtitle.endTime() ) ) {
+                                if ( new_start_time_ms >=  AttributesConverter::timeStrHMStoMs( next_subtitle.endTime() ) ) {
                                     error_msgs.append("Subtitle n° " +QString::number(current_subtitle_index + 1) +" : end time > next end time \n");
                                     failed_count++;
                                     continue;
@@ -985,7 +985,7 @@ bool MainWindow::changeSubEndTime(qint64 &positionMs, qint32 refIndex, QList<MyS
             }
 
             // Check if the new end time is not before the subtitle start time
-            if ( positionMs <= MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() ) ) {
+            if ( positionMs <= AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() ) ) {
                 error_msgs.append("Subtitle n° " +QString::number(current_subtitle_index + 1) +" : new end timecode < satrt timecode \n");
                 failed_count++;
                 continue;
@@ -1061,7 +1061,7 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         ref_subtitle_index = index;
     }
 
-    QList<MySubtitles> sub_list;
+    QList<Subtitles> sub_list;
     sub_list = ui->subTable->saveSubtitles();
 
     if ( ( ref_subtitle_index >= sub_list.count() ) ||
@@ -1069,9 +1069,9 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         return;
     }
 
-    MySubtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
-    qint64 current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
-    qint64 current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+    Subtitles current_subtitle = ui->subTable->getSubInfos(ref_subtitle_index);
+    qint64 current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+    qint64 current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
     delta_ms = positionMs - current_sub_start_time_ms;
 
@@ -1091,8 +1091,8 @@ void MainWindow::shiftSubtitles(qint64 positionMs, qint32 index) {
         current_subtitle_index = *it;
 
         current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
-        current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
-        current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+        current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+        current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
         // Check time validity
         if ( ( current_sub_start_time_ms >= 0 ) && ( current_sub_end_time_ms >= 0 ) ) {
@@ -1158,7 +1158,7 @@ void MainWindow::removeSubtitles() {
 
     QList<qint32> selected_indexes = ui->subTable->selectedIndex();
 
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+    QList<Subtitles> sub_list = ui->subTable->saveSubtitles();
 
     qSort(selected_indexes.begin(), selected_indexes.end(), qGreater<qint32>());
 
@@ -1192,9 +1192,9 @@ void MainWindow::updateFrameRate(qreal frameRate) {
 
     this->updateFrameRateBox(frameRate);
 
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+    QList<Subtitles> sub_list = ui->subTable->saveSubtitles();
 
-    MyAttributesConverter::roundSubListToFrame(frameRate, sub_list);
+    AttributesConverter::roundSubListToFrame(frameRate, sub_list);
 
     ui->subTable->loadSubtitles(sub_list);
 
@@ -1219,7 +1219,7 @@ void MainWindow::on_actionOpen_triggered() {
 
 
     // Read the file
-    MyFileReader file_reader(file_name, "UTF-8");
+    FileReader file_reader(file_name, "UTF-8");
 
     if ( file_reader.readFile(file_name, "UTF-8") == false ) {
         QString error_msg = file_reader.errorMsg();
@@ -1237,7 +1237,7 @@ void MainWindow::on_actionOpen_triggered() {
     // Parse the file
     AmapolaProjFileParser* parser = new AmapolaProjFileParser();
 
-    QList<MySubtitles> subtitles_list = parser->open(file_reader);
+    QList<Subtitles> subtitles_list = parser->open(file_reader);
 
     // Update the default parameters
     ui->stEditDisplay->updateDefaultSub();
@@ -1264,7 +1264,7 @@ void MainWindow::on_actionOpen_triggered() {
     else {
 
         // Erase the text edit zone
-        MySubtitles empty_sub;
+        Subtitles empty_sub;
         ui->stEditDisplay->setText(empty_sub);
     }
 
@@ -1324,12 +1324,12 @@ void MainWindow::on_actionSave_triggered() {
 // Save the current state of Amapola application into a ".apf" file
 void MainWindow::saveProject(QString fileName) {
 
-    MyFileWriter file_writer(fileName, "UTF-8");
+    FileWriter file_writer(fileName, "UTF-8");
 
     AmapolaProjFileParser* parser = new AmapolaProjFileParser();
 
     // Retreive the subtitles datas from databases
-    QList<MySubtitles> subtitles_list = ui->subTable->saveSubtitles();
+    QList<Subtitles> subtitles_list = ui->subTable->saveSubtitles();
 
     // Save the subtitles, the video opened, all default parameters and current settings
     parser->save(file_writer, subtitles_list, qApp->property("currentVideoFileName").toString());
@@ -1444,9 +1444,9 @@ void MainWindow::on_actionImport_Subtitles_triggered()
                                                      &selected_filter);
 
 
-    MyFileReader file_reader(file_name, "UTF-8");
+    FileReader file_reader(file_name, "UTF-8");
 
-    MySubtitleFileParser* parser;
+    SubtitleFileParser* parser;
 
     if ( file_name.section(".", -1) == "stl" ) {
 
@@ -1473,13 +1473,13 @@ void MainWindow::on_actionImport_Subtitles_triggered()
     if ( parser != NULL ) {
 
         // Parse the file
-        QList<MySubtitles> subtitles_list = parser->open(file_reader);
+        QList<Subtitles> subtitles_list = parser->open(file_reader);
 
         // If parsing is successfull, load the subtitles list in the database
         if ( !subtitles_list.isEmpty() ) {
 
             // Round the timecodes to the current frame rate and load subtitles
-            MyAttributesConverter::roundSubListToFrame(qApp->property("prop_FrameRate_fps").toDouble(), subtitles_list);
+            AttributesConverter::roundSubListToFrame(qApp->property("prop_FrameRate_fps").toDouble(), subtitles_list);
             ui->subTable->loadSubtitles(subtitles_list, false);
 
             // Save the database current state in history
@@ -1697,12 +1697,12 @@ void MainWindow::updateFrameRateBox(qreal frameRate) {
     mFrameRateComboBox->setCurrentIndex(mFrameRateComboBox->count() - 1);
 }
 
-QList<MySubtitles> MainWindow::getSubtitlesList() {
+QList<Subtitles> MainWindow::getSubtitlesList() {
 
     return ui->subTable->saveSubtitles();
 }
 
-void MainWindow::setSubtitlesList(QList<MySubtitles> subList) {
+void MainWindow::setSubtitlesList(QList<Subtitles> subList) {
 
     ui->subTable->loadSubtitles(subList);
 }
@@ -1737,7 +1737,7 @@ quint16 MainWindow::getSelectedSub() {
 // Update the parameter tool boxes
 void MainWindow::updateToolBox() {
 
-    MySubtitles current_subtitle_datas;
+    Subtitles current_subtitle_datas;
     TextLine text_line;
     TextFont text_font;
     qint16 line_nbr;
@@ -1795,7 +1795,7 @@ void MainWindow::updateTextPosition() {
     if ( !ui->subTable->isNewEntry(current_psotion_ms) ) {
 
         // Retrieve the current subtitle datas
-        MySubtitles current_subtitle_datas;
+        Subtitles current_subtitle_datas;
         current_subtitle_datas = ui->subTable->getSubInfos( ui->subTable->currentIndex() );
 
         // Check the line number
@@ -1976,8 +1976,8 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
         else {
             ui->fontColor7Button->setChecked(true);
             qApp->setProperty("prop_Color7", font_color_str);
-            mColor7 = MyAttributesConverter::stringToColor(font_color_str);
-            MyAttributesConverter::setColorToButton(ui->fontColor7Button, mColor7);
+            mColor7 = AttributesConverter::stringToColor(font_color_str);
+            AttributesConverter::setColorToButton(ui->fontColor7Button, mColor7);
         }
 
         if ( textFont.fontItalic().contains("yes", Qt::CaseInsensitive) == true ) {
@@ -2016,13 +2016,13 @@ void MainWindow::updateFontToolBox(TextFont textFont) {
         }
 
 
-        mTextBorderColor = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
-        mTextShadowColor = MyAttributesConverter::stringToColor( textFont.fontShadowEffectColor() );
-        mTextBackgroundColor = MyAttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() );
+        mTextBorderColor = AttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
+        mTextShadowColor = AttributesConverter::stringToColor( textFont.fontShadowEffectColor() );
+        mTextBackgroundColor = AttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() );
 
-        MyAttributesConverter::setColorToButton(ui->fontBorderColor, mTextBorderColor);
-        MyAttributesConverter::setColorToButton(ui->fontShadowColor, mTextShadowColor);
-        MyAttributesConverter::setColorToButton(ui->fontBackgroundColor, mTextBackgroundColor);
+        AttributesConverter::setColorToButton(ui->fontBorderColor, mTextBorderColor);
+        AttributesConverter::setColorToButton(ui->fontShadowColor, mTextShadowColor);
+        AttributesConverter::setColorToButton(ui->fontBackgroundColor, mTextBackgroundColor);
     }
 
     mTextFontChangedBySoft = false;
@@ -2042,25 +2042,25 @@ TextFont MainWindow::getFontToolBox() {
         text_font.setFontSize(ui->fontSizeSpinBox->cleanText());
 
         if ( ui->fontColor1Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor1);
+            font_color_str = AttributesConverter::colorToString(mColor1);
         }
         else if ( ui->fontColor2Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor2);
+            font_color_str = AttributesConverter::colorToString(mColor2);
         }
         else if ( ui->fontColor3Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor3);
+            font_color_str = AttributesConverter::colorToString(mColor3);
         }
         else if ( ui->fontColor4Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor4);
+            font_color_str = AttributesConverter::colorToString(mColor4);
         }
         else if ( ui->fontColor5Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor5);
+            font_color_str = AttributesConverter::colorToString(mColor5);
         }
         else if ( ui->fontColor6Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor6);
+            font_color_str = AttributesConverter::colorToString(mColor6);
         }
         else if ( ui->fontColor7Button->isChecked() ) {
-            font_color_str = MyAttributesConverter::colorToString(mColor7);
+            font_color_str = AttributesConverter::colorToString(mColor7);
         }
 
         text_font.setFontColor(font_color_str);
@@ -2105,9 +2105,9 @@ TextFont MainWindow::getFontToolBox() {
         else {
             text_font.setFontBackgroundEffect("no");
         }
-        text_font.setFontBorderEffectColor( MyAttributesConverter::colorToString(mTextBorderColor) );
-        text_font.setFontShadowEffectColor( MyAttributesConverter::colorToString(mTextShadowColor) );
-        text_font.setFontBackgroundEffectColor( MyAttributesConverter::colorToString(mTextBackgroundColor) );
+        text_font.setFontBorderEffectColor( AttributesConverter::colorToString(mTextBorderColor) );
+        text_font.setFontShadowEffectColor( AttributesConverter::colorToString(mTextShadowColor) );
+        text_font.setFontBackgroundEffectColor( AttributesConverter::colorToString(mTextBackgroundColor) );
     }
 
     return text_font;
@@ -2130,7 +2130,7 @@ void MainWindow::updateTextFont() {
     if ( !ui->subTable->isNewEntry(current_psotion_ms) ) {
 
         // Retrieve the current subtitle datas
-        MySubtitles current_subtitle_datas;
+        Subtitles current_subtitle_datas;
         current_subtitle_datas = ui->subTable->getSubInfos( ui->subTable->currentIndex() );
 
         // Check the line number (1 or 2)
@@ -2249,10 +2249,10 @@ void MainWindow::on_fontColor1Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor1 = font_color;
-                qApp->setProperty("prop_Color1", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color1", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor1Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor1Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor1Button->isChecked() ) {
@@ -2285,10 +2285,10 @@ void MainWindow::on_fontColor2Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor2 = font_color;
-                qApp->setProperty("prop_Color2", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color2", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor2Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor2Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor2Button->isChecked() ) {
@@ -2321,10 +2321,10 @@ void MainWindow::on_fontColor3Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor3 = font_color;
-                qApp->setProperty("prop_Color3", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color3", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor3Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor3Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor3Button->isChecked() ) {
@@ -2357,10 +2357,10 @@ void MainWindow::on_fontColor4Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor4 = font_color;
-                qApp->setProperty("prop_Color4", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color4", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor4Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor4Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor4Button->isChecked() ) {
@@ -2393,10 +2393,10 @@ void MainWindow::on_fontColor5Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor5 = font_color;
-                qApp->setProperty("prop_Color5", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color5", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor5Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor5Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor5Button->isChecked() ) {
@@ -2429,10 +2429,10 @@ void MainWindow::on_fontColor6Button_customContextMenuRequested(const QPoint &po
 
                 // Save the color
                 mColor6 = font_color;
-                qApp->setProperty("prop_Color6", MyAttributesConverter::colorToString(font_color));
+                qApp->setProperty("prop_Color6", AttributesConverter::colorToString(font_color));
 
                 // Change the color of the PushButton
-                MyAttributesConverter::setColorToButton(ui->fontColor6Button, font_color);
+                AttributesConverter::setColorToButton(ui->fontColor6Button, font_color);
 
                 // Update the text font in the database and in the text edit
                 if ( ui->fontColor6Button->isChecked() ) {
@@ -2524,7 +2524,7 @@ void MainWindow::on_fontBorderColor_clicked() {
     if ( mTextFontChangedBySoft == false ) {
 
         // Open a dialog abling user to chose a color
-        QColor init_color = MyAttributesConverter::stringToColor( qApp->property("prop_FontBorderColor").toString() );
+        QColor init_color = AttributesConverter::stringToColor( qApp->property("prop_FontBorderColor").toString() );
         QColor font_border_color = QColorDialog::getColor(init_color, this, tr("Select border effect color"), QColorDialog::ShowAlphaChannel);
 
         if ( font_border_color.isValid() ) {
@@ -2535,12 +2535,12 @@ void MainWindow::on_fontBorderColor_clicked() {
             // If there are no subtitle for the current position,
             // save this parameter as default parameter
             if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
-                qApp->setProperty("prop_FontBorderColor", MyAttributesConverter::colorToString(font_border_color));
+                qApp->setProperty("prop_FontBorderColor", AttributesConverter::colorToString(font_border_color));
                 ui->stEditDisplay->updateDefaultSub();
             }
 
             // Change the color of the PushButton
-            MyAttributesConverter::setColorToButton(ui->fontBorderColor, font_border_color);
+            AttributesConverter::setColorToButton(ui->fontBorderColor, font_border_color);
 
             // Update the text font in the database and in the text edit
             updateTextFont();
@@ -2554,7 +2554,7 @@ void MainWindow::on_fontShadowColor_clicked() {
     if ( mTextFontChangedBySoft == false ) {
 
         // Open a dialog abling user to chose a color
-        QColor init_color = MyAttributesConverter::stringToColor( qApp->property("prop_FontShadowColor").toString() );
+        QColor init_color = AttributesConverter::stringToColor( qApp->property("prop_FontShadowColor").toString() );
         QColor font_shadow_color = QColorDialog::getColor(init_color, this, tr("Select shadow effect color"), QColorDialog::ShowAlphaChannel);
 
         if ( font_shadow_color.isValid() ) {
@@ -2565,12 +2565,12 @@ void MainWindow::on_fontShadowColor_clicked() {
             // If there are no subtitle for the current position,
             // save this parameter as default parameter
             if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
-                qApp->setProperty("prop_FontShadowColor", MyAttributesConverter::colorToString(font_shadow_color));
+                qApp->setProperty("prop_FontShadowColor", AttributesConverter::colorToString(font_shadow_color));
                 ui->stEditDisplay->updateDefaultSub();
             }
 
             // Change the color of the PushButton
-            MyAttributesConverter::setColorToButton(ui->fontShadowColor, font_shadow_color);
+            AttributesConverter::setColorToButton(ui->fontShadowColor, font_shadow_color);
 
             // Update the text font in the database and in the text edit
             updateTextFont();
@@ -2584,7 +2584,7 @@ void MainWindow::on_fontBackgroundColor_clicked() {
     if ( mTextFontChangedBySoft == false ) {
 
         // Open a dialog abling user to chose a color
-        QColor init_color = MyAttributesConverter::stringToColor( qApp->property("prop_FontBackgroundColor").toString() );
+        QColor init_color = AttributesConverter::stringToColor( qApp->property("prop_FontBackgroundColor").toString() );
         QColor font_background_color = QColorDialog::getColor(init_color, this, tr("Select backgroung effect color"), QColorDialog::ShowAlphaChannel);
 
         if ( font_background_color.isValid() ) {
@@ -2595,12 +2595,12 @@ void MainWindow::on_fontBackgroundColor_clicked() {
             // If there are no subtitle for the current position,
             // save this parameter as default parameter
             if ( ui->subTable->isNewEntry( ui->waveForm->currentPositonMs() ) ) {
-                qApp->setProperty("prop_FontBackgroundColor", MyAttributesConverter::colorToString(font_background_color));
+                qApp->setProperty("prop_FontBackgroundColor", AttributesConverter::colorToString(font_background_color));
                 ui->stEditDisplay->updateDefaultSub();
             }
 
             // Change the color of the PushButton
-            MyAttributesConverter::setColorToButton(ui->fontBackgroundColor, font_background_color);
+            AttributesConverter::setColorToButton(ui->fontBackgroundColor, font_background_color);
 
             // Update the text font in the database and in the text edit
             updateTextFont();
@@ -2692,7 +2692,7 @@ void MainWindow::on_firstNumSpinBox_customContextMenuRequested(const QPoint &pos
             if (current_subtitle_index >= 0 ) {
                 ui->firstNumSpinBox->setValue(current_subtitle_index);
 
-                MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+                Subtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
                 ui->firstStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
                 ui->firstNewStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
             }
@@ -2722,7 +2722,7 @@ void MainWindow::on_lastNumSpinBox_customContextMenuRequested(const QPoint &pos)
 
                 ui->lastNumSpinBox->setValue(current_subtitle_index);
 
-                MySubtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
+                Subtitles current_subtitle = ui->subTable->getSubInfos(current_subtitle_index);
                 ui->lastStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
                 ui->lastNewStartTimeEdit->setTime( QTime::fromString(current_subtitle.startTime(), "hh:mm:ss.zzz") );
             }
@@ -2789,7 +2789,7 @@ void MainWindow::on_syncApplyPushButton_clicked() {
     qint64 last_dest_time_ms;
     qint32 from_index, to_index;
 
-    MySubtitles current_subtitle;
+    Subtitles current_subtitle;
     qint64 current_sub_start_time_ms;
     qint64 current_sub_end_time_ms;
     qreal temp_time_ms;
@@ -2807,7 +2807,7 @@ void MainWindow::on_syncApplyPushButton_clicked() {
     qreal rescale_factor = (qreal)( (last_dest_time_ms - last_source_time_ms) - (first_dest_time_ms - first_source_time_ms) ) / (qreal)(last_source_time_ms - first_source_time_ms);
 
     // Get the current subtiles list from the database
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+    QList<Subtitles> sub_list = ui->subTable->saveSubtitles();
 
     if ( ui->firstNumSpinBox->value() >= ui->lastNumSpinBox->value() ) {
         // Error
@@ -2835,21 +2835,21 @@ void MainWindow::on_syncApplyPushButton_clicked() {
 
         // Compute new timecodes
         current_subtitle = sub_list.at(i);
-        current_sub_start_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
-        current_sub_end_time_ms = MyAttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
+        current_sub_start_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.startTime() );
+        current_sub_end_time_ms = AttributesConverter::timeStrHMStoMs( current_subtitle.endTime() );
 
         temp_time_ms = (qreal)current_sub_start_time_ms + ( (qreal)(current_sub_start_time_ms - first_source_time_ms) * rescale_factor ) + (qreal)(first_dest_time_ms - first_source_time_ms);
-        new_start_time_ms = MyAttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
+        new_start_time_ms = AttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
 
         temp_time_ms = (qreal)current_sub_end_time_ms + ( (qreal)(current_sub_end_time_ms - first_source_time_ms) * rescale_factor ) + (qreal)(first_dest_time_ms - first_source_time_ms);
-        new_end_time_ms = MyAttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
+        new_end_time_ms = AttributesConverter::roundToFrame(temp_time_ms, qApp->property("prop_FrameRate_fps").toInt());
 
         // If it's the first subtitle, check if it's new timecode is positive and not erase the previous subtitle
         if ( i == from_index ) {
 
             if ( from_index > 0 ) {
 
-                qint64 previous_end_time_ms = MyAttributesConverter::timeStrHMStoMs( sub_list[i -1].endTime() );
+                qint64 previous_end_time_ms = AttributesConverter::timeStrHMStoMs( sub_list[i -1].endTime() );
 
                 if ( new_start_time_ms <= previous_end_time_ms ) {
                     // Error
@@ -2870,7 +2870,7 @@ void MainWindow::on_syncApplyPushButton_clicked() {
 
             if ( ( i + 1 ) < sub_list.count() ) {
 
-                qint64 next_start_time_ms = MyAttributesConverter::timeStrHMStoMs( sub_list[i + 1].startTime() );
+                qint64 next_start_time_ms = AttributesConverter::timeStrHMStoMs( sub_list[i + 1].startTime() );
 
                 if ( new_end_time_ms >= next_start_time_ms ) {
                     // Error
@@ -2901,7 +2901,7 @@ void MainWindow::on_syncApplyPushButton_clicked() {
 // Apply the current text line position to all selected subtitles corresponding line
 void MainWindow::on_applyPosSelButton_clicked() {
 
-    MySubtitles current_sub;
+    Subtitles current_sub;
     qint32 index;
     qint16 nbr_of_lines;
     TextFont current_text_font;
@@ -2953,7 +2953,7 @@ void MainWindow::on_applyPosSelButton_clicked() {
 // Apply the current text line font to all selected subtitles corresponding line
 void MainWindow::on_applyFontSelButton_clicked() {
 
-    MySubtitles current_sub;
+    Subtitles current_sub;
     qint32 index;
     qint16 nbr_of_lines;
     bool data_changed = false;
@@ -2966,7 +2966,7 @@ void MainWindow::on_applyFontSelButton_clicked() {
     QList<qint32> selected_indexes = ui->subTable->selectedIndex();
 
     // Retrieve the subtitles list from the databases
-    QList<MySubtitles> sub_list = ui->subTable->saveSubtitles();
+    QList<Subtitles> sub_list = ui->subTable->saveSubtitles();
 
     // For each subtitle selected
     QList<qint32>::iterator it;
@@ -3033,7 +3033,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
     custom_menu.addAction("Delete");
     // ...
 
-    MySubtitles current_sub;
+    Subtitles current_sub;
     QList<TextLine> text_lines;
     bool italic_found = false;
     bool underlined_found = false;
@@ -3261,7 +3261,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             // If valid color, set to all selected subtitles
             if ( font_color.isValid() ) {
 
-                QString font_color_str = MyAttributesConverter::colorToString(font_color);
+                QString font_color_str = AttributesConverter::colorToString(font_color);
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
@@ -3290,7 +3290,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             // If valid color, set to all selected subtitles
             if ( border_color.isValid() ) {
 
-                QString border_color_str = MyAttributesConverter::colorToString(border_color);
+                QString border_color_str = AttributesConverter::colorToString(border_color);
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
@@ -3319,7 +3319,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             // If valid color, set to all selected subtitles
             if ( shadow_color.isValid() ) {
 
-                QString shadow_color_str = MyAttributesConverter::colorToString(shadow_color);
+                QString shadow_color_str = AttributesConverter::colorToString(shadow_color);
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 
@@ -3348,7 +3348,7 @@ void MainWindow::on_subTable_customContextMenuRequested(const QPoint &pos) {
             // If valid color, set to all selected subtitles
             if ( background_color.isValid() ) {
 
-                QString background_color_str = MyAttributesConverter::colorToString(background_color);
+                QString background_color_str = AttributesConverter::colorToString(background_color);
 
                 for ( it = selected_indexes.begin(); it != selected_indexes.end(); ++it ) {
 

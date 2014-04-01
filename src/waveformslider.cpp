@@ -29,9 +29,9 @@
 // Sample size in bytes (here it's 16 bits -> 2 Bytes)
 #define SAMPLE_SIZE_BYTES 2
 
-MyWaveFormSlider::MyWaveFormSlider(QWidget *parent) :
+WaveFormSlider::WaveFormSlider(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::MyWaveForm)
+    ui(new Ui::WaveForm)
 {
     ui->setupUi(this);
 
@@ -118,13 +118,13 @@ MyWaveFormSlider::MyWaveFormSlider(QWidget *parent) :
     mpPosSlider->setBrush(QBrush(slider_color_zone));
 }
 
-MyWaveFormSlider::~MyWaveFormSlider()
+WaveFormSlider::~WaveFormSlider()
 {
     delete ui;
 }
 
 
-void MyWaveFormSlider::openFile(QString waveform_file_name, qint64 mediaDurationMs) {
+void WaveFormSlider::openFile(QString waveform_file_name, qint64 mediaDurationMs) {
 
     mpFile->setFileName("");
 
@@ -142,7 +142,7 @@ void MyWaveFormSlider::openFile(QString waveform_file_name, qint64 mediaDuration
     initWaveForm(mediaDurationMs);
 }
 
-void MyWaveFormSlider::initWaveForm(qint64 durationMs) {
+void WaveFormSlider::initWaveForm(qint64 durationMs) {
 
     qint32 size_of_file;
 
@@ -239,7 +239,7 @@ void MyWaveFormSlider::initWaveForm(qint64 durationMs) {
 
 }
 
-bool MyWaveFormSlider::eventFilter(QObject* watched, QEvent* event) {
+bool WaveFormSlider::eventFilter(QObject* watched, QEvent* event) {
 
     // Manage mouse click and wheel event for the wave-form plot object
     if ( watched == ui->waveFormPlot ) {
@@ -277,7 +277,7 @@ bool MyWaveFormSlider::eventFilter(QObject* watched, QEvent* event) {
 
 // Draw a marker under the mouse in real time.
 // With time "hh:mm"
-void MyWaveFormSlider::setRtMarkerPos(int xPos) {
+void WaveFormSlider::setRtMarkerPos(int xPos) {
 
     QTime time_base(0, 0, 0, 0);
 
@@ -291,7 +291,7 @@ void MyWaveFormSlider::setRtMarkerPos(int xPos) {
 }
 
 // Retrieve the position in millisecond from the mouse horizontal position (X coordonates)
-qint64 MyWaveFormSlider::posMsFromPosPx(int xPos) {
+qint64 WaveFormSlider::posMsFromPosPx(int xPos) {
 
     qint32 scale_size_ms;
     qint32 position_ms;
@@ -316,11 +316,11 @@ qint64 MyWaveFormSlider::posMsFromPosPx(int xPos) {
     position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
     // Scale the positon in function of the framerate
-    return MyAttributesConverter::roundToFrame(position_ms, qApp->property("prop_FrameRate_fps").toReal());
+    return AttributesConverter::roundToFrame(position_ms, qApp->property("prop_FrameRate_fps").toReal());
 }
 
 // Compute new position in fonction of mouse click position
-void MyWaveFormSlider::setSliderPosFromClick(int xPos) {
+void WaveFormSlider::setSliderPosFromClick(int xPos) {
 
     mCurrentPositonMs = this->posMsFromPosPx(xPos);
 
@@ -332,9 +332,9 @@ void MyWaveFormSlider::setSliderPosFromClick(int xPos) {
 }
 
 // Draw the slider in function of the player current position
-void MyWaveFormSlider::updatePostionSlider(qint64 positionMs) {
+void WaveFormSlider::updatePostionSlider(qint64 positionMs) {
 
-    positionMs = MyAttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
+    positionMs = AttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
 
     if ( positionMs > mMediaDurationMs ) {
         return;
@@ -347,7 +347,7 @@ void MyWaveFormSlider::updatePostionSlider(qint64 positionMs) {
     ui->waveFormPlot->replot();
 }
 
-qint64 MyWaveFormSlider::currentPositonMs() {
+qint64 WaveFormSlider::currentPositonMs() {
 
     return mCurrentPositonMs;
 }

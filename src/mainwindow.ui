@@ -49,7 +49,7 @@
      <number>6</number>
     </property>
     <item row="0" column="1">
-     <widget class="MyVideoPlayer" name="videoPlayer" native="true">
+     <widget class="VideoPlayer" name="videoPlayer" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
@@ -62,7 +62,7 @@
         <height>400</height>
        </size>
       </property>
-      <widget class="MyTextEdit" name="stEditDisplay" native="true">
+      <widget class="TextEdit" name="stEditDisplay" native="true">
        <property name="geometry">
         <rect>
          <x>50</x>
@@ -164,7 +164,7 @@
       <widget class="QWidget" name="page1">
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
-         <widget class="MySubtitlesTable" name="subTable">
+         <widget class="SubtitlesTable" name="subTable">
           <property name="enabled">
            <bool>true</bool>
           </property>
@@ -406,7 +406,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="MySettings" name="settings">
+      <widget class="Settings" name="settings">
        <layout class="QGridLayout" name="gridLayout_3"/>
       </widget>
      </widget>
@@ -1692,7 +1692,7 @@
      </layout>
     </item>
     <item row="3" column="0" colspan="2">
-     <widget class="MyWaveForm" name="waveForm" native="true">
+     <widget class="WaveForm" name="waveForm" native="true">
       <property name="sizePolicy">
        <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
@@ -1793,30 +1793,30 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>MyVideoPlayer</class>
+   <class>VideoPlayer</class>
    <extends>QWidget</extends>
    <header location="global">videoplayer.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MyWaveForm</class>
+   <class>WaveForm</class>
    <extends>QWidget</extends>
    <header location="global">waveform.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MySubtitlesTable</class>
+   <class>SubtitlesTable</class>
    <extends>QTableWidget</extends>
    <header location="global">subtitlestable.h</header>
   </customwidget>
   <customwidget>
-   <class>MySettings</class>
+   <class>Settings</class>
    <extends>QWidget</extends>
    <header location="global">settings.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>MyTextEdit</class>
+   <class>TextEdit</class>
    <extends>QWidget</extends>
    <header location="global">textedit.h</header>
    <container>1</container>

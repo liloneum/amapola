@@ -5,13 +5,13 @@
 #include "filewriter.h"
 #include "subexportdialog.h"
 
-class ScenaristSubParser : public MySubtitleFileParser
+class ScenaristSubParser : public SubtitleFileParser
 {
 public:
     ScenaristSubParser();
-    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
-    QList<MySubtitles> open(MyFileReader file);
-    bool readSample(MyFileReader file);
+    bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog);
+    QList<Subtitles> open(FileReader file);
+    bool readSample(FileReader file);
 };
 
 #endif // SCENARISTSUBPARSER_H

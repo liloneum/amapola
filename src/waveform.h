@@ -5,7 +5,7 @@
 #include <subtitles.h>
 
 namespace Ui {
-class MyWaveForm;
+class WaveForm;
 }
 
 class QAudioDecoder;
@@ -22,13 +22,13 @@ class QLabel;
 // This widget manage an audio waveform displaying, with zoom and shift.
 // Display a position marker at the input time,
 // allow media control by sending output time of the position clicked.
-class MyWaveForm : public QWidget
+class WaveForm : public QWidget
 {
     Q_OBJECT
     
 public:
-    explicit MyWaveForm(QWidget *parent = 0);
-    ~MyWaveForm();
+    explicit WaveForm(QWidget *parent = 0);
+    ~WaveForm();
 
 signals:
     void markerPositionChanged(qint64);
@@ -40,7 +40,7 @@ signals:
 public slots:
     void openFile(QString waveform_file_name, QString video_file_name);
     void updatePostionMarker(qint64 positionMs);
-    void drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subtitleIndex);
+    void drawSubtitlesZone(QList<Subtitles> subtitlesList, qint32 subtitleIndex);
     void changeZoneColor(QList<qint32> selectedIndex, qint32 currentIndex);
     void removeSubtitleZone(qint32 subtitleIndex);
     void removeAllSubtitlesZones();
@@ -64,7 +64,7 @@ private slots:
 
 private:
     // Qt designer ui reference
-    Ui::MyWaveForm *ui;
+    Ui::WaveForm *ui;
 
     // Audio decoder object
     QAudioDecoder* mpDecoder;

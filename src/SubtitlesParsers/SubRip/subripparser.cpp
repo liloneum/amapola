@@ -25,7 +25,7 @@ SubRipParser::SubRipParser()
 {
 }
 
-bool SubRipParser::readSample(MyFileReader file) {
+bool SubRipParser::readSample(FileReader file) {
 
     QStringList lines = file.lines();
     QRegExp time_regexp("^(\\d+):(\\d+):(\\d+),(\\d+)\\s-->\\s(\\d+):(\\d+):(\\d+),(\\d+)");
@@ -45,14 +45,14 @@ bool SubRipParser::readSample(MyFileReader file) {
 }
 
 // Parse SubRip file, retrieve subtitles infos.
-// Subtitles read are saved in "MySubtitles" container
-QList<MySubtitles> SubRipParser::open(MyFileReader file) {
+// Subtitles read are saved in "Subtitles" container
+QList<Subtitles> SubRipParser::open(FileReader file) {
 
     QStringList lines = file.lines();
 
     QRegExp time_regexp("^(\\d+):(\\d+):(\\d+),(\\d+)\\s-->\\s(\\d+):(\\d+):(\\d+),(\\d+)");
 
-    QList<MySubtitles> subtitles_list;
+    QList<Subtitles> subtitles_list;
 
     for ( qint32 i = 0; i < lines.count(); i++ ) {
 
@@ -66,7 +66,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
             times_list = times.split(QRegExp("-->"));
             times_list = times_list.replaceInStrings(",", ".");
 
-            MySubtitles new_subtitle;
+            Subtitles new_subtitle;
 
             new_subtitle.setStartTime(times_list.first());
             new_subtitle.setEndTime(times_list.last());
@@ -77,14 +77,14 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
                 TextLine text_line;
                 TextFont text_font;
 
-                text_line.setLine( MyAttributesConverter::plainTextToHtml(lines[i + 1]) );
+                text_line.setLine( AttributesConverter::plainTextToHtml(lines[i + 1]) );
 
                 new_subtitle.setText(text_line, text_font);
 
                 // If text line 2 exist, retrieve it
                 if ( !( lines[i + 2].isEmpty() ) ) {
 
-                    text_line.setLine( MyAttributesConverter::plainTextToHtml(lines[i + 2]) );
+                    text_line.setLine( AttributesConverter::plainTextToHtml(lines[i + 2]) );
 
                     new_subtitle.setText(text_line, text_font);
                 }
@@ -98,7 +98,7 @@ QList<MySubtitles> SubRipParser::open(MyFileReader file) {
 
 
 // Write the subtitles list in a file (SubRip format)
-bool SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool SubRipParser::save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
@@ -224,7 +224,7 @@ bool SubRipParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, S
                 }
             }
             else {
-                line = MyAttributesConverter::htmlToPlainText( text_line.Line() );
+                line = AttributesConverter::htmlToPlainText( text_line.Line() );
             }
 
             if ( text.isEmpty() ) {

@@ -1,20 +1,20 @@
 #include "application.h"
 #include "mainwindow.h"
 
-MainWindow* MyApplication::mpMainWindow = NULL;
+MainWindow* Application::mpMainWindow = NULL;
 
-MyApplication::MyApplication(int argc, char* argv[]):
+Application::Application(int argc, char* argv[]):
     QApplication(argc, argv)
 {
     mpMainWindow = new MainWindow();
     mpMainWindow->show();
 }
 
-MyApplication::~MyApplication() {
+Application::~Application() {
 
 }
 
-MainWindow* MyApplication::getMainWindow() {
+MainWindow* Application::getMainWindow() {
 
     return mpMainWindow;
 }

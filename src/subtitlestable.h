@@ -7,12 +7,12 @@
 // This widget manage a subtitles table.
 // It's a database to stock text, timecode, position, font.
 // Display only text and timecode.
-class MySubtitlesTable : public QTableWidget
+class SubtitlesTable : public QTableWidget
 {
     Q_OBJECT
 
 public:
-    explicit MySubtitlesTable(QWidget *parent = 0);
+    explicit SubtitlesTable(QWidget *parent = 0);
 
     enum columnRole {
         SUB_NUM_COL = 0,
@@ -24,31 +24,31 @@ public:
         SUB_TEXT_COL = 6
     };
 
-    //~MySubtitlesTable();
+    //~SubtitlesTable();
 
 signals:
     void itemSelectionChanged(qint64);
-    void newTextToDisplay(MySubtitles);
+    void newTextToDisplay(Subtitles);
     void currentSubChanged(qint32);
     void endTimeCodeChanged(qint32, qint64);
 
 public slots:
-    bool insertNewSub(MySubtitles &newSubtitle, qint64 positionMs);
-    bool insertNewSubAfterCurrent(MySubtitles &newSubtitle);
+    bool insertNewSub(Subtitles &newSubtitle, qint64 positionMs);
+    bool insertNewSubAfterCurrent(Subtitles &newSubtitle);
     void deleteCurrentSub();
     void initStTable(qint32 numberOfRow);
-    void loadSubtitles(QList<MySubtitles> subtitlesList, bool keepSelection = true);
-    QList<MySubtitles> saveSubtitles();
+    void loadSubtitles(QList<Subtitles> subtitlesList, bool keepSelection = true);
+    QList<Subtitles> saveSubtitles();
     bool isNewEntry(qint64 positionMs);
     void updateText(QList<TextLine> textLines);
-    void updateDatas(MySubtitles subtitle, qint32 index = -1);
+    void updateDatas(Subtitles subtitle, qint32 index = -1);
     bool setEndTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
     bool setStartTime(qint64 positionMs, qint32 stIndex, bool force = false, qint32 intervalMs = 0);
     void updateStDisplay(qint64 positionMs);
     qint32 currentIndex();
     QList<qint32> selectedIndex();
     qint32 subtitlesCount();
-    MySubtitles getSubInfos(qint32 stIndex);
+    Subtitles getSubInfos(qint32 stIndex);
     QString errorMsg();
     void setDurationAuto(qint32 index, bool state);
 
@@ -63,7 +63,7 @@ private:
     QVector<qint32> mPositionMsToStIndex;
 
     // The current subtitles list
-    QList<MySubtitles> mSubtitlesList;
+    QList<Subtitles> mSubtitlesList;
 
     // Previous subtitle displayed index.
     qint32 mPreviousIndex;

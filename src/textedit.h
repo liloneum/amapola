@@ -9,28 +9,28 @@
 
 // This widget class manage the edit zone.
 // Manage 2 lines of editable text, with position and font attributes
-class MyTextEdit : public QWidget
+class TextEdit : public QWidget
 {
     Q_OBJECT
     
 public:
-    explicit MyTextEdit(QWidget *parent = 0);
-    ~MyTextEdit();
+    explicit TextEdit(QWidget *parent = 0);
+    ~TextEdit();
 
 signals:
     void cursorPositionChanged();
-    void subDatasChanged(MySubtitles);
-    void lineAdded(MySubtitles);
-    void lineRemoved(MySubtitles);
+    void subDatasChanged(Subtitles);
+    void lineAdded(Subtitles);
+    void lineRemoved(Subtitles);
     void textLineFocusChanged();
 
 public slots :
-    void setText(MySubtitles subtitle);
+    void setText(Subtitles subtitle);
     QList<TextLine> text();
-    MySubtitles subtitleData();
+    Subtitles subtitleData();
     void updateTextPosition(TextLine textLine);
     void updateTextFont(TextFont textFont, TextLine textLine);
-    MySubtitles getDefaultSub();
+    Subtitles getDefaultSub();
     void updateDefaultSub();
     qint16 lastFocused();
 
@@ -58,9 +58,9 @@ private:
     // Test flag : : font is updating. Cursor maybe moved by soft
     bool mIsChangingFont;
     // Save defaut subtitle container
-    MySubtitles mDefaultSub;
+    Subtitles mDefaultSub;
     // Save current text edit zones position and font
-    MySubtitles mCurrentTextProp;
+    Subtitles mCurrentTextProp;
     // Number of pixels per inch for the current hardware
     qint32 mPxPerInch;
     // Last text zone focused

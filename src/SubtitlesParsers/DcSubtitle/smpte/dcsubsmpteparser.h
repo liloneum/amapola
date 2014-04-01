@@ -9,13 +9,13 @@
 #include <QDomElement>
 #include <QFile>
 
-class DcSubSmpteParser : public MySubtitleFileParser
+class DcSubSmpteParser : public SubtitleFileParser
 {
 public:
     DcSubSmpteParser();
-    QList<MySubtitles> open(MyFileReader file);
-    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
-    bool readSample(MyFileReader file);
+    QList<Subtitles> open(FileReader file);
+    bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(FileReader file);
 
 private:
     void changeFont(QDomElement xmlElement);
@@ -28,9 +28,9 @@ private:
     // Fond name list
     QList<QString> mFontIdList;
     // Subtitles container
-    MySubtitles mNewSubtitle;
-    // MySubtitles containers list
-    QList<MySubtitles> mSubtitlesList;
+    Subtitles mNewSubtitle;
+    // Subtitles containers list
+    QList<Subtitles> mSubtitlesList;
     // TimeCodeRate
     qint16 mTimeCodeRate;
 

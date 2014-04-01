@@ -10,8 +10,8 @@ class AmapolaProjFileParser
 {
 public:
     AmapolaProjFileParser();
-    QList<MySubtitles> open(MyFileReader file);
-    void save(MyFileWriter & file, QList<MySubtitles> subtitlesList, QString videoFilePath);
+    QList<Subtitles> open(FileReader file);
+    void save(FileWriter & file, QList<Subtitles> subtitlesList, QString videoFilePath);
 };
 
 #endif // AMAPOLAPROJFILEPARSER_H

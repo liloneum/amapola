@@ -5,7 +5,7 @@
 #include <waveform.h>
 
 namespace Ui {
-class MyWaveFormSlider;
+class WaveFormSlider;
 }
 
 class QFile;
@@ -15,13 +15,13 @@ class QwtPlotMarker;
 class QwtPlotZoneItem;
 class QTimeEdit;
 
-class MyWaveFormSlider : public QWidget
+class WaveFormSlider : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MyWaveFormSlider(QWidget *parent = 0);
-    ~MyWaveFormSlider();
+    explicit WaveFormSlider(QWidget *parent = 0);
+    ~WaveFormSlider();
 
 signals:
     void sliderPositionChanged(qint64);
@@ -39,7 +39,7 @@ private slots:
     void setSliderPosFromClick(int xPos);
 
 private:
-    Ui::MyWaveForm *ui;
+    Ui::WaveForm *ui;
 
     // Stream to read/write file
     QDataStream* mpStream;

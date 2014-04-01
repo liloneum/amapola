@@ -3,9 +3,9 @@
 
 #define FLOAT_EPSILON 0.001
 
-MySettings::MySettings(QWidget *parent) :
+Settings::Settings(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::MySettings)
+    ui(new Ui::Settings)
 {
     ui->setupUi(this);
 
@@ -27,12 +27,12 @@ MySettings::MySettings(QWidget *parent) :
     mSettingsChangedBySoft = false;
 }
 
-MySettings::~MySettings()
+Settings::~Settings()
 {
     delete ui;
 }
 
-void MySettings::updateDisplayAll() {
+void Settings::updateDisplayAll() {
 
     ui->intervalMinSpinBox->setValue( qApp->property("prop_SubMinInterval_frame").toInt());
     ui->displayTimeMinSpinBox->setValue( qApp->property("prop_SubMinDuration_ms").toInt());
@@ -46,56 +46,56 @@ void MySettings::updateDisplayAll() {
     ui->bottomMarginSpinBox->setValue( qApp->property("prop_BottomMargin_percent").toDouble());
 }
 
-void MySettings::on_displayTimeMinSpinBox_valueChanged(int value) {
+void Settings::on_displayTimeMinSpinBox_valueChanged(int value) {
 
     qApp->setProperty("prop_SubMinDuration_ms", value);
 }
 
-void MySettings::on_intervalMinSpinBox_valueChanged(int value) {
+void Settings::on_intervalMinSpinBox_valueChanged(int value) {
 
     qApp->setProperty("prop_SubMinInterval_frame", value);
 }
 
-void MySettings::on_maxCharPerLineSpinBox_valueChanged(int value) {
+void Settings::on_maxCharPerLineSpinBox_valueChanged(int value) {
 
     qApp->setProperty("prop_MaxCharPerLine", value);
 }
 
-void MySettings::on_maxCharPerSecDoubleSpinBox_valueChanged(double value) {
+void Settings::on_maxCharPerSecDoubleSpinBox_valueChanged(double value) {
 
     qApp->setProperty("prop_MaxCharPerSec", value);
 
     emit marginChanged();
 }
 
-void MySettings::on_leftMarginSpinBox_valueChanged(double arg1) {
+void Settings::on_leftMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_LeftMargin_percent", arg1);
 
     emit marginChanged();
 }
 
-void MySettings::on_rightMarginSpinBox_valueChanged(double arg1) {
+void Settings::on_rightMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_RightMargin_percent", arg1);
 
     emit marginChanged();
 }
 
-void MySettings::on_topMarginSpinBox_valueChanged(double arg1) {
+void Settings::on_topMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_TopMargin_percent", arg1);
 
     emit marginChanged();
 }
 
-void MySettings::on_bottomMarginSpinBox_valueChanged(double arg1) {
+void Settings::on_bottomMarginSpinBox_valueChanged(double arg1) {
 
     qApp->setProperty("prop_BottomMargin_percent", arg1);
 }
 
 
-void MySettings::on_frameRateComboBox_currentIndexChanged(int index) {
+void Settings::on_frameRateComboBox_currentIndexChanged(int index) {
 
     qreal frame_rate;
 
@@ -141,7 +141,7 @@ void MySettings::on_frameRateComboBox_currentIndexChanged(int index) {
     }
 }
 
-void MySettings::on_frameRateSpinBox_editingFinished() {
+void Settings::on_frameRateSpinBox_editingFinished() {
 
     qreal frame_rate = ui->frameRateSpinBox->value();
 
@@ -153,7 +153,7 @@ void MySettings::on_frameRateSpinBox_editingFinished() {
     }
 }
 
-void MySettings::setFrameRate(qreal frameRate) {
+void Settings::setFrameRate(qreal frameRate) {
 
     int index;
 
@@ -189,22 +189,22 @@ void MySettings::setFrameRate(qreal frameRate) {
     qApp->setProperty("prop_FrameRate_fps", frameRate);
 }
 
-MyProperties MySettings::getCurrentProp() {
+Properties Settings::getCurrentProp() {
     return mCurrentProperties;
 }
 
 //*************************************************//
-//               Class MyProperties                //
+//               Class Properties                //
 //*************************************************//
 
-MyProperties::MyProperties() {
+Properties::Properties() {
     mFrameRate = 0.0;
 }
 
-void MyProperties::setFrameRate(qreal frameRate) {
+void Properties::setFrameRate(qreal frameRate) {
     mFrameRate = frameRate;
 }
 
-qreal MyProperties::frameRate() {
+qreal Properties::frameRate() {
     return mFrameRate;
 }

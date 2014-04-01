@@ -10,7 +10,7 @@ class ImagesExporter : public QWidget
     Q_OBJECT
 public:
     explicit ImagesExporter(QSize widgetSize, QWidget *parent = 0);
-    void createImage(MySubtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth);
+    void createImage(Subtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth);
     QRect imageRect();
 
 signals:
@@ -20,7 +20,7 @@ public slots:
 private:
 
     QTextEdit* createNewTextEdit();
-    void setText(MySubtitles subtitle);
+    void setText(Subtitles subtitle);
     void setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize widgetSize);
     void setTextFont(QTextEdit* textEdit, TextFont textFont, QSize widgetSize);
 

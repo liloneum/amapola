@@ -100,10 +100,10 @@ private:
 
 
 
-class MySubtitles
+class Subtitles
 {
 public:
-    MySubtitles();
+    Subtitles();
     void clear();
     void setStartTime(QString startTime);
     void setEndTime(QString endTime);

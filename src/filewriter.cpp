@@ -5,7 +5,7 @@
 #include <QTextCodec>
 
 // Class to write text datas in a specified file "fileName" with specified format "textCodec"
-MyFileWriter::MyFileWriter(QString fileName, QString textCodec) {
+FileWriter::FileWriter(QString fileName, QString textCodec) {
 
     mFileName = fileName;
     mTextCodec = textCodec;
@@ -15,19 +15,19 @@ MyFileWriter::MyFileWriter(QString fileName, QString textCodec) {
 }
 
 // Add datas
-void MyFileWriter::writeText(QString buffer) {
+void FileWriter::writeText(QString buffer) {
 
     mStringData += buffer;
 }
 
 // Add datas
-void MyFileWriter::writeRawData(QList<quint8> buffer) {
+void FileWriter::writeRawData(QList<quint8> buffer) {
 
     mRawData.append(buffer);
 }
 
 // Write the datas in the file
-bool MyFileWriter::toFile(bool rawData) {
+bool FileWriter::toFile(bool rawData) {
 
     if ( !mFileName.isEmpty() ) {
         QFile file_write(mFileName);
@@ -71,10 +71,10 @@ bool MyFileWriter::toFile(bool rawData) {
     return false;
 }
 
-QString MyFileWriter::errorMsg() {
+QString FileWriter::errorMsg() {
     return mErrorMsg;
 }
 
-QString MyFileWriter::fileName() {
+QString FileWriter::fileName() {
     return mFileName;
 }

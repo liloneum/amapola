@@ -58,7 +58,7 @@ DcSubSmpteParser::DcSubSmpteParser() {
 }
 
 // Read a sample of the file (10 lines). Try to found "SubtitleReel" tag
-bool DcSubSmpteParser::readSample(MyFileReader file) {
+bool DcSubSmpteParser::readSample(FileReader file) {
 
     QXmlStreamReader xml_reader;
     QStringList lines_list = file.lines();
@@ -113,7 +113,7 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
             // TimeIn
             QString start_time = xmlElement.attribute("TimeIn");
 
-            start_time = MyAttributesConverter::framesToTimeHMSms(start_time, mTimeCodeRate);
+            start_time = AttributesConverter::framesToTimeHMSms(start_time, mTimeCodeRate);
 
             if ( !start_time.isEmpty() ) {
 
@@ -124,7 +124,7 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
             //TimeOut
             QString end_time = xmlElement.attribute("TimeOut");
 
-            end_time = MyAttributesConverter::framesToTimeHMSms(end_time, mTimeCodeRate);
+            end_time = AttributesConverter::framesToTimeHMSms(end_time, mTimeCodeRate);
 
             if ( !end_time.isEmpty() ) {
 
@@ -238,8 +238,8 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
                     }
                 }
 
-                // Set text and font attributes in MySubtitltes container
-                new_text.setLine( MyAttributesConverter::plainTextToHtml(text) );
+                // Set text and font attributes in Subtitltes container
+                new_text.setLine( AttributesConverter::plainTextToHtml(text) );
                 mNewSubtitle.setText(new_text, mFontList.last());
 
                 if ( font_inside_whole_text == true ) {
@@ -267,8 +267,8 @@ void DcSubSmpteParser::parseTree(QDomElement xmlElement) {
 }
 
 // Parse DCSub file, retrieve subtitles infos.
-// Subtitles read are saved in "MySubtitles" container
-QList<MySubtitles> DcSubSmpteParser::open(MyFileReader file) {
+// Subtitles read are saved in "Subtitles" container
+QList<Subtitles> DcSubSmpteParser::open(FileReader file) {
 
     QFile file_read( file.getFileName() );
 
@@ -325,7 +325,7 @@ QList<MySubtitles> DcSubSmpteParser::open(MyFileReader file) {
 }
 
 // Create an xml DCSub document from the subtitle list
-bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool DcSubSmpteParser::save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QDomDocument doc("dcsub_smpte");
 
@@ -398,7 +398,7 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
     // Add "StartTime" node
     QDomElement xml_starttime = doc.createElement("StartTime");
     xml_root.appendChild(xml_starttime);
-    QDomText starttime_text = doc.createTextNode( MyAttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), mTimeCodeRate) );
+    QDomText starttime_text = doc.createTextNode( AttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), mTimeCodeRate) );
     xml_starttime.appendChild(starttime_text);
 
     // Add "LoadFont" node
@@ -453,22 +453,22 @@ bool DcSubSmpteParser::save(MyFileWriter & file, QList<MySubtitles> subtitlesLis
     // For each subtitles
     for ( qint32 i = 0; i < subtitlesList.size(); i++ ) {
 
-        MySubtitles current_subtitle = subtitlesList.at(i);
+        Subtitles current_subtitle = subtitlesList.at(i);
 
         // Add "Subtitle" tag with attributes
         QDomElement xml_Subtitle = doc.createElement("Subtitle");
         xml_Subtitle.setAttribute("SpotNumber", QString::number(i+1));
 
         if ( exportDialog->fadeInTime() != "00:00:00.000" ) {
-            xml_Subtitle.setAttribute("FadeUpTime", MyAttributesConverter::timeHMSmsToFrames(exportDialog->fadeInTime(), mTimeCodeRate));
+            xml_Subtitle.setAttribute("FadeUpTime", AttributesConverter::timeHMSmsToFrames(exportDialog->fadeInTime(), mTimeCodeRate));
         }
 
         if ( exportDialog->fadeOutTime() != "00:00:00.000" ) {
-            xml_Subtitle.setAttribute("FadeDownTime", MyAttributesConverter::timeHMSmsToFrames(exportDialog->fadeOutTime(), mTimeCodeRate));
+            xml_Subtitle.setAttribute("FadeDownTime", AttributesConverter::timeHMSmsToFrames(exportDialog->fadeOutTime(), mTimeCodeRate));
         }
 
-        xml_Subtitle.setAttribute("TimeIn", MyAttributesConverter::timeHMSmsToFrames(current_subtitle.startTime(), mTimeCodeRate ));
-        xml_Subtitle.setAttribute("TimeOut", MyAttributesConverter::timeHMSmsToFrames(current_subtitle.endTime(), mTimeCodeRate ));
+        xml_Subtitle.setAttribute("TimeIn", AttributesConverter::timeHMSmsToFrames(current_subtitle.startTime(), mTimeCodeRate ));
+        xml_Subtitle.setAttribute("TimeOut", AttributesConverter::timeHMSmsToFrames(current_subtitle.endTime(), mTimeCodeRate ));
         xml_font0.appendChild(xml_Subtitle);
 
         QList<TextLine> text_list = current_subtitle.text();
