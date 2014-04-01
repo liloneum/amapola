@@ -7,7 +7,7 @@ AmapolaProjFileParser::AmapolaProjFileParser() {
 
 }
 
-QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
+QList<Subtitles> AmapolaProjFileParser::open(FileReader file) {
 
     qint32 sub_count = 0;
     qint16 text_lines_count = 0;
@@ -15,7 +15,7 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
 
     QStringList lines = file.lines();
 
-    QList<MySubtitles> subtitles_list;
+    QList<Subtitles> subtitles_list;
 
     for ( qint32 i = 0; i < lines.size(); i++ ) {
 
@@ -26,7 +26,7 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
 
             if ( current_line.contains("AMAPOLASUB") ) {
 
-                MySubtitles new_subtitle;
+                Subtitles new_subtitle;
                 subtitles_list.append(new_subtitle);
                 sub_count++;
                 text_lines_count = 0;
@@ -288,24 +288,24 @@ QList<MySubtitles> AmapolaProjFileParser::open(MyFileReader file) {
 }
 
 // Save the subtitles, the video opened, all default parameters and current settings
-void AmapolaProjFileParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, QString videoFilePath) {
+void AmapolaProjFileParser::save(FileWriter &file, QList<Subtitles> subtitlesList, QString videoFilePath) {
 
     qint32 sub_count = 0;
 
     // Save the subtitles
-    QList<MySubtitles>::iterator sub_it;
+    QList<Subtitles>::iterator sub_it;
     for ( sub_it = subtitlesList.begin(); sub_it != subtitlesList.end(); ++sub_it ) {
 
         sub_count++;
 
-        MySubtitles current_sub = *sub_it;
+        Subtitles current_sub = *sub_it;
 
         QString sub_to_write = "";
 
         sub_to_write += "AMAPOLASUB" +QString::number(sub_count) +"\n";
         sub_to_write += "StartTime->" +current_sub.startTime() +"\n";
         sub_to_write += "EndTime->" +current_sub.endTime() +"\n";
-        sub_to_write += "DurationAuto->" +MyAttributesConverter::boolToString(current_sub.isDurationAuto()) +"\n";
+        sub_to_write += "DurationAuto->" +AttributesConverter::boolToString(current_sub.isDurationAuto()) +"\n";
 
         QList<TextLine> text_lines;
         text_lines = current_sub.text();

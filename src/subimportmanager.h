@@ -8,7 +8,7 @@ class SubImportManager
 {
 public:
     SubImportManager();
-    static MySubtitleFileParser* findSubFileParser(MyFileReader fileReader);
+    static SubtitleFileParser* findSubFileParser(FileReader fileReader);
 };
 
 #endif // SUBIMPORTMANAGER_H

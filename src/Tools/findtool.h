@@ -29,7 +29,7 @@ private slots:
     void on_findNextArrow_clicked();
     void on_replacePushButton_clicked();
     void on_replaceAllPushButton_clicked();
-    void replaceText(QList<MySubtitles>& subList, quint16 sub_number);
+    void replaceText(QList<Subtitles>& subList, quint16 sub_number);
 };
 
 #endif // FINDTOOL_H

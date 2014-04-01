@@ -3,14 +3,14 @@
 
 #include "subtitlefileparser.h"
 
-class EbuParser : public MySubtitleFileParser
+class EbuParser : public SubtitleFileParser
 {
 public:
     EbuParser();
-    QList<MySubtitles> open(MyFileReader file);
-    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
-    bool readSample(MyFileReader file);
-    void readGsiBlock(MyFileReader file, SubExportDialog* exportDialog);
+    QList<Subtitles> open(FileReader file);
+    bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(FileReader file);
+    void readGsiBlock(FileReader file, SubExportDialog* exportDialog);
 
     static const QString LANGUAGES_CODES[128];
 

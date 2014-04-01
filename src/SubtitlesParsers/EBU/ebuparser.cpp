@@ -149,7 +149,7 @@ EbuParser::EbuParser()
 }
 
 // Read the GSI block of the given "stl" file
-void EbuParser::readGsiBlock(MyFileReader file, SubExportDialog *exportDialog) {
+void EbuParser::readGsiBlock(FileReader file, SubExportDialog *exportDialog) {
 
     QList<quint8>* datas = file.data();
 
@@ -314,11 +314,11 @@ void EbuParser::readGsiBlock(MyFileReader file, SubExportDialog *exportDialog) {
 }
 
 // Open and read a "stl" file and return a subtitles list
-QList<MySubtitles> EbuParser::open(MyFileReader file) {
+QList<Subtitles> EbuParser::open(FileReader file) {
 
     QList<quint8>* datas = file.data();
 
-    QList<MySubtitles> sub_list;
+    QList<Subtitles> sub_list;
 
     // Retrieve the display mode
     quint8 dsc;
@@ -389,7 +389,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
     }
 
 
-    MySubtitles* current_sub = new MySubtitles;
+    Subtitles* current_sub = new Subtitles;
     bool is_new_sub = true;
 
     qreal v_pos_step;
@@ -437,7 +437,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                 start_time_str.append(number);
             }
 
-            current_sub->setStartTime( MyAttributesConverter::framesToTimeHMSms(start_time_str, time_code_rate) );
+            current_sub->setStartTime( AttributesConverter::framesToTimeHMSms(start_time_str, time_code_rate) );
 
             // Read end time code
             QString end_time_str;
@@ -456,7 +456,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                 end_time_str.append(number);
             }
 
-            current_sub->setEndTime( MyAttributesConverter::framesToTimeHMSms(end_time_str, time_code_rate) );
+            current_sub->setEndTime( AttributesConverter::framesToTimeHMSms(end_time_str, time_code_rate) );
 
             // Duration auto ON
             current_sub->setDurationAuto(true);
@@ -686,7 +686,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
                         // Set horizontal position - free position
                         qreal current_h_pos = 0.0;
-                        quint16 char_count = MyAttributesConverter::htmlToPlainText(current_line).count();
+                        quint16 char_count = AttributesConverter::htmlToPlainText(current_line).count();
                         qreal left_margin = qApp->property("prop_LeftMargin_percent").toDouble();
                         qreal right_margin = qApp->property("prop_RightMargin_percent").toDouble();
 
@@ -707,7 +707,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     }
 
                     // Set text
-                    current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
+                    current_sub->text().last().setLine( AttributesConverter::plainTextToHtml(current_line) );
                     current_line = "";
 
                     current_sub->setText(new_text_line, new_text_font);
@@ -845,7 +845,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
                         // Set horizontal position - free position
                         qreal current_h_pos = 0.0;
-                        quint16 char_count = MyAttributesConverter::htmlToPlainText(current_line).count();
+                        quint16 char_count = AttributesConverter::htmlToPlainText(current_line).count();
                         qreal left_margin = qApp->property("prop_LeftMargin_percent").toDouble();
                         qreal right_margin = qApp->property("prop_RightMargin_percent").toDouble();
 
@@ -866,7 +866,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
                     }
 
                     // Set the new line to current sub (html formated)
-                    current_sub->text().last().setLine( MyAttributesConverter::plainTextToHtml(current_line) );
+                    current_sub->text().last().setLine( AttributesConverter::plainTextToHtml(current_line) );
                 }
                 break;
             }
@@ -877,7 +877,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 
             // Save the current subtitle and create a new one
             sub_list.append(*current_sub);
-            current_sub = new MySubtitles;
+            current_sub = new Subtitles;
             is_new_sub = true;
         }
         else {
@@ -890,7 +890,7 @@ QList<MySubtitles> EbuParser::open(MyFileReader file) {
 }
 
 // Save the given subtitles list in a "stl" file
-bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool EbuParser::save(FileWriter &file, QList<Subtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     // GSI block
     QList<quint8> gsi_block_data;
@@ -1271,7 +1271,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
     }
 
     // Time Code: First in-cue (TCF)
-    QString first_in_cue_str = MyAttributesConverter::timeHMSmsToFrames(subtitlesList.first().startTime(), time_code_rate);
+    QString first_in_cue_str = AttributesConverter::timeHMSmsToFrames(subtitlesList.first().startTime(), time_code_rate);
     first_in_cue_str = first_in_cue_str.remove(":");
     QByteArray first_in_cue_bytes = first_in_cue_str.toLatin1();
 
@@ -1294,7 +1294,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
     for ( qint32 sub_it = 0; sub_it < subtitlesList.count(); sub_it++ ) {
 
         QList<quint8> tti_block_data;
-        MySubtitles current_subtitle = subtitlesList.at(sub_it);
+        Subtitles current_subtitle = subtitlesList.at(sub_it);
 
         // Init the tti block
         for ( quint16 j = 0; j < TTI_BLOCK_LENGTH; j++ ) {
@@ -1317,7 +1317,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         tti_block_data.replace(CUMULATIV_STATUS_ADD, CS_NOT);
 
         // Time Code In (TCI)
-        QString timecode_in_str = MyAttributesConverter::timeHMSmsToFrames(current_subtitle.startTime(), time_code_rate);
+        QString timecode_in_str = AttributesConverter::timeHMSmsToFrames(current_subtitle.startTime(), time_code_rate);
         QStringList timecode_in_strlist = timecode_in_str.split(":");
 
         for ( quint16 tc_in_it = 0; tc_in_it < TIME_CODE_IN_LENGTH; tc_in_it++ ) {
@@ -1328,7 +1328,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
         }
 
         // Time Code Out (TCO)
-        QString timecode_out_str = MyAttributesConverter::timeHMSmsToFrames(current_subtitle.endTime(), time_code_rate);
+        QString timecode_out_str = AttributesConverter::timeHMSmsToFrames(current_subtitle.endTime(), time_code_rate);
         QStringList timecode_out_strlist = timecode_out_str.split(":");
 
         for ( quint16 tc_out_it = 0; tc_out_it < TIME_CODE_OUT_LENGTH; tc_out_it++ ) {
@@ -1477,7 +1477,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             bool color_changed = false;
             if ( ( current_font.fontBackgroundEffect() == "yes" ) && ( teletext == true ) ) {
 
-                QString background_color_str = MyAttributesConverter::simplifyColorStr( current_font.fontBackgroundEffectColor() );
+                QString background_color_str = AttributesConverter::simplifyColorStr( current_font.fontBackgroundEffectColor() );
                 quint8 background_color_code = colorStrToTeletextCode(background_color_str);
 
                 if ( background_color_code != ALPHA_BLACK ) {
@@ -1488,7 +1488,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
             }
 
             // Set foreground color code
-            QString line_color = MyAttributesConverter::simplifyColorStr( current_font.fontColor() );
+            QString line_color = AttributesConverter::simplifyColorStr( current_font.fontColor() );
             quint8 current_color_code = colorStrToTeletextCode(line_color);
             if ( ( current_color_code != ALPHA_WHITE ) || ( color_changed == true ) ) {
                 text_field.append(current_color_code);
@@ -1499,7 +1499,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 
                 qreal h_pos = current_line.textHPosition().toDouble() - qApp->property("prop_LeftMargin_percent").toDouble();
                 QString cur_h_align = current_line.textHAlign();
-                QString cur_plain_text = MyAttributesConverter::htmlToPlainText(current_line.Line());
+                QString cur_plain_text = AttributesConverter::htmlToPlainText(current_line.Line());
                 quint16 nbr_of_char = cur_plain_text.count();
                 qint16 nbr_of_spacing;
 
@@ -1587,7 +1587,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 
                                 QString color_str = style_str.mid( (style_str.indexOf("#") + 1), 6 );
                                 color_str.prepend("FF");
-                                color_str = MyAttributesConverter::simplifyColorStr(color_str);
+                                color_str = AttributesConverter::simplifyColorStr(color_str);
                                 quint8 color_code = colorStrToTeletextCode(color_str);
 
                                 if ( color_code != current_color_code ) {
@@ -1734,7 +1734,7 @@ bool EbuParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubEx
 }
 
 // Not used - used readGsiBlock() instead
-bool EbuParser::readSample(MyFileReader file) {
+bool EbuParser::readSample(FileReader file) {
     return false;
 }
 

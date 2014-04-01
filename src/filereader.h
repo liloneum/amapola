@@ -7,10 +7,10 @@
 #include <QStringList>
 
 // Class to read text datas in a specified file "fileName" with specified format "textCodec"
-class MyFileReader
+class FileReader
 {
 public:
-    MyFileReader(const QString fileName, QString textCodec);
+    FileReader(const QString fileName, QString textCodec);
     bool readFile(const QString fileName, QString textCodec);
     bool readRawData(const QString fileName);
     QStringList lines();

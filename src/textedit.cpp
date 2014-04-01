@@ -45,7 +45,7 @@
 
 // This widget class manage the edit zone.
 // Manage many lines of editable text, with position and font attributes
-MyTextEdit::MyTextEdit(QWidget *parent) :
+TextEdit::TextEdit(QWidget *parent) :
     QWidget(parent)
 {
     // Retrieive the number of pixels per inch for the current hardware
@@ -72,12 +72,12 @@ MyTextEdit::MyTextEdit(QWidget *parent) :
 }
 
 
-MyTextEdit::~MyTextEdit()
+TextEdit::~TextEdit()
 {
 //    delete ui;
 }
 
-QTextEdit* MyTextEdit::createNewTextEdit() {
+QTextEdit* TextEdit::createNewTextEdit() {
 
     QTextEdit* text_edit = new QTextEdit(this);
 
@@ -108,7 +108,7 @@ QTextEdit* MyTextEdit::createNewTextEdit() {
 }
 
 // Save the default position and font parameter
-void MyTextEdit::updateDefaultSub() {
+void TextEdit::updateDefaultSub() {
 
     TextLine default_line;
     TextFont default_font;
@@ -141,12 +141,12 @@ void MyTextEdit::updateDefaultSub() {
     mCurrentTextProp = mDefaultSub;
 }
 
-MySubtitles MyTextEdit::getDefaultSub() {
+Subtitles TextEdit::getDefaultSub() {
 
     return mDefaultSub;
 }
 
-void MyTextEdit::saveCurrentTextPos(TextLine textLine, QTextEdit* textEdit) {
+void TextEdit::saveCurrentTextPos(TextLine textLine, QTextEdit* textEdit) {
 
     qint16 line_nbr = mTextLinesList.indexOf(textEdit);
 
@@ -175,7 +175,7 @@ void MyTextEdit::saveCurrentTextPos(TextLine textLine, QTextEdit* textEdit) {
     }
 }
 
-void MyTextEdit::saveCurrentTextFont(TextFont textFont, QTextEdit* textEdit) {
+void TextEdit::saveCurrentTextFont(TextFont textFont, QTextEdit* textEdit) {
 
     qint16 line_nbr = mTextLinesList.indexOf(textEdit);
 
@@ -201,14 +201,14 @@ void MyTextEdit::saveCurrentTextFont(TextFont textFont, QTextEdit* textEdit) {
 }
 
 // Get the text from the text edit zones
-QList<TextLine> MyTextEdit::text() {
+QList<TextLine> TextEdit::text() {
 
     QList<TextLine> text_lines;
 
     for ( qint16 i = 0; i < mTextLinesList.count(); i++ ) {
 
 //        QString text = mTextLinesList[i]->toPlainText();
-        QString text = MyAttributesConverter::simplifyRichTextFilter( mTextLinesList[i]->toHtml() );
+        QString text = AttributesConverter::simplifyRichTextFilter( mTextLinesList[i]->toHtml() );
         TextLine line;
         line.setLine(text);
         text_lines.append(line);
@@ -219,13 +219,13 @@ QList<TextLine> MyTextEdit::text() {
 
 // Get the text properties (font and position)
 // Return a subtitle container
-MySubtitles MyTextEdit::subtitleData() {
+Subtitles TextEdit::subtitleData() {
 
     return mCurrentTextProp;
 }
 
 
-bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
+bool TextEdit::eventFilter(QObject* watched, QEvent* event) {
 
     QTextEdit* text_edit = static_cast<QTextEdit*>(watched);
 
@@ -283,7 +283,7 @@ bool MyTextEdit::eventFilter(QObject* watched, QEvent* event) {
 }
 
 // Display text lines in the QTextEdit widgets
-void MyTextEdit::setText(MySubtitles subtitle) {
+void TextEdit::setText(Subtitles subtitle) {
 
     QTextEdit* text_edit;
 
@@ -326,7 +326,7 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         }
 
         QString text_html = text_lines[i].Line();
-        QString plain_text = MyAttributesConverter::htmlToPlainText(text_html);
+        QString plain_text = AttributesConverter::htmlToPlainText(text_html);
 
         // Change the text edit border color function of the number of character
         if ( plain_text.count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
@@ -353,14 +353,14 @@ void MyTextEdit::setText(MySubtitles subtitle) {
         text_edit->moveCursor(QTextCursor::End);
 
         // Keep a backup of the last texts displayed
-        mPreviousTextList.append( MyAttributesConverter::htmlToPlainText( text_lines[i].Line() ) );
+        mPreviousTextList.append( AttributesConverter::htmlToPlainText( text_lines[i].Line() ) );
     }
 
     mIsSettingLines = false;
 }
 
 // Update current or last focussed line postion
-void MyTextEdit::updateTextPosition(TextLine textLine) {
+void TextEdit::updateTextPosition(TextLine textLine) {
 
     // Change the position
     this->setTextPosition(mpLastFocused, textLine, this->size());
@@ -372,7 +372,7 @@ void MyTextEdit::updateTextPosition(TextLine textLine) {
 // - Horizontal alignment (left, center, right)
 // - Vertical coordonate (ref : top of the widget)
 // - Horizontal coordonate (ref : left of the widget)
-void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize widgetSize ) {
+void TextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize widgetSize ) {
 
     bool ok;
     qint32 pos_x_offset;
@@ -393,7 +393,7 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
     QFontMetrics font_metrics(textEdit->font());
 
     // Set the horizontal alignment
-    h_align = MyAttributesConverter::hAlignFromString( textLine.textHAlign() );
+    h_align = AttributesConverter::hAlignFromString( textLine.textHAlign() );
     textEdit->setAlignment(h_align);
     // Convert horizontal position from % to number of pixels
     pos_x_offset = qRound( ( (qreal)widget_width * (qreal)textLine.textHPosition().toFloat(&ok) ) / (qreal)100 );
@@ -414,7 +414,7 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
     }
 
     // Retrieive the vertical alignment
-    v_align = MyAttributesConverter::vAlignFromString( textLine.textVAlign() );
+    v_align = AttributesConverter::vAlignFromString( textLine.textVAlign() );
     // Convert vertical position from % to number of pixels
     pos_y_offset = qRound( ( (qreal)widget_height * (qreal)textLine.textVPosition().toFloat(&ok) ) / (qreal)100 );
 
@@ -445,7 +445,7 @@ void MyTextEdit::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSize w
 // Retrieive the "textEdit" position properties,
 // not relative to the current video displayed but in %.
 // Returned properties are in "String" format to be easily displayed and exported in file
-void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize) {
+void TextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize widgetSize) {
 
     Qt::Alignment h_align;
     qint32 h_position;
@@ -500,7 +500,7 @@ void MyTextEdit::textPosition(QTextEdit* textEdit, TextLine &textLine, QSize wid
 }
 
 // Update current or last focussed line font
-void MyTextEdit::updateTextFont(TextFont textFont, TextLine textLine) {
+void TextEdit::updateTextFont(TextFont textFont, TextLine textLine) {
 
     // Retrieive the line position before. Because if font size change,
     // the position need to be recomputed
@@ -517,7 +517,7 @@ void MyTextEdit::updateTextFont(TextFont textFont, TextLine textLine) {
 // - Color
 // - Italic (yes/no)
 // - Underlined (yes/no)
-void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widgetSize) {
+void TextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widgetSize) {
 
     qint16 font_size_pt;
     qreal relative_font_size;
@@ -557,7 +557,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
     textEdit->setFont(font);
 
     // Set font color
-    font_color = MyAttributesConverter::stringToColor( textFont.fontColor() );
+    font_color = AttributesConverter::stringToColor( textFont.fontColor() );
     QPalette widget_palette = textEdit->palette();
     widget_palette.setColor(QPalette::Text,font_color);
     textEdit->setPalette(widget_palette);
@@ -578,7 +578,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
         QGraphicsDropShadowEffect* shadow_effect = static_cast<QGraphicsDropShadowEffect*> (textEdit->graphicsEffect());
         textEdit->graphicsEffect()->setEnabled(true);
-        shadow_effect->setColor( MyAttributesConverter::stringToColor( textFont.fontShadowEffectColor() ) );
+        shadow_effect->setColor( AttributesConverter::stringToColor( textFont.fontShadowEffectColor() ) );
     }
     else {
         textEdit->graphicsEffect()->setEnabled(false);
@@ -594,7 +594,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
         outline_pen_style = Qt::NoPen;
     }
 
-    QColor outline_color = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
+    QColor outline_color = AttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
 
     QTextCharFormat char_format;
 
@@ -602,7 +602,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 
     char_format.setTextOutline(outline_pen);
     if ( textFont.fontBackgroundEffect() == "yes" ) {
-        char_format.setBackground( QBrush( MyAttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() ) ) );
+        char_format.setBackground( QBrush( AttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() ) ) );
     }
     else {
         char_format.setBackground(QBrush(Qt::transparent));
@@ -627,7 +627,7 @@ void MyTextEdit::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize widge
 // Retrieive the given "textEdit" font properties
 // Font sized returned in "point" for 72pt = 1 inch
 // Returned properties are in "String" format to be easily displayed and exported in file
-void MyTextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetSize) {
+void TextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetSize) {
 
     qint16 font_size_pt;
     qreal relative_font_size_pt;
@@ -645,9 +645,9 @@ void MyTextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetS
     textFont.setFontSize( QString::number(font_size_pt) );
 
     // Get Italic
-    textFont.setFontItalic( MyAttributesConverter::isItalic( font.italic() ) );
+    textFont.setFontItalic( AttributesConverter::isItalic( font.italic() ) );
     // Get Underlined
-    textFont.setFontUnderlined( MyAttributesConverter::isUnderlined( font.underline() ) );
+    textFont.setFontUnderlined( AttributesConverter::isUnderlined( font.underline() ) );
 
     // Get font color
     QPalette widget_palette = textEdit->palette();
@@ -668,7 +668,7 @@ void MyTextEdit::textFont(QTextEdit *textEdit, TextFont &textFont, QSize widgetS
 }
 
 // Widget resize event
-void MyTextEdit::resizeEvent(QResizeEvent *event) {
+void TextEdit::resizeEvent(QResizeEvent *event) {
 
     TextLine text_line;
     TextFont text_font;
@@ -686,7 +686,7 @@ void MyTextEdit::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 }
 
-void MyTextEdit::paintEvent(QPaintEvent *event) {
+void TextEdit::paintEvent(QPaintEvent *event) {
 
     qreal margin_left = this->width() * qApp->property("prop_LeftMargin_percent").toDouble() / 100.0;
     qreal margin_top = this->height() * qApp->property("prop_TopMargin_percent").toDouble() / 100.0;
@@ -707,7 +707,7 @@ void MyTextEdit::paintEvent(QPaintEvent *event) {
 }
 
 // Add a newline
-void MyTextEdit::addLine(QTextEdit *textEdit) {
+void TextEdit::addLine(QTextEdit *textEdit) {
 
     // Create new line with the same properties than current line
     // Font and position, except for horizontal position
@@ -798,7 +798,7 @@ void MyTextEdit::addLine(QTextEdit *textEdit) {
 
 
 // Remove a line
-void MyTextEdit::removeLine(QTextEdit *textEdit) {
+void TextEdit::removeLine(QTextEdit *textEdit) {
 
     TextLine text_line;
     QString current_v_align;
@@ -888,7 +888,7 @@ void MyTextEdit::removeLine(QTextEdit *textEdit) {
 
 
 // Manage the maximum number of characters in one line
-void MyTextEdit::wrapText(QTextEdit *textEdit) {
+void TextEdit::wrapText(QTextEdit *textEdit) {
 
     // If the number of characters of the current line exceed the maximum specified
     if ( textEdit->toPlainText().count() > qApp->property("prop_MaxCharPerLine").toInt() ) {
@@ -948,7 +948,7 @@ void MyTextEdit::wrapText(QTextEdit *textEdit) {
     }
 }
 
-void MyTextEdit::newCursorPosition() {
+void TextEdit::newCursorPosition() {
 
     // If a new text line is setting, cursor has not moved by user but automatically.
     // So do nothing
@@ -998,7 +998,7 @@ void MyTextEdit::newCursorPosition() {
     }
 }
 
-qint16 MyTextEdit::lastFocused() {
+qint16 TextEdit::lastFocused() {
 
     qint16 last_focussed_index = mTextLinesList.indexOf(mpLastFocused);
 
@@ -1011,7 +1011,7 @@ qint16 MyTextEdit::lastFocused() {
 }
 
 // Manage the text edit context menu
-void MyTextEdit::showCustomContextMenu(const QPoint &pos) {
+void TextEdit::showCustomContextMenu(const QPoint &pos) {
 
     QTextEdit* textEdit = mpLastFocused;
 

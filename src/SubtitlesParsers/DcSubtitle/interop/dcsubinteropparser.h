@@ -13,13 +13,13 @@
 #include <QColor>
 #include <QList>
 
-class DcSubInteropParser : public MySubtitleFileParser
+class DcSubInteropParser : public SubtitleFileParser
 {
 public:
     DcSubInteropParser();
-    QList<MySubtitles> open(MyFileReader file);
-    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
-    bool readSample(MyFileReader file);
+    QList<Subtitles> open(FileReader file);
+    bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(FileReader file);
     QString convertVposToAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos);
     QString convertVposFromAmapolaRef(QString fontId, QString fontSize, QString vAlign, QString vPos);
 
@@ -33,9 +33,9 @@ private:
     // Font name list
     QList<QString> mFontIdList;
     // Subtitles container
-    MySubtitles mNewSubtitle;
-    // MySubtitles containers list
-    QList<MySubtitles> mSubtitlesList;
+    Subtitles mNewSubtitle;
+    // Subtitles containers list
+    QList<Subtitles> mSubtitlesList;
 
     QString mPreferredEffect;
     QString mCurrentEffect;

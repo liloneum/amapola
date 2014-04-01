@@ -4,6 +4,6 @@
 //#include <QString>
 //#include <QFileDialog>
 
-// //MySubtitleFileParser::MySubtitleFileParser() {
+// //SubtitleFileParser::SubtitleFileParser() {
 
 // //}

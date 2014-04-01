@@ -11,7 +11,7 @@ ScenaristSubParser::ScenaristSubParser()
 }
 
 
-bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesList, SubExportDialog *exportDialog) {
+bool ScenaristSubParser::save(FileWriter &file, QList<Subtitles> subtitlesList, SubExportDialog *exportDialog) {
 
     QString file_path = file.fileName();
     file_path = file_path.remove(file_path.lastIndexOf('.'), file_path.size());
@@ -69,7 +69,7 @@ bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
 
     // Base time
     quint16 time_code_rate = qRound(qApp->property("prop_FrameRate_fps").toDouble());
-    QString base_time = MyAttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), time_code_rate);
+    QString base_time = AttributesConverter::timeHMSmsToFrames(exportDialog->startTime(), time_code_rate);
     header.append("Base_Time         " +base_time);
     header.append("\n");
 
@@ -170,7 +170,7 @@ bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
 
     for ( qint16 i = 0; i < subtitlesList.size(); i++ ) {
 
-        MySubtitles current_sub = subtitlesList.at(i);
+        Subtitles current_sub = subtitlesList.at(i);
 
         QList<TextLine> lines = current_sub.text();
 
@@ -332,10 +332,10 @@ bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
         sub_data.append(QString::number(i + 1) +"          ");
 
         time_code_rate = qRound(qApp->property("prop_FrameRate_fps").toDouble());
-        QString start_time = MyAttributesConverter::timeHMSmsToFrames(current_sub.startTime(), time_code_rate);
+        QString start_time = AttributesConverter::timeHMSmsToFrames(current_sub.startTime(), time_code_rate);
         sub_data.append(start_time +"  ");
 
-        QString end_time = MyAttributesConverter::timeHMSmsToFrames(current_sub.endTime(), time_code_rate);
+        QString end_time = AttributesConverter::timeHMSmsToFrames(current_sub.endTime(), time_code_rate);
         sub_data.append(end_time +"  ");
 
         sub_data.append(image_file_name.section('/', -1)
@@ -367,11 +367,11 @@ bool ScenaristSubParser::save(MyFileWriter &file, QList<MySubtitles> subtitlesLi
     return true;
 }
 
-QList<MySubtitles> ScenaristSubParser::open(MyFileReader file) {
-    QList<MySubtitles> sub_list;
+QList<Subtitles> ScenaristSubParser::open(FileReader file) {
+    QList<Subtitles> sub_list;
     return sub_list;
 }
 
-bool ScenaristSubParser::readSample(MyFileReader file) {
+bool ScenaristSubParser::readSample(FileReader file) {
     return false;
 }

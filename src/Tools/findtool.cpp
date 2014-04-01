@@ -24,7 +24,7 @@ FindTool::~FindTool() {
  */
 void FindTool::on_findLineEdit_textChanged(QString searchedText) {
 
-    MainWindow* main_window = MyApplication::getMainWindow();
+    MainWindow* main_window = Application::getMainWindow();
 
     mMatchingSubsList.clear();
     mFindRegExp.setPattern("");
@@ -46,16 +46,16 @@ void FindTool::on_findLineEdit_textChanged(QString searchedText) {
             mFindRegExp.setPattern(searchedText);
         }
 
-        QList<MySubtitles> sub_list = main_window->getSubtitlesList();
+        QList<Subtitles> sub_list = main_window->getSubtitlesList();
         sub_count = sub_list.count();
 
         quint16 sub_nbr = 0;
 
         // Search the reg exp in the subtitle list
-        QList<MySubtitles>::iterator sub_it;
+        QList<Subtitles>::iterator sub_it;
         for( sub_it = sub_list.begin(); sub_it != sub_list.end(); ++sub_it ) {
 
-            MySubtitles current_subtitle = *sub_it;
+            Subtitles current_subtitle = *sub_it;
 
             QList<TextLine> text_lines = current_subtitle.text();
 
@@ -63,7 +63,7 @@ void FindTool::on_findLineEdit_textChanged(QString searchedText) {
             for( line_it = text_lines.begin(); line_it != text_lines.end(); ++line_it ) {
 
                 TextLine current_line = *line_it;
-                QString current_text = MyAttributesConverter::htmlToPlainText(current_line.Line());
+                QString current_text = AttributesConverter::htmlToPlainText(current_line.Line());
 
                 if ( current_text.contains(mFindRegExp) ) {
                     mMatchingSubsList.append(sub_nbr);
@@ -80,10 +80,10 @@ void FindTool::on_findLineEdit_textChanged(QString searchedText) {
     for ( int row_nbr = 0; row_nbr < sub_count; row_nbr++ ) {
 
         if ( mMatchingSubsList.contains(row_nbr) ) {
-            main_window->setTableItemColor(row_nbr, MySubtitlesTable::SUB_TEXT_COL, Qt::yellow, QPalette::Background);
+            main_window->setTableItemColor(row_nbr, SubtitlesTable::SUB_TEXT_COL, Qt::yellow, QPalette::Background);
         }
         else {
-            main_window->setTableItemColor(row_nbr, MySubtitlesTable::SUB_TEXT_COL, Qt::transparent, QPalette::Background);
+            main_window->setTableItemColor(row_nbr, SubtitlesTable::SUB_TEXT_COL, Qt::transparent, QPalette::Background);
         }
     }
 
@@ -121,7 +121,7 @@ void FindTool::on_findPrevArrow_clicked() {
 
     if ( !mMatchingSubsList.isEmpty() ) {
 
-        MainWindow* main_window = MyApplication::getMainWindow();
+        MainWindow* main_window = Application::getMainWindow();
 
         quint16 selected_sub = main_window->getSelectedSub();
 
@@ -146,7 +146,7 @@ void FindTool::on_findNextArrow_clicked() {
 
     if ( !mMatchingSubsList.isEmpty() ) {
 
-        MainWindow* main_window = MyApplication::getMainWindow();
+        MainWindow* main_window = Application::getMainWindow();
 
         quint16 selected_sub = main_window->getSelectedSub();
 
@@ -172,9 +172,9 @@ void FindTool::on_replacePushButton_clicked() {
 
     if ( !mMatchingSubsList.isEmpty() ) {
 
-        MainWindow* main_window = MyApplication::getMainWindow();
+        MainWindow* main_window = Application::getMainWindow();
 
-        QList<MySubtitles> sub_list = main_window->getSubtitlesList();
+        QList<Subtitles> sub_list = main_window->getSubtitlesList();
 
         quint16 selected_sub = main_window->getSelectedSub();
 
@@ -197,7 +197,7 @@ void FindTool::on_replacePushButton_clicked() {
 
             for ( int i = 0; i < mMatchingSubsList.size(); i++ ) {
 
-                main_window->setTableItemColor(mMatchingSubsList.at(i), MySubtitlesTable::SUB_TEXT_COL, Qt::yellow, QPalette::Background);
+                main_window->setTableItemColor(mMatchingSubsList.at(i), SubtitlesTable::SUB_TEXT_COL, Qt::yellow, QPalette::Background);
             }
 
             on_findNextArrow_clicked();
@@ -214,9 +214,9 @@ void FindTool::on_replaceAllPushButton_clicked() {
 
     if ( !mMatchingSubsList.isEmpty() ) {
 
-        MainWindow* main_window = MyApplication::getMainWindow();
+        MainWindow* main_window = Application::getMainWindow();
 
-        QList<MySubtitles> sub_list = main_window->getSubtitlesList();
+        QList<Subtitles> sub_list = main_window->getSubtitlesList();
 
         for ( qint16 i = 0; i < mMatchingSubsList.size(); i++ ) {
 
@@ -235,7 +235,7 @@ void FindTool::on_replaceAllPushButton_clicked() {
  * @param subList the complete subtitle list
  * @param subNumber subtitle number to treat
  */
-void FindTool::replaceText(QList<MySubtitles>& subList, quint16 subNumber) {
+void FindTool::replaceText(QList<Subtitles>& subList, quint16 subNumber) {
 
     QList<TextLine> text_lines = subList[subNumber].text();
 

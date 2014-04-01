@@ -4,26 +4,26 @@
 #include <QWidget>
 
 namespace Ui {
-class MySettings;
+class Settings;
 }
 
-class MyProperties {
+class Properties {
 
 public:
-    MyProperties();
+    Properties();
     void setFrameRate(qreal frameRate);
     qreal frameRate();
 private:
     qreal mFrameRate;
 };
 
-class MySettings : public QWidget
+class Settings : public QWidget
 {
     Q_OBJECT
     
 public:
-    explicit MySettings(QWidget *parent = 0);
-    ~MySettings();
+    explicit Settings(QWidget *parent = 0);
+    ~Settings();
     
 signals:
     void marginChanged();
@@ -31,7 +31,7 @@ signals:
 
 public slots:
     void setFrameRate(qreal frameRate);
-    MyProperties getCurrentProp();
+    Properties getCurrentProp();
     void updateDisplayAll();
 
 private slots:
@@ -47,8 +47,8 @@ private slots:
     void on_bottomMarginSpinBox_valueChanged(double arg1);
 
 private:
-    Ui::MySettings *ui;
-    MyProperties mCurrentProperties;
+    Ui::Settings *ui;
+    Properties mCurrentProperties;
     bool mSettingsChangedBySoft;
 };
 

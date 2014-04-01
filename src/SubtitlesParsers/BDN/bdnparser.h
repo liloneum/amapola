@@ -7,13 +7,13 @@
 #include "subtitles.h"
 #include "subexportdialog.h"
 
-class BDNparser : public MySubtitleFileParser
+class BDNparser : public SubtitleFileParser
 {
 public:
     BDNparser();
-    QList<MySubtitles> open(MyFileReader file);
-    bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog);
-    bool readSample(MyFileReader file);
+    QList<Subtitles> open(FileReader file);
+    bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog);
+    bool readSample(FileReader file);
 };
 
 #endif // BDNPARSER_H

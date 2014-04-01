@@ -7,10 +7,10 @@
 #include <subtitles.h>
 
 // Class to define some converters statics methods
-class MyAttributesConverter
+class AttributesConverter
 {
 public:
-    MyAttributesConverter();
+    AttributesConverter();
     static Qt::Alignment vAlignFromString(QString vAlignAttribute);
     static Qt::Alignment hAlignFromString(QString hAlignAttribute);
     static QString dirToHorVer(QString direction);
@@ -26,7 +26,7 @@ public:
     static QString timeHMSmsToFrames(QString time, qreal timeCodeRate);
     static qint64 timeStrHMStoMs(QString time);
     static qint64 roundToFrame(qint64 timeMs, qreal frameRate);
-    static void roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList);
+    static void roundSubListToFrame(qreal frameRate, QList<Subtitles> & subList);
     static qint32 timeMsToFrames(qint64 timeMs, qreal frameRate);
     static QString colorToString(QColor colorRgba);
     static QColor stringToColor(QString colorStr);

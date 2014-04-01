@@ -13,7 +13,7 @@ class SubExportDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SubExportDialog(QList<MySubtitles> subList, QList<qint32>selectedSub, QWidget *parent = 0);
+    explicit SubExportDialog(QList<Subtitles> subList, QList<qint32>selectedSub, QWidget *parent = 0);
     ~SubExportDialog();
 
     // SubRip, DcSub
@@ -140,7 +140,7 @@ private:
     Ui::SubExportDialog *ui;
 
     // SubRip, DCSub
-    QList<MySubtitles> mSubList;
+    QList<Subtitles> mSubList;
     QList<qint32> mSelectedIndex;
     QString mVersion;
     QString mSubUUID;

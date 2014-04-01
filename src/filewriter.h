@@ -5,10 +5,10 @@
 #include <QList>
 
 // Class to write text datas in a specified file "fileName" with specified format "textCodec"
-class MyFileWriter
+class FileWriter
 {
 public:
-    MyFileWriter(QString fileName, QString textCodec);
+    FileWriter(QString fileName, QString textCodec);
     void writeText(QString buffer);
     void writeRawData(QList<quint8> buffer);
     bool toFile(bool rawData = false);

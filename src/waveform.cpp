@@ -59,9 +59,9 @@ private:
 // This widget manage an audio waveform displaying, with zoom and shift.
 // Display a position marker at the input time,
 // allow media control by sending output time of the position clicked.
-MyWaveForm::MyWaveForm(QWidget *parent) :
+WaveForm::WaveForm(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::MyWaveForm)
+    ui(new Ui::WaveForm)
 {
     QTime t(0, 0, 0, 0);
 
@@ -158,12 +158,12 @@ MyWaveForm::MyWaveForm(QWidget *parent) :
     connect(mpDecoder, SIGNAL(finished()), this, SLOT(decodingFinished()));
 }
 
-MyWaveForm::~MyWaveForm()
+WaveForm::~WaveForm()
 {
     delete ui;
 }
 
-void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
+void WaveForm::openFile(QString waveform_file_name, QString video_file_name) {
 
     if ( video_file_name.isEmpty() ) {
         mpFile->setFileName("");
@@ -218,7 +218,7 @@ void MyWaveForm::openFile(QString waveform_file_name, QString video_file_name) {
 
 // readBuffer is called when a decoded audio-buffer is ready
 // Write the audio-buffer data in ".awf" file
-void MyWaveForm::readBuffer() {
+void WaveForm::readBuffer() {
 
     QAudioBuffer audio_buffer;
     audio_buffer = mpDecoder->read();
@@ -234,14 +234,14 @@ void MyWaveForm::readBuffer() {
     }
 }
 
-void MyWaveForm::decodingFinished() {
+void WaveForm::decodingFinished() {
 
      mpDecoder->stop();
      mpFile->close();
      initWaveForm();
 }
 
-void MyWaveForm::initWaveForm() {
+void WaveForm::initWaveForm() {
 
     qint32 size_of_file;
     qreal time_accuracy_ms;
@@ -311,7 +311,7 @@ void MyWaveForm::initWaveForm() {
 }
 
 // Plot the wave-form with in function of the current scope
-void MyWaveForm::plotWaveForm() {
+void WaveForm::plotWaveForm() {
 
     qint32 vector_size;
     QVector<double> amplitude_vector;
@@ -335,7 +335,7 @@ void MyWaveForm::plotWaveForm() {
     ui->waveFormPlot->replot();
 }
 
-bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
+bool WaveForm::eventFilter(QObject* watched, QEvent* event) {
 
     // Manage mouse click and wheel event for the wave-form plot object
     if ( watched == ui->waveFormPlot ) {
@@ -424,7 +424,7 @@ bool MyWaveForm::eventFilter(QObject* watched, QEvent* event) {
 }
 
 // Rescale the waveform in function of the zoom (in or out) and the mouse position
-bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
+bool WaveForm::computeZoom(qint16 step, qint16 xPos) {
 
     quint32 scale_size_ms;
     quint32 new_scale_size_ms;
@@ -480,7 +480,7 @@ bool MyWaveForm::computeZoom(qint16 step, qint16 xPos) {
 }
 
 // Shift the waveform the number of step, left (step<0) or right(step>0)
-bool MyWaveForm::timeScaleShift(qint16 step) {
+bool WaveForm::timeScaleShift(qint16 step) {
 
     quint32 scale_size_ms;
     qint32 time_shift_ms;
@@ -520,7 +520,7 @@ bool MyWaveForm::timeScaleShift(qint16 step) {
 }
 
 // Compute new position in fonction of mouse click position
-void MyWaveForm::setMarkerPosFromClick(int xPos) {
+void WaveForm::setMarkerPosFromClick(int xPos) {
 
     mCurrentPositonMs = this->posMsFromPosPx(xPos);
 
@@ -531,7 +531,7 @@ void MyWaveForm::setMarkerPosFromClick(int xPos) {
     emit markerPositionChanged(mCurrentPositonMs);
 }
 
-void MyWaveForm::setRtMarkerPos(int xPos) {
+void WaveForm::setRtMarkerPos(int xPos) {
 
     QTime time_base(0, 0, 0, 0);
 
@@ -543,14 +543,14 @@ void MyWaveForm::setRtMarkerPos(int xPos) {
     mpRtTime->setTime( time_base.addMSecs(position_ms) );
     mpRtTime->move(xPos, 10);
 
-    qint32 frame_nbr = MyAttributesConverter::timeMsToFrames( position_ms, qApp->property("prop_FrameRate_fps").toReal() );
+    qint32 frame_nbr = AttributesConverter::timeMsToFrames( position_ms, qApp->property("prop_FrameRate_fps").toReal() );
 
     mpRtFrames->setText(" Frame n° "+QString::number(frame_nbr));
     mpRtFrames->move(xPos, 25);
 }
 
 // Retrieve the position in millisecond from the mouse horizontal position (X coordonates)
-qint64 MyWaveForm::posMsFromPosPx(int xPos) {
+qint64 WaveForm::posMsFromPosPx(int xPos) {
 
     qint32 scale_size_ms;
     qint32 position_ms;
@@ -571,15 +571,15 @@ qint64 MyWaveForm::posMsFromPosPx(int xPos) {
     position_ms = mMinPlotTimeMs + (qint32)( ( (qreal)scale_size_ms / (qreal)plot_width_px ) * (qreal)xPos );
 
     // Scale the positon in function of the framerate
-    return MyAttributesConverter::roundToFrame(position_ms, qApp->property("prop_FrameRate_fps").toReal());
+    return AttributesConverter::roundToFrame(position_ms, qApp->property("prop_FrameRate_fps").toReal());
 }
 
 // Draw the marker in function of the player current position
-void MyWaveForm::updatePostionMarker(qint64 positionMs) {
+void WaveForm::updatePostionMarker(qint64 positionMs) {
 
     qint32 scale_size_ms;
 
-    positionMs = MyAttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
+    positionMs = AttributesConverter::roundToFrame(positionMs, qApp->property("prop_FrameRate_fps").toReal());
 
     if ( positionMs > mLastTimeMs ) {
         return;
@@ -609,18 +609,18 @@ void MyWaveForm::updatePostionMarker(qint64 positionMs) {
     emit markerPositionChanged(positionMs);
 }
 
-qint64 MyWaveForm::currentPositonMs() {
+qint64 WaveForm::currentPositonMs() {
 
     return mCurrentPositonMs;
 }
 
 // Draw one or more subtitles zones
-void MyWaveForm::drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subtitleIndex) {
+void WaveForm::drawSubtitlesZone(QList<Subtitles> subtitlesList, qint32 subtitleIndex) {
 
     qint32 start_time_ms;
     qint32 end_time_ms;
     QTime time_base(0, 0, 0, 0);
-    MySubtitles subtitle;
+    Subtitles subtitle;
 
     // Set the "non-active zone" color
     QString color_str = "FF96CA2D";
@@ -629,7 +629,7 @@ void MyWaveForm::drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subt
     QColor color_border = color_zone;
     color_border.setAlpha(50);
 
-    QList<MySubtitles>::iterator it;
+    QList<Subtitles>::iterator it;
     for ( it = subtitlesList.begin(); it != subtitlesList.end(); ++it ) {
 
         subtitle = *it;
@@ -658,7 +658,7 @@ void MyWaveForm::drawSubtitlesZone(QList<MySubtitles> subtitlesList, qint32 subt
 // Change the color of a given zone and reset all others zones colors
 // to the "non-active zone" color
 // The subtitle index is the same as its zone item
-void MyWaveForm::changeZoneColor(QList<qint32> selectedIndex, qint32 currentIndex) {
+void WaveForm::changeZoneColor(QList<qint32> selectedIndex, qint32 currentIndex) {
 
     QString color_non_active_str = "FF96CA2D";
     QString color_active_str = "FFF07746";
@@ -706,7 +706,7 @@ void MyWaveForm::changeZoneColor(QList<qint32> selectedIndex, qint32 currentInde
 }
 
 // Redraw zone item corresponding to the given index with a new start time
-void MyWaveForm::changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs) {
+void WaveForm::changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs) {
 
     if ( mpZoneItemList.size() > subtitleIndex ) {
 
@@ -718,7 +718,7 @@ void MyWaveForm::changeZoneStartTime(qint32 subtitleIndex, qint64 startTimeMs) {
 }
 
 // Redraw zone item corresponding to the given index with a new end time
-void MyWaveForm::changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs) {
+void WaveForm::changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs) {
 
     if ( mpZoneItemList.size() > subtitleIndex ) {
 
@@ -730,7 +730,7 @@ void MyWaveForm::changeZoneEndTime(qint32 subtitleIndex, qint64 endTimeMs) {
 }
 
 // Remove zone item corresponding to the given index
-void MyWaveForm::removeSubtitleZone(qint32 subtitleIndex) {
+void WaveForm::removeSubtitleZone(qint32 subtitleIndex) {
 
     if ( mpZoneItemList.size() > subtitleIndex ) {
         mpZoneItemList.at(subtitleIndex)->detach();
@@ -741,7 +741,7 @@ void MyWaveForm::removeSubtitleZone(qint32 subtitleIndex) {
 }
 
 // Remove all zones items
-void MyWaveForm::removeAllSubtitlesZones() {
+void WaveForm::removeAllSubtitlesZones() {
 
     if ( !mpZoneItemList.isEmpty() ) {
 
@@ -759,7 +759,7 @@ void MyWaveForm::removeAllSubtitlesZones() {
     }
 }
 
-QwtPlot* MyWaveForm::qwtPlot() {
+QwtPlot* WaveForm::qwtPlot() {
 
     return ui ->waveFormPlot;
 }

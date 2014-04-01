@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MyVideoPlayer</class>
- <widget class="QWidget" name="MyVideoPlayer">
+ <class>VideoPlayer</class>
+ <widget class="QWidget" name="VideoPlayer">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -46,7 +46,7 @@
     </widget>
    </item>
    <item>
-    <widget class="MyWaveFormSlider" name="timeSlider" native="true">
+    <widget class="WaveFormSlider" name="timeSlider" native="true">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -203,7 +203,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>MyWaveFormSlider</class>
+   <class>WaveFormSlider</class>
    <extends>QWidget</extends>
    <header location="global">waveformslider.h</header>
    <container>1</container>

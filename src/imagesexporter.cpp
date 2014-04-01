@@ -57,7 +57,7 @@ QTextEdit* ImagesExporter::createNewTextEdit() {
 }
 
 // Display text lines in the QTextEdit widgets
-void ImagesExporter::setText(MySubtitles subtitle) {
+void ImagesExporter::setText(Subtitles subtitle) {
 
     QTextEdit* text_edit;
 
@@ -120,7 +120,7 @@ void ImagesExporter::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSi
     widget_height = widgetSize.height();
 
     // Set the horizontal alignment
-    h_align = MyAttributesConverter::hAlignFromString( textLine.textHAlign() );
+    h_align = AttributesConverter::hAlignFromString( textLine.textHAlign() );
     textEdit->setAlignment(h_align);
     // Convert horizontal position from % to number of pixels
     pos_x_offset = qRound( ( (qreal)widget_width * (qreal)textLine.textHPosition().toFloat(&ok) ) / (qreal)100 );
@@ -141,7 +141,7 @@ void ImagesExporter::setTextPosition(QTextEdit* textEdit, TextLine textLine, QSi
     }
 
     // Retrieive the vertical alignment
-    v_align = MyAttributesConverter::vAlignFromString( textLine.textVAlign() );
+    v_align = AttributesConverter::vAlignFromString( textLine.textVAlign() );
     // Convert vertical position from % to number of pixels
     pos_y_offset = qRound( ( (qreal)widget_height * (qreal)textLine.textVPosition().toFloat(&ok) ) / (qreal)100 );
 
@@ -212,7 +212,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
     textEdit->setFont(font);
 
     // Set font color
-    font_color = MyAttributesConverter::stringToColor( textFont.fontColor() );
+    font_color = AttributesConverter::stringToColor( textFont.fontColor() );
     QPalette widget_palette = textEdit->palette();
     widget_palette.setColor(QPalette::Text,font_color);
     textEdit->setPalette(widget_palette);
@@ -233,7 +233,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
 
         QGraphicsDropShadowEffect* shadow_effect = static_cast<QGraphicsDropShadowEffect*> (textEdit->graphicsEffect());
         textEdit->graphicsEffect()->setEnabled(true);
-        shadow_effect->setColor( MyAttributesConverter::stringToColor( textFont.fontShadowEffectColor() ) );
+        shadow_effect->setColor( AttributesConverter::stringToColor( textFont.fontShadowEffectColor() ) );
     }
     else {
         textEdit->graphicsEffect()->setEnabled(false);
@@ -249,7 +249,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
         outline_pen_style = Qt::NoPen;
     }
 
-    QColor outline_color = MyAttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
+    QColor outline_color = AttributesConverter::stringToColor( textFont.fontBorderEffectColor() );
 
     QTextCharFormat char_format;
 
@@ -257,7 +257,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
 
     char_format.setTextOutline(outline_pen);
     if ( textFont.fontBackgroundEffect() == "yes" ) {
-        char_format.setBackground( QBrush( MyAttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() ) ) );
+        char_format.setBackground( QBrush( AttributesConverter::stringToColor( textFont.fontBackgroundEffectColor() ) ) );
     }
     else {
         char_format.setBackground(QBrush(Qt::transparent));
@@ -274,7 +274,7 @@ void ImagesExporter::setTextFont(QTextEdit *textEdit, TextFont textFont, QSize w
 
 // Create an image of the "subtitle" at the given "format" and with the given "backgroundColor" and "colorDepth"
 // Color depth = 0 -> 4 colors (white, black, red, blue). Else it's the number of byte used for colors code (1-4)
-void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth) {
+void ImagesExporter::createImage(Subtitles subtitle, QString fileName, QSize imageSize, bool fullSize, QString format, QColor backgroundColor, quint16 colorDepth) {
 
     QImage image;
     quint16 x1 = imageSize.width() - 1;;
@@ -321,7 +321,7 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
             text_line.Font().setFontBorderEffect("no");
             text_line.Font().setFontShadowEffect("no");
 
-            MySubtitles temp_sub;
+            Subtitles temp_sub;
             QList<TextLine> temp_lines;
             temp_lines.append(text_line);
             temp_sub.setText(temp_lines);
@@ -401,7 +401,7 @@ void ImagesExporter::createImage(MySubtitles subtitle, QString fileName, QSize i
     else {
 
         QList<TextLine> text_lines = subtitle.text();
-        MySubtitles temp_sub = subtitle;
+        Subtitles temp_sub = subtitle;
 
         // Deactivate the border effect
         for ( qint16 line_it = 0; line_it < text_lines.size(); line_it++ ) {

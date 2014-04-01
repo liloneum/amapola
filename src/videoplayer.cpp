@@ -9,9 +9,9 @@
 #define SEC_TO_MSEC 1000
 
 // This widget manage a media player with a position slider, a clock and a play/pause button
-MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
+VideoPlayer::VideoPlayer(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::MyVideoPlayer)
+    ui(new Ui::VideoPlayer)
 {
     ui->setupUi(this);
 
@@ -60,13 +60,13 @@ MyVideoPlayer::MyVideoPlayer(QWidget *parent) :
     ui->timeSlider->openFile("", mVideoDuration);
 }
 
-MyVideoPlayer::~MyVideoPlayer()
+VideoPlayer::~VideoPlayer()
 {
     delete ui;
 }
 
 // Swith the player state to "play/pause" when play/pause button clicked
-void MyVideoPlayer::on_playButton_clicked() {
+void VideoPlayer::on_playButton_clicked() {
 
     QString player_state_infos;
 
@@ -85,7 +85,7 @@ void MyVideoPlayer::on_playButton_clicked() {
 }
 
 // Update the play/pause icon displayed in function of the player state
-void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
+void VideoPlayer::updatePlayerState(QMediaPlayer::State state)
 {
     switch ( state ) {
     case QMediaPlayer::PlayingState:
@@ -98,7 +98,7 @@ void MyVideoPlayer::updatePlayerState(QMediaPlayer::State state)
 }
 
 // Change video playback rate (x1.0 to x4.0)
-bool MyVideoPlayer::changePlaybackRate(bool moreSpeed) {
+bool VideoPlayer::changePlaybackRate(bool moreSpeed) {
 
     bool status = false;
     QString player_state_infos = "";
@@ -127,7 +127,7 @@ bool MyVideoPlayer::changePlaybackRate(bool moreSpeed) {
 }
 
 // Open a media file
-QString MyVideoPlayer::openFile(QString fileName) {
+QString VideoPlayer::openFile(QString fileName) {
 
     if ( fileName == "" ) {
 
@@ -151,7 +151,7 @@ QString MyVideoPlayer::openFile(QString fileName) {
 }
 
 // Unload all media
-void MyVideoPlayer::unloadMedia() {
+void VideoPlayer::unloadMedia() {
 
     mpPlayer->stop();
     mpPlayer->setMedia(NULL);
@@ -160,7 +160,7 @@ void MyVideoPlayer::unloadMedia() {
 }
 
 // Load tha waveform in the slider
-void MyVideoPlayer::loadWaveForm(QString waveFormFileName) {
+void VideoPlayer::loadWaveForm(QString waveFormFileName) {
 
     // The video is loaded. Load the waveform
     if ( mMediaChanged == true ) {
@@ -176,7 +176,7 @@ void MyVideoPlayer::loadWaveForm(QString waveFormFileName) {
 
 // Update de duration of the current media
 // New duration signal mean that media is loaded
-void MyVideoPlayer::updateDuration() {
+void VideoPlayer::updateDuration() {
 
     mVideoDuration = mpPlayer->duration();
 
@@ -198,7 +198,7 @@ void MyVideoPlayer::updateDuration() {
 }
 
 // Update the position of the slider in function of the player position in millisecond
-void MyVideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
+void VideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
 
     if ( playerPositionMs <= mVideoDuration ) {
 
@@ -217,7 +217,7 @@ void MyVideoPlayer::updateSliderPosition(qint64 playerPositionMs) {
 }
 
 // Update and display the player clock
-void MyVideoPlayer::updateTime(qint64 positionMs) {
+void VideoPlayer::updateTime(qint64 positionMs) {
 
     QTime time_base(0, 0, 0, 0);
 
@@ -225,14 +225,14 @@ void MyVideoPlayer::updateTime(qint64 positionMs) {
     ui->durationTimeHMS->setTime( time_base.addMSecs(mVideoDuration) );
 }
 
-void MyVideoPlayer::checkVideoNativeSize(QSizeF videoNativeSize) {
+void VideoPlayer::checkVideoNativeSize(QSizeF videoNativeSize) {
 
     if ( ( videoNativeSize.isValid() ) && ( videoNativeSize.toSize() != QSize(0,0) ) ) {
         emit nativeSizeChanged(videoNativeSize);
     }
 }
 
-void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
+void VideoPlayer::resizeEvent(QResizeEvent* event) {
 
     mpVideoScene->setSceneRect(0.0, 0.0, ui->videoView->size().width(), ui->videoView->size().height() );
     mpVideoItem->setSize( QSizeF(ui->videoView->size()) - ( QSizeF(ui->videoView->frameWidth(), ui->videoView->frameWidth()) * 2 ) );
@@ -240,19 +240,19 @@ void MyVideoPlayer::resizeEvent(QResizeEvent* event) {
 }
 
 // Get the video item size
-QSizeF MyVideoPlayer::videoItemSize() {
+QSizeF VideoPlayer::videoItemSize() {
 
     return mpVideoItem->size();
 }
 
 // Get the video item native size (the native size of the media)
-QSizeF MyVideoPlayer::videoItemNativeSize() {
+QSizeF VideoPlayer::videoItemNativeSize() {
 
     return mpVideoItem->nativeSize();
 }
 
  // Update the player position in function of slider position
-void MyVideoPlayer::sliderMoved(qint64 positionMs) {
+void VideoPlayer::sliderMoved(qint64 positionMs) {
 
     // Slider was moved by user
     mTimeSliderPositionChangedByGui = true;
@@ -260,7 +260,7 @@ void MyVideoPlayer::sliderMoved(qint64 positionMs) {
 }
 
 // Interface to set the player position
-void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
+void VideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
 
     if ( mpPlayer->isVideoAvailable() ) {
         mpPlayer->setPosition(videoPlayerPositionMs);
@@ -268,11 +268,11 @@ void MyVideoPlayer::setPosition(qint64 videoPlayerPositionMs) {
 }
 
 // get the player position
-qint64 MyVideoPlayer::playerPosition() {
+qint64 VideoPlayer::playerPosition() {
     return mpPlayer->position();
 }
 
-bool MyVideoPlayer::videoAvailable() {
+bool VideoPlayer::videoAvailable() {
     return mpPlayer->isVideoAvailable();
 }
 

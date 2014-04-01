@@ -4,12 +4,12 @@
 #include <QApplication>
 #include <mainwindow.h>
 
-class MyApplication : public QApplication {
+class Application : public QApplication {
 
 public:
-    MyApplication(int argc, char* argv[]);
+    Application(int argc, char* argv[]);
     static MainWindow* getMainWindow();
-    ~MyApplication();
+    ~Application();
 
 protected:
     static MainWindow* mpMainWindow;

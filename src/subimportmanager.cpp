@@ -8,11 +8,11 @@ SubImportManager::SubImportManager() {
 }
 
 // Read a sample a the file to find the good parser
-MySubtitleFileParser *SubImportManager::findSubFileParser(MyFileReader fileReader) {
+SubtitleFileParser *SubImportManager::findSubFileParser(FileReader fileReader) {
 
     QString file_name = fileReader.getFileName();
 
-    MySubtitleFileParser* parser;
+    SubtitleFileParser* parser;
 
     // If file extension is ".srt", check if it's readable SubRip format
     if ( file_name.section(".", -1) == "srt" ) {

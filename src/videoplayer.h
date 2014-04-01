@@ -6,7 +6,7 @@
 #include <QMediaPlayer>
 
 namespace Ui {
-class MyVideoPlayer;
+class VideoPlayer;
 }
 
 class QMediaPlayer;
@@ -14,14 +14,14 @@ class QGraphicsVideoItem;
 class QGraphicsScene;
 
 // This widget manage a media player with a position slider, a clock and a play/pause button
-class MyVideoPlayer : public QWidget
+class VideoPlayer : public QWidget
 {
     Q_OBJECT
 
     
 public:
-    explicit MyVideoPlayer(QWidget *parent = 0);
-    ~MyVideoPlayer();
+    explicit VideoPlayer(QWidget *parent = 0);
+    ~VideoPlayer();
     QSizeF videoItemSize();
     QSizeF videoItemNativeSize();
 
@@ -53,7 +53,7 @@ private slots:
     
 private:
     // Qt designer ui reference
-    Ui::MyVideoPlayer *ui;
+    Ui::VideoPlayer *ui;
 
     // Media player object
     QMediaPlayer* mpPlayer;

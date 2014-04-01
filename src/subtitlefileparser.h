@@ -7,13 +7,13 @@
 #include "subexportdialog.h"
 
 // Class with virtual methods used to parse subtitles file
-class MySubtitleFileParser
+class SubtitleFileParser
 {
 public:
-    //MySubtitleFileParser();
-    virtual QList<MySubtitles> open(MyFileReader file) = 0;
-    virtual bool save(MyFileWriter & file, QList<MySubtitles> subtitlesList, SubExportDialog* exportDialog) = 0;
-    virtual bool readSample(MyFileReader file) =0;
+    //SubtitleFileParser();
+    virtual QList<Subtitles> open(FileReader file) = 0;
+    virtual bool save(FileWriter & file, QList<Subtitles> subtitlesList, SubExportDialog* exportDialog) = 0;
+    virtual bool readSample(FileReader file) =0;
 };
 
 #endif // SUBTITLEFILEPARSER_H

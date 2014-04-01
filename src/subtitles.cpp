@@ -2,8 +2,8 @@
 
 #include <QColor>
 
-// The "MySubtitles" class is a string container for text and font, position properties
-// MySubtitles :
+// The "Subtitles" class is a string container for text and font, position properties
+// Subtitles :
 //  - Start time (format HH:MM:SS.zzz)
 //  - End time (format HH:MM:SS.zzz)
 //  - Text :
@@ -25,9 +25,9 @@
 
 
 //*************************************************//
-//               Class MySubtitles                 //
+//               Class Subtitles                 //
 //*************************************************//
-MySubtitles::MySubtitles()
+Subtitles::Subtitles()
 {
     mStartTime = "";
     mEndTime = "";
@@ -35,7 +35,7 @@ MySubtitles::MySubtitles()
     mDurationAuto = true;
 }
 
-void MySubtitles::clear() {
+void Subtitles::clear() {
 
     mStartTime = "";
     mEndTime = "";
@@ -45,68 +45,68 @@ void MySubtitles::clear() {
 
 // Mutators
 
-void MySubtitles::setStartTime(QString startTime) {
+void Subtitles::setStartTime(QString startTime) {
 
     mStartTime = startTime;
 }
 
-void MySubtitles::setEndTime(QString endTime) {
+void Subtitles::setEndTime(QString endTime) {
 
     mEndTime = endTime;
 }
 
-void MySubtitles::setText(TextLine textLine, TextFont font) {
+void Subtitles::setText(TextLine textLine, TextFont font) {
 
     textLine.setFont(font);
 
     mText.append(textLine);
 }
 
-void MySubtitles::setText(QList<TextLine> textLineList) {
+void Subtitles::setText(QList<TextLine> textLineList) {
 
     mText = textLineList;
 }
 
-void MySubtitles::insertText(TextLine textLine, TextFont font, qint16 index) {
+void Subtitles::insertText(TextLine textLine, TextFont font, qint16 index) {
 
     textLine.setFont(font);
 
     mText.insert(index, textLine);
 }
 
-void MySubtitles::removeTextAt(qint16 index) {
+void Subtitles::removeTextAt(qint16 index) {
 
     mText.removeAt(index);
 }
 
-void MySubtitles::setDurationAuto(bool value) {
+void Subtitles::setDurationAuto(bool value) {
 
     mDurationAuto = value;
 }
 
 // Assessors
-QString MySubtitles::startTime() {
+QString Subtitles::startTime() {
 
     return mStartTime;
 }
 
-QString MySubtitles::endTime() {
+QString Subtitles::endTime() {
 
     return mEndTime;
 }
 
-QList<TextLine>& MySubtitles::text() {
+QList<TextLine>& Subtitles::text() {
 
     return mText;
 }
 
-bool MySubtitles::isDurationAuto() {
+bool Subtitles::isDurationAuto() {
 
     return mDurationAuto;
 }
 
 // A subtitle is valid if there are "time in", "time out", and text
-bool MySubtitles::isValid() {
+bool Subtitles::isValid() {
 
     if ( ( !mStartTime.isEmpty() ) && ( !mEndTime.isEmpty() ) && ( !mText.isEmpty() ) ) {
         return true;

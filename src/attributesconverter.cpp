@@ -13,12 +13,12 @@
 #define SEC_TO_MSEC 1000
 
 // Class to define some converters statics methods
-MyAttributesConverter::MyAttributesConverter()
+AttributesConverter::AttributesConverter()
 {
 }
 
 // Convert an horizontal alignment string to Qt::Aligment enum
-Qt::Alignment MyAttributesConverter::hAlignFromString(QString hAlignAttribute) {
+Qt::Alignment AttributesConverter::hAlignFromString(QString hAlignAttribute) {
 
     if ( hAlignAttribute == "left") {
         return Qt::AlignLeft;
@@ -35,7 +35,7 @@ Qt::Alignment MyAttributesConverter::hAlignFromString(QString hAlignAttribute) {
 }
 
 // Convert a vertical alignment string to Qt::Aligment enum
-Qt::Alignment MyAttributesConverter::vAlignFromString(QString vAlignAttribute) {
+Qt::Alignment AttributesConverter::vAlignFromString(QString vAlignAttribute) {
 
     if ( vAlignAttribute == "top" ) {
         return Qt::AlignTop;
@@ -53,7 +53,7 @@ Qt::Alignment MyAttributesConverter::vAlignFromString(QString vAlignAttribute) {
 
 // Convert a direction "left-to-right", "right-to-left", "top-to-bottom", "bottom-to-top"
 // into a direction "horizontal", "vertical"
-QString MyAttributesConverter::dirToHorVer(QString direction) {
+QString AttributesConverter::dirToHorVer(QString direction) {
 
     if ( ( direction == "ltr" ) || ( direction == "rtl") ) {
         return "horizontal";
@@ -68,7 +68,7 @@ QString MyAttributesConverter::dirToHorVer(QString direction) {
 
 // Convert a direction "horizontal", "vertical"
 // Into a direction "left-to-right", "top-to-bottom"
-QString MyAttributesConverter::dirToLtrTtb(QString direction) {
+QString AttributesConverter::dirToLtrTtb(QString direction) {
 
     if ( direction == "horizontal" ) {
         return "ltr";
@@ -82,7 +82,7 @@ QString MyAttributesConverter::dirToLtrTtb(QString direction) {
 }
 
 // Convert a boolean to string "yes" or "no"
-QString MyAttributesConverter::isItalic(bool italic) {
+QString AttributesConverter::isItalic(bool italic) {
 
     if ( italic == true ) {
         return "yes";
@@ -92,7 +92,7 @@ QString MyAttributesConverter::isItalic(bool italic) {
 }
 
 // Convert a boolean to string "yes" or "no"
-QString MyAttributesConverter::isUnderlined(bool underlined) {
+QString AttributesConverter::isUnderlined(bool underlined) {
 
     if ( underlined == true ) {
         return "yes";
@@ -102,7 +102,7 @@ QString MyAttributesConverter::isUnderlined(bool underlined) {
 }
 
 // Convert a boolean to string "yes" or "no"
-QString MyAttributesConverter::boolToString(bool boolean) {
+QString AttributesConverter::boolToString(bool boolean) {
 
     if ( boolean == true ) {
         return "yes";
@@ -114,7 +114,7 @@ QString MyAttributesConverter::boolToString(bool boolean) {
 // Convert time given with "ticks" or "1/10 second" to time with millisecond,
 // with HH:MM:SS.zzz format.
 // One tick equal to 4 milliseconds
-QString MyAttributesConverter::toTimeHMSms(QString time) {
+QString AttributesConverter::toTimeHMSms(QString time) {
 
     QRegExp time_format1("^\\d{2}:\\d{2}:\\d{2}\\.\\d+$");
     QRegExp time_format2("^\\d{2}:\\d{2}:\\d{2}:\\d{3}$");
@@ -162,7 +162,7 @@ QString MyAttributesConverter::toTimeHMSms(QString time) {
 
 // Convert time given with millisecond to time with "ticks".
 // Where a tick equal 4 milliseconds.
-QString MyAttributesConverter::toTimeHMSticks(QString time) {
+QString AttributesConverter::toTimeHMSticks(QString time) {
 
     qint32 millisecond = time.section(".",-1).toInt();
     qint32 ticks = millisecond / 4;
@@ -182,7 +182,7 @@ QString MyAttributesConverter::toTimeHMSticks(QString time) {
 
 // Convert time given in frame to time with millisecond,
 // with HH:MM:SS.zzz format.
-QString MyAttributesConverter::framesToTimeHMSms(QString time, qreal timeCodeRate) {
+QString AttributesConverter::framesToTimeHMSms(QString time, qreal timeCodeRate) {
 
     qint16 time_frames = time.section(":", -1).toInt();
 
@@ -205,7 +205,7 @@ QString MyAttributesConverter::framesToTimeHMSms(QString time, qreal timeCodeRat
     return time;
 }
 
-QString MyAttributesConverter::timeHMSmsToFrames(QString time, qreal timeCodeRate) {
+QString AttributesConverter::timeHMSmsToFrames(QString time, qreal timeCodeRate) {
 
     qint32 millisecond = time.section(".", -1).toInt();
     qint32 frames = qint16( (qreal)millisecond / ( (qreal)1000 / timeCodeRate ) );
@@ -224,7 +224,7 @@ QString MyAttributesConverter::timeHMSmsToFrames(QString time, qreal timeCodeRat
 
 // Convert a time with format HH:MM:SS:zzz, where zzz are millisecond
 // to time in millisecond
-qint64 MyAttributesConverter::timeStrHMStoMs(QString time) {
+qint64 AttributesConverter::timeStrHMStoMs(QString time) {
 
     QTime time_base(0, 0, 0, 0);
     QTime time_HMS;
@@ -240,7 +240,7 @@ qint64 MyAttributesConverter::timeStrHMStoMs(QString time) {
 }
 
 // Round the given time to the nearest frame time
-qint64 MyAttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
+qint64 AttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
 
     qreal frame_duration_ms = (qreal)SEC_TO_MSEC / frameRate;
 
@@ -248,28 +248,28 @@ qint64 MyAttributesConverter::roundToFrame(qint64 timeMs, qreal frameRate) {
 }
 
 // Round the given subtitles list to the nearest frame time
-void MyAttributesConverter::roundSubListToFrame(qreal frameRate, QList<MySubtitles> & subList) {
+void AttributesConverter::roundSubListToFrame(qreal frameRate, QList<Subtitles> & subList) {
 
     qint32 start_time_ms;
     qint32 end_time_ms;
-    MySubtitles subtitle;
+    Subtitles subtitle;
     QTime time_base(0, 0, 0, 0);
 
-    QList<MySubtitles>::iterator it;
+    QList<Subtitles>::iterator it;
     for ( it = subList.begin(); it != subList.end(); ++it ) {
 
         subtitle = *it;
         start_time_ms = qAbs( QTime::fromString(subtitle.startTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        start_time_ms = MyAttributesConverter::roundToFrame(start_time_ms, frameRate);
+        start_time_ms = AttributesConverter::roundToFrame(start_time_ms, frameRate);
         it->setStartTime( time_base.addMSecs(start_time_ms).toString("hh:mm:ss.zzz") );
 
         end_time_ms = qAbs( QTime::fromString(subtitle.endTime(), "hh:mm:ss.zzz").msecsTo(time_base) );
-        end_time_ms = MyAttributesConverter::roundToFrame(end_time_ms, frameRate);
+        end_time_ms = AttributesConverter::roundToFrame(end_time_ms, frameRate);
         it->setEndTime( time_base.addMSecs(end_time_ms).toString("hh:mm:ss.zzz") );
     }
 }
 
-qint32 MyAttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
+qint32 AttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
 
     qreal frame_duration_ms = (qreal)SEC_TO_MSEC / frameRate;
 
@@ -278,7 +278,7 @@ qint32 MyAttributesConverter::timeMsToFrames(qint64 timeMs, qreal frameRate) {
 
 
 // Convert a QColor in string with format AARRGGBB
-QString MyAttributesConverter::colorToString(QColor colorRgba) {
+QString AttributesConverter::colorToString(QColor colorRgba) {
 
     QString color_str = "";
     QList<int> argb_list;
@@ -303,7 +303,7 @@ QString MyAttributesConverter::colorToString(QColor colorRgba) {
 }
 
 // Convert a AARRGGBB string in QColor argb
-QColor MyAttributesConverter::stringToColor(QString colorStr) {
+QColor AttributesConverter::stringToColor(QString colorStr) {
 
     bool ok;
 
@@ -312,7 +312,7 @@ QColor MyAttributesConverter::stringToColor(QString colorStr) {
 
 // Simplify a color AARRGGBB formated.
 // Set A, R, G, B parmaters to 0 or FF.
-QString MyAttributesConverter::simplifyColorStr(QString colorStr) {
+QString AttributesConverter::simplifyColorStr(QString colorStr) {
 
     bool ok;
     QString simplified_color_str = "FF";
@@ -333,14 +333,14 @@ QString MyAttributesConverter::simplifyColorStr(QString colorStr) {
 }
 
 // Fill QPushButton icon with the given color
-void MyAttributesConverter::setColorToButton(QPushButton* button, QColor color) {
+void AttributesConverter::setColorToButton(QPushButton* button, QColor color) {
 
     QPixmap pix_map(button->iconSize().width(), button->iconSize().height());
     pix_map.fill( color );
     button->setIcon(QIcon(pix_map));
 }
 
-QString MyAttributesConverter::htmlToPlainText(QString htmlText) {
+QString AttributesConverter::htmlToPlainText(QString htmlText) {
 
     QTextEdit text_edit;
 
@@ -349,7 +349,7 @@ QString MyAttributesConverter::htmlToPlainText(QString htmlText) {
     return text_edit.toPlainText();
 }
 
-QString MyAttributesConverter::plainTextToHtml(QString plainText) {
+QString AttributesConverter::plainTextToHtml(QString plainText) {
 
     QTextEdit text_edit;
     text_edit.setHtml(plainText);
@@ -425,7 +425,7 @@ static inline bool isWhiteSpace(const QStringRef &in)
 // Richtext simplification filter: Remove hard-coded font settings,
 // <style> elements, <p> attributes other than 'align' and
 // and unnecessary meta-information.
-QString MyAttributesConverter::simplifyRichTextFilter(QString in)
+QString AttributesConverter::simplifyRichTextFilter(QString in)
 {
     unsigned elementCount = 0;
     bool paragraphAlignmentFound = false;

@@ -20,8 +20,8 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    QList<MySubtitles> getSubtitlesList();
-    void setSubtitlesList(QList<MySubtitles> subList);
+    QList<Subtitles> getSubtitlesList();
+    void setSubtitlesList(QList<Subtitles> subList);
     void setTableItemColor(quint16 row, quint16 column, QColor color, QPalette::ColorRole colorRole);
     void selectSubtitle(quint16 subNumber);
     quint16 getSelectedSub();
@@ -39,12 +39,12 @@ private slots:
     void onCtrlLeftClickEvent(qint64 positionMs);
     void onCtrlRightClickEvent(qint64 positionMs);
     void updateSubTableText();
-    void updateSubTableDatas(MySubtitles subtitleDatas);
+    void updateSubTableDatas(Subtitles subtitleDatas);
     void videoPositionChanged(qint64 positionMs);
     void currentSelectionChanged(qint64 positionMs);
     void waveformMarerkPosChanged(qint64 positionMs);
     void updateVideoPosition(qint64 positionMs);
-    void currentSubChanged(MySubtitles subtitle);
+    void currentSubChanged(Subtitles subtitle);
     bool eventFilter(QObject* watched, QEvent* event);
     void resizeEvent(QResizeEvent* event);
     void updateStEditSize();
@@ -52,8 +52,8 @@ private slots:
     void displayErrorMsg(QString);
     void displayInfo(QString info);
     void eraseInfo();
-    bool changeSubStartTime(qint64 &positionMs, qint32 refIndex = -1, QList<MySubtitles> subList = QList<MySubtitles>(), bool multiChange = true, bool applyChange = true, bool movePrevious = true);
-    bool changeSubEndTime(qint64 &positionMs, qint32 refIndex = -1, QList<MySubtitles> subList = QList<MySubtitles>(), bool multiChange = true, bool applyChange = true, bool moveNext = true);
+    bool changeSubStartTime(qint64 &positionMs, qint32 refIndex = -1, QList<Subtitles> subList = QList<Subtitles>(), bool multiChange = true, bool applyChange = true, bool movePrevious = true);
+    bool changeSubEndTime(qint64 &positionMs, qint32 refIndex = -1, QList<Subtitles> subList = QList<Subtitles>(), bool multiChange = true, bool applyChange = true, bool moveNext = true);
     void shiftSubtitles(qint64 positionMs, qint32 index = -1);
     void removeSubtitles();
     void updateFrameRate(qreal frameRate);
@@ -157,8 +157,8 @@ private:
 
     // History (undo/redo) varaiables
     QList<QString> mHistoryReasons;
-    QList< QList<MySubtitles> > mSubListHistory;
-    QList<MyProperties> mPropertyHistory;
+    QList< QList<Subtitles> > mSubListHistory;
+    QList<Properties> mPropertyHistory;
     qint32 mHistoryCurrentIndex;
 
     QTimer* mpDisplayInfoTimer;
