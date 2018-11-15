@@ -1,7 +1,7 @@
 
 QT       += core gui multimedia multimediawidgets xml
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+greaterThan(QT_MAJOR_VERSION, 5): QT += widgets
 
 TARGET = amapola
 TEMPLATE = app
@@ -57,7 +57,7 @@ FORMS += mainwindow.ui \
 CONFIG += qwt
 
 QWT_DIR = $$PWD/../lib/qwt
-INCLUDEPATH +=  $${QWT_DIR}/src/
+INCLUDEPATH +=  $${QWT_DIR}/include/
 LIBS += -L$${QWT_DIR}/lib -lqwt
 
 OTHER_FILES += \

@@ -4,6 +4,7 @@
 #include <QGraphicsVideoItem>
 #include <QFileDialog>
 #include <QTime>
+#include <QStyle>
 
 // Convert second in milliseconds
 #define SEC_TO_MSEC 1000

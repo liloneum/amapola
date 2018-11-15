@@ -3,7 +3,7 @@
 
 MainWindow* Application::mpMainWindow = NULL;
 
-Application::Application(int argc, char* argv[]):
+Application::Application(int &argc, char* argv[]):
     QApplication(argc, argv)
 {
     mpMainWindow = new MainWindow();

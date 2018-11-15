@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QTextCodec>
+#include <QDataStream>
 
 // Class to read text datas in a specified file "fileName" with specified format "textCodec"
 FileReader::FileReader(const QString fileName, QString textCodec)
