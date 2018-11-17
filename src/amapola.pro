@@ -56,9 +56,15 @@ FORMS += mainwindow.ui \
 
 CONFIG += qwt
 
-QWT_DIR = $$PWD/../lib/qwt
+mac {
+    QWT_DIR = /usr/local
+    LIBS += -F$${QWT_DIR}/lib -framework qwt
+}
+!mac {
+    QWT_DIR = $$PWD/../lib/qwt
+    LIBS += -L$${QWT_DIR}/lib -lqwt
+}
 INCLUDEPATH +=  $${QWT_DIR}/include/
-LIBS += -L$${QWT_DIR}/lib -lqwt
 
 OTHER_FILES += \
     ../lib/README.md
